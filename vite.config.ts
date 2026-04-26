@@ -1,16 +1,15 @@
-import { resolve } from 'path';
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
+
 export default defineConfig({
-  server: {
-    port: 9999,
-  },
   build: {
     lib: {
       entry: resolve(__dirname, 'lib/main.ts'),
-      name: '__LAKE__',
+      name: 'Lake',
       fileName: format => `main.${format}.js`,
     },
   },
-  plugins: [],
 });
