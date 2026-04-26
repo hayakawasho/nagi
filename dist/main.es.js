@@ -62,10 +62,7 @@ function u(e) {
 //#region lib/composition/createContext.ts
 function d() {
 	let e = Symbol();
-	return [(t) => ({
-		_id: e,
-		_factory: t
-	}), () => {
+	return [{ _id: e }, () => {
 		let t = s("createContext.use").parent;
 		for (; t !== null;) {
 			if (t.provides.has(e)) return t.provides.get(e);
@@ -75,13 +72,12 @@ function d() {
 	}];
 }
 function f(e, t) {
-	return {
-		name: e.name,
-		setup(n, r) {
-			let i = t._factory();
-			return s("withContext").provides.set(t._id, i), e.setup(n, r);
+	return (n) => ({
+		name: n.name,
+		setup(r, i) {
+			return s(`withContext.${n.name}`).provides.set(e._id, t), n.setup(r, i);
 		}
-	};
+	});
 }
 //#endregion
 //#region lib/core/internal/dom-refs.ts

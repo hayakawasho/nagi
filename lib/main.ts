@@ -1,5 +1,5 @@
 export { createContext, withContext } from "./composition/createContext";
-export type { ContextProvider } from "./composition/createContext";
+export type { Provider } from "./composition/createContext";
 export { useDomRef } from "./composition/useDomRef";
 export { useEvent } from "./composition/useEvent";
 export { useIntersectionWatch } from "./composition/useIntersectionWatch";

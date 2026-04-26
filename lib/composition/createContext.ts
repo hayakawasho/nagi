@@ -1,22 +1,17 @@
 import { getCurrentComponent } from "../core/internal/component";
 import type { ComponentContext, IComponent, RefElement } from "../types";
 
-export type ContextProvider<T> = {
+export type Provider<T> = {
   readonly _id: symbol;
-  readonly _factory: () => T;
+  readonly _type?: T;
 }
 
-export function createContext<T>(): [
-  (factory: () => T) => ContextProvider<T>,
-  () => T,
-] {
+export function createContext<T>(): [Provider<T>, () => Readonly<T>] {
   const id = Symbol();
 
-  const provide = (factory: () => T): ContextProvider<T> => {
-    return { _id: id, _factory: factory };
-  };
+  const key: Provider<T> = { _id: id };
 
-  const use = (): T => {
+  const use = (): Readonly<T> => {
     const component = getCurrentComponent("createContext.use");
     let current: ComponentContext | null = component.parent;
 
@@ -30,22 +25,21 @@ export function createContext<T>(): [
     throw new Error("createContext.use: no provider found");
   };
 
-  return [provide, use];
+  return [key, use] as const;
 }
 
-export function withContext<
-  SetupResult extends Record<string, unknown> | void,
-  Props extends Record<string, unknown>,
->(
+export function withContext<T>(
+  key: Provider<T>,
+  value: T,
+): <SetupResult extends Record<string, unknown> | void, Props extends Record<string, unknown>>(
   component: IComponent<SetupResult, Props>,
-  provider: ContextProvider<unknown>,
-): IComponent<SetupResult, Props> {
-  return {
+) => IComponent<SetupResult, Props> {
+  return (component) => ({
     name: component.name,
-    setup(el: RefElement, props: Props) {
-      const value = provider._factory();
-      getCurrentComponent("withContext").provides.set(provider._id, value);
+    setup(el: RefElement, props) {
+      getCurrentComponent(`withContext.${component.name}`).provides.set(key._id, value);
+
       return component.setup(el, props);
     },
-  };
+  });
 }

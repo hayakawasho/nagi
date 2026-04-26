@@ -6,6 +6,9 @@ import {
   useMount,
   useUnmount,
   useMediaQuery,
+  withContext,
+  ref,
+  readonly,
 } from '../lib/main'
 import type { ReadonlyRef } from '../lib/main'
 import Child from './Child'
@@ -15,13 +18,13 @@ type Refs = {
   or: HTMLElement | null
 }
 
-type ParentContextValue = {
+const [ParentProvider, useParentContext] = createContext<{
   isOpen: ReadonlyRef<boolean>
   onOpen: () => void
   onClose: () => void
-}
+}>()
 
-export const [provideParent, useParentContext] = createContext<ParentContextValue>()
+export { useParentContext }
 
 export default defineComponent({
   name: 'parent',
@@ -29,7 +32,17 @@ export default defineComponent({
     const { refs } = useDomRef<Refs>('child', 'or')
     const { addChild } = useSlot()
 
-    const [child] = addChild(refs.child, Child, {})
+    const isOpen = ref(false)
+
+    const [child] = addChild(refs.child, withContext(ParentProvider, {
+      isOpen: readonly(isOpen),
+      onOpen: () => {
+        isOpen.value = true;
+      },
+      onClose: () => {
+        isOpen.value = false;
+      },
+    })(Child), {})
 
     child.current.test()
 
