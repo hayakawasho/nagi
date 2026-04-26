@@ -1,17 +1,15 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.13/schema.json",
   "vcs": {
-    "enabled": false,
+    "enabled": true,
     "clientKind": "git",
-    "useIgnoreFile": false
+    "useIgnoreFile": true
   },
   "files": {
-    "ignoreUnknown": false,
-    "ignore": []
+    "ignoreUnknown": false
   },
   "formatter": {
     "enabled": true,
-    "useEditorconfig": true,
     "formatWithErrors": false,
     "indentStyle": "space",
     "indentWidth": 2,
@@ -19,17 +17,18 @@
     "lineWidth": 80,
     "attributePosition": "auto",
     "bracketSpacing": true,
-    "ignore": [".gitignore", "node_modules"]
+    "includes": ["**", "!node_modules/**"]
   },
-  "organizeImports": {
-    "enabled": false
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
   },
   "linter": {
     "enabled": true,
     "rules": {
-      "a11y": {
-        "recommended": true
-      },
       "complexity": {
         "recommended": true,
         "noStaticOnlyClass": "off",
@@ -41,16 +40,11 @@
       "security": {
         "recommended": true
       },
-      "nursery": {
-        "recommended": true,
-        "useSortedClasses": "error"
-      },
       "style": {
         "recommended": true
       },
       "suspicious": {
         "recommended": true,
-        "noArrayIndexKey": "off",
         "noExplicitAny": "warn",
         "noConfusingVoidType": "off"
       }
