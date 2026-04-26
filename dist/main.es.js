@@ -1,208 +1,234 @@
-var O = Object.defineProperty;
-var N = (t) => {
-  throw TypeError(t);
+//#region lib/util/assert.ts
+function e(e, t) {
+	if (!e) throw Error(t || "unexpected condition");
+}
+//#endregion
+//#region lib/core/lifecycle.ts
+var t = /* @__PURE__ */ function(e) {
+	return e.MOUNTED = "Mounted", e.UNMOUNTED = "Unmounted", e;
+}({});
+function n(e) {
+	return (t) => {
+		s(e)[e].push(t);
+	};
+}
+var r = n(t.MOUNTED), i = n(t.UNMOUNTED), a;
+function o(e) {
+	return a = e, e;
+}
+function s(t) {
+	return e(a, `"${t}" called outside setup() will never be run.`), a;
+}
+var c = 0, l = class {
+	[t.MOUNTED] = [];
+	[t.UNMOUNTED] = [];
+	parent = null;
+	#e = [];
+	uid;
+	current = {};
+	props = {};
+	element;
+	provides = /* @__PURE__ */ new Map();
+	constructor(e, t) {
+		this.uid = `${t}.${c++}`, this.element = e;
+	}
+	onMount = () => {
+		let e = this[t.MOUNTED].map((e) => e()).filter((e) => typeof e == "function");
+		this[t.UNMOUNTED].push(...e);
+	};
+	onUnmount = () => {
+		[...this[t.UNMOUNTED], ...this.#e.flatMap((e) => e.onUnmount)].forEach((e) => {
+			e();
+		});
+	};
+	addChild = (e) => {
+		this.#e.push(e), e.parent = this, e.onMount();
+	};
+	removeChild = (e) => {
+		let t = this.#e.indexOf(e);
+		t !== -1 && (this.#e.splice(t, 1), e.parent = null, e.onUnmount());
+	};
 };
-var A = (t, n, e) => n in t ? O(t, n, { enumerable: !0, configurable: !0, writable: !0, value: e }) : t[n] = e;
-var c = (t, n, e) => A(t, typeof n != "symbol" ? n + "" : n, e), v = (t, n, e) => n.has(t) || N("Cannot " + e);
-var i = (t, n, e) => (v(t, n, "read from private field"), e ? e.call(t) : n.get(t)), l = (t, n, e) => n.has(t) ? N("Cannot add the same private member more than once") : n instanceof WeakSet ? n.add(t) : n.set(t, e), m = (t, n, e, o) => (v(t, n, "write to private field"), o ? o.call(t, e) : n.set(t, e), e);
-var d;
-class S {
-  constructor(n) {
-    l(this, d);
-    m(this, d, n);
-  }
-  get value() {
-    return i(this, d);
-  }
-  set value(n) {
-    m(this, d, n);
-  }
+function u(e) {
+	let t = a;
+	return (n, r) => {
+		let i = new l(n, e.name);
+		t && (i.parent = t);
+		let a = o(i);
+		return a.props = r || {}, a.current = e.setup(n, r) || {}, o(t), a;
+	};
 }
-d = new WeakMap();
-const L = (t) => new S(t);
-var h;
-class b {
-  constructor(n) {
-    l(this, h);
-    m(this, h, n);
-  }
-  get value() {
-    return i(this, h).value;
-  }
+//#endregion
+//#region lib/composition/createContext.ts
+function d() {
+	let e = Symbol();
+	return [(t) => ({
+		_id: e,
+		_factory: t
+	}), () => {
+		let t = s("createContext.use").parent;
+		for (; t !== null;) {
+			if (t.provides.has(e)) return t.provides.get(e);
+			t = t.parent;
+		}
+		throw Error("createContext.use: no provider found");
+	}];
 }
-h = new WeakMap();
-const P = (t) => new b(t);
-function T(t, n) {
-  if (!t)
-    throw new Error(n || "unexpected condition");
+function f(e, t) {
+	return {
+		name: e.name,
+		setup(n, r) {
+			let i = t._factory();
+			return s("withContext").provides.set(t._id, i), e.setup(n, r);
+		}
+	};
 }
-var f = /* @__PURE__ */ ((t) => (t.MOUNTED = "Mounted", t.UNMOUNTED = "Unmounted", t))(f || {});
-function R(t) {
-  return (n) => {
-    M(t)[t].push(n);
-  };
+//#endregion
+//#region lib/core/internal/dom-refs.ts
+function p(e, t) {
+	let n = (e) => {
+		let n = t ?? document, r = Array.from(n.querySelectorAll(`[data-ref="${e}"]`)), { length: i } = r;
+		return i === 0 ? null : { 1: r[0] }[i] ?? r;
+	};
+	return [...e].reduce((e, t) => (e[t] = n(t), e), {});
 }
-const $ = R(
-  "Mounted"
-  /* MOUNTED */
-), x = R(
-  "Unmounted"
-  /* UNMOUNTED */
-);
-let p;
-const U = (t) => (p = t, t);
-function M(t) {
-  return T(p, `"${t}" called outside setup() will never be run.`), p;
+//#endregion
+//#region lib/composition/useDomRef.ts
+function m(...e) {
+	let t = s("useDomRef");
+	return { refs: p(new Set(e), t.element) };
 }
-let I = 0;
-var w, C, a;
-C = f.MOUNTED, w = f.UNMOUNTED;
-class q {
-  constructor(n, e) {
-    c(this, C, []);
-    c(this, w, []);
-    c(this, "parent", null);
-    l(this, a, []);
-    c(this, "uid");
-    c(this, "current", {});
-    c(this, "element");
-    c(this, "onMount", () => {
-      const n = this[f.MOUNTED].map((e) => e()).filter((e) => typeof e == "function");
-      this[f.UNMOUNTED].push(...n);
-    });
-    c(this, "onUnmount", () => {
-      [
-        ...this[f.UNMOUNTED],
-        ...i(this, a).flatMap((e) => e.onUnmount)
-      ].forEach((e) => e());
-    });
-    c(this, "addChild", (n) => {
-      i(this, a).push(n), n.parent = this, n.onMount();
-    });
-    c(this, "removeChild", (n) => {
-      const e = i(this, a).indexOf(n);
-      e !== -1 && (i(this, a).splice(e, 1), n.parent = null, n.onUnmount());
-    });
-    this.uid = `${e}.${I++}`, this.element = n;
-  }
+//#endregion
+//#region lib/composition/useEvent.ts
+function h(e, t, n, i) {
+	r(() => (e.addEventListener(t, n, i), () => {
+		e.removeEventListener(t, n, i);
+	}));
 }
-a = new WeakMap();
-function D(t) {
-  const n = p;
-  return (e, o) => {
-    const s = new q(e, t.name), r = U(s), u = t.setup(e, o);
-    return r.current = u || {}, U(n), r;
-  };
-}
-const E = /* @__PURE__ */ new WeakMap();
-function J(t, n, e) {
-  if (E.has(t)) {
-    const o = {
-      payload: {
-        el: t,
-        component: n,
-        name: e
-      },
-      reason: ""
-    };
-    throw new Error(JSON.stringify(o));
-  }
-  try {
-    E.set(t, n);
-  } catch {
-    const s = {
-      payload: {
-        el: t,
-        component: n,
-        name: e
-      },
-      reason: ""
-    };
-    throw new Error(JSON.stringify(s));
-  }
-}
-function V() {
-  return {
-    component(t) {
-      return (n, e = {}) => {
-        const o = D(t)(n, e);
-        return J(n, o, t.name), o.onMount(), o;
-      };
-    },
-    unmount(t) {
-      t.filter((n) => E.has(n)).forEach((n) => {
-        E.get(n).onUnmount();
-      });
-    }
-  };
-}
-const j = (t) => t;
-function z(t, n, e, o) {
-  t.addEventListener(n, e, o), x(() => {
-    t.removeEventListener(n, e, o);
-  });
-}
-const W = (t, n) => Array.from((n ?? document).querySelectorAll(t));
-function _(t, n) {
-  const e = (s) => {
-    const r = W(`[data-ref="${s}"]`, n), { length: u } = r;
-    return u === 0 ? null : {
-      1: r[0]
-    }[u] ?? r;
-  };
-  return [...t].reduce((s, r) => (s[r] = e(r), s), {});
-}
-function B(...t) {
-  const n = M("useDomRef");
-  return {
-    refs: _(new Set(t), n.element)
-  };
-}
-function F(t, n, e = {
-  rootMargin: "0px",
-  threshold: 0.1
+//#endregion
+//#region lib/composition/useIntersectionWatch.ts
+function g(e, t, n = {
+	rootMargin: "0px",
+	threshold: .1
 }) {
-  const o = new IntersectionObserver(n, e), s = (u) => {
-    Array.isArray(u) ? u.forEach((y) => o.observe(y)) : o.observe(u);
-  };
-  return $(() => {
-    s(t);
-  }), x(() => {
-    o.disconnect();
-  }), {
-    unwatch: (u) => {
-      o.unobserve(u);
-    }
-  };
+	let r = new IntersectionObserver(t, n);
+	function a(e) {
+		Array.isArray(e) ? e.forEach((e) => {
+			r.observe(e);
+		}) : r.observe(e);
+	}
+	a(e), i(() => {
+		r.disconnect();
+	});
+	function o(e) {
+		r.unobserve(e);
+	}
+	return { unwatch: o };
 }
-function G() {
-  const t = M("useSlot");
-  return {
-    addChild(n, e, o = {}) {
-      const s = (r) => {
-        const u = D(e)(r, o);
-        return t.addChild(u), u;
-      };
-      return Array.isArray(n) ? n.map((r) => s(r)) : [s(n)];
-    },
-    removeChild(n) {
-      n.forEach((e) => t.removeChild(e));
-    }
-  };
+//#endregion
+//#region lib/core/ref.ts
+var _ = class {
+	#e;
+	constructor(e) {
+		this.#e = e;
+	}
+	get value() {
+		return this.#e;
+	}
+	set value(e) {
+		this.#e = e;
+	}
+}, v = (e) => new _(e), y = class {
+	#e;
+	constructor(e) {
+		this.#e = e;
+	}
+	get value() {
+		return this.#e.value;
+	}
+}, b = (e) => new y(e);
+//#endregion
+//#region lib/composition/useMediaQuery.ts
+function x(e, t) {
+	let n = window.matchMedia(e), i = v(n.matches), a = null;
+	function o(e) {
+		i.value = e.matches, e.matches ? a = t() : (a?.(), a = null);
+	}
+	return n.addEventListener("change", o), r(() => (n.matches && (a = t()), () => {
+		a?.(), n.removeEventListener("change", o);
+	})), { matchesQuery: b(i) };
 }
-function H() {
-  return M("useRootRef").element;
+//#endregion
+//#region lib/composition/useRootRef.ts
+function S() {
+	return s("useRootRef").element;
 }
-export {
-  V as create,
-  j as defineComponent,
-  P as readonly,
-  L as ref,
-  B as useDomRef,
-  z as useEvent,
-  F as useIntersectionWatch,
-  $ as useMount,
-  H as useRootRef,
-  G as useSlot,
-  x as useUnmount
-};
+//#endregion
+//#region lib/composition/useSlot.ts
+function C() {
+	let e = s("useSlot");
+	return {
+		addChild(t, n, r = {}) {
+			let i = (t) => {
+				let i = u(n)(t, r);
+				return e.addChild(i), i;
+			};
+			return Array.isArray(t) ? t.map((e) => i(e)) : [i(t)];
+		},
+		removeChild(t) {
+			t.forEach((t) => {
+				e.removeChild(t);
+			});
+		}
+	};
+}
+//#endregion
+//#region lib/core/core.ts
+var w = /* @__PURE__ */ new WeakMap();
+function T(e, t, n) {
+	if (w.has(e)) throw Error(JSON.stringify({
+		payload: {
+			el: e,
+			component: t,
+			name: n
+		},
+		reason: ""
+	}));
+	try {
+		w.set(e, t);
+	} catch {
+		throw Error(JSON.stringify({
+			payload: {
+				el: e,
+				component: t,
+				name: n
+			},
+			reason: ""
+		}));
+	}
+}
+function E() {
+	return {
+		component(e) {
+			return (t, n = {}) => {
+				let r = u(e)(t, n);
+				return T(t, r, e.name), r.onMount(), r;
+			};
+		},
+		unmount(e) {
+			e.filter((e) => w.has(e)).forEach((e) => {
+				w.get(e).onUnmount();
+			});
+		}
+	};
+}
+function D(e) {
+	return e === void 0 ? (e) => (t) => ({
+		name: e.name,
+		setup(n) {
+			return e.setup(n, t);
+		}
+	}) : e;
+}
+//#endregion
+export { E as create, d as createContext, D as defineComponent, b as readonly, v as ref, m as useDomRef, h as useEvent, g as useIntersectionWatch, x as useMediaQuery, r as useMount, S as useRootRef, C as useSlot, i as useUnmount, f as withContext };

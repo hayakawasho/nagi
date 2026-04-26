@@ -1,16 +1,10 @@
 import { defineComponent, useUnmount, useMount } from '../lib/main';
-import type { ReadonlyRef } from '../lib/main';
-
-type Props = {
-  isOpen: ReadonlyRef<boolean>;
-  onOpen: () => void;
-  onClose: () => void;
-};
+import { useParentContext } from './Parent';
 
 export default defineComponent({
   name: 'child',
-  setup(el, props: Props) {
-    const { isOpen, onOpen, onClose } = props;
+  setup(el) {
+    const { isOpen, onOpen, onClose } = useParentContext();
     const onToggle = () => (isOpen.value ? onClose() : onOpen());
 
     el.addEventListener('click', onToggle);
