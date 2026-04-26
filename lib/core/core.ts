@@ -1,5 +1,5 @@
+import type { ComponentContext, IComponent, RefElement } from "../types";
 import { createComponent } from "./internal/component";
-import type { RefElement, IComponent, ComponentContext } from "./types";
 
 const DOM_COMPONENT_INSTANCE = new WeakMap<RefElement, ComponentContext>();
 
@@ -22,7 +22,7 @@ function bindDOMNodeToComponent(
 
   try {
     DOM_COMPONENT_INSTANCE.set(el, component);
-  } catch (error) {
+  } catch (_error) {
     const report = {
       payload: {
         el,
@@ -38,7 +38,7 @@ function bindDOMNodeToComponent(
 export function create() {
   return {
     component(wrap: IComponent) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // biome-ignore lint/suspicious/noExplicitAny: internal props type
       return (el: RefElement, props: Record<string, any> = {}) => {
         const component = createComponent(wrap)(el, props);
         bindDOMNodeToComponent(el, component, wrap.name);
@@ -59,9 +59,29 @@ export function create() {
   };
 }
 
-export const defineComponent = <
+export function defineComponent<Context extends Record<string, unknown>>(): <
+  SetupResult extends Record<string, unknown> | void,
+>(opts: {
+  name: string;
+  setup(el: RefElement, context: Context): SetupResult;
+}) => (context: Context) => IComponent<SetupResult>;
+
+export function defineComponent<
   SetupResult extends Record<string, unknown> | void,
   Props extends Record<string, unknown>,
->(
-  opts: IComponent<SetupResult, Props>,
-) => opts;
+>(opts: IComponent<SetupResult, Props>): IComponent<SetupResult, Props>;
+
+// biome-ignore lint/suspicious/noExplicitAny: overload implementation
+export function defineComponent(opts?: any) {
+  if (opts === undefined) {
+    // biome-ignore lint/suspicious/noExplicitAny: overload implementation
+    return (opts: any) => (context: any) => ({
+      name: opts.name,
+      setup(el: RefElement) {
+        return opts.setup(el, context);
+      },
+    });
+  }
+
+  return opts;
+}

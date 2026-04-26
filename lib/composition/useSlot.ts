@@ -1,8 +1,8 @@
 import {
-  getCurrentComponent,
   createComponent,
+  getCurrentComponent,
 } from "../core/internal/component";
-import type { IComponent, RefElement, ComponentContext } from "../core/types";
+import type { ComponentContext, IComponent, RefElement } from "../types";
 
 export function useSlot() {
   const context = getCurrentComponent("useSlot");
@@ -26,7 +26,9 @@ export function useSlot() {
     },
 
     removeChild(children: ComponentContext[]) {
-      children.forEach((child) => context.removeChild(child));
+      children.forEach((child) => {
+        context.removeChild(child);
+      });
     },
   };
 }

@@ -14,7 +14,7 @@ class Ref<T> {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// biome-ignore lint/suspicious/noExplicitAny: generic default
 const ref = <T = any>(val: T) => new Ref(val);
 
 class ReadonlyRef<T> {
@@ -29,8 +29,8 @@ class ReadonlyRef<T> {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// biome-ignore lint/suspicious/noExplicitAny: generic default
 const readonly = <T = any>(ref: Ref<T>) => new ReadonlyRef(ref);
 
-export { ref, readonly };
-export type { Ref, ReadonlyRef };
+export type { ReadonlyRef, Ref };
+export { readonly, ref };

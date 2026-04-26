@@ -1,9 +1,11 @@
-import { qsa } from "../../util/selector";
-import type { RefElement } from "../types";
+import type { RefElement } from "../../types";
 
 export function domRefs(ref: Set<string>, scope: RefElement) {
   const findRef = (q: string) => {
-    const nodes = qsa(`[data-ref="${q}"]`, scope);
+    const currentScope = scope ?? document;
+    const nodes = Array.from(
+      currentScope.querySelectorAll(`[data-ref="${q}"]`),
+    );
     const { length } = nodes;
 
     return length === 0
@@ -13,7 +15,7 @@ export function domRefs(ref: Set<string>, scope: RefElement) {
         }[length] ?? nodes);
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: dynamic key accumulation
   const childRef = [...ref].reduce<any>((acc, cur) => {
     acc[cur] = findRef(cur);
     return acc;

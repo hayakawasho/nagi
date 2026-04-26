@@ -1,14 +1,18 @@
+import type {
+  Cleanup,
+  IComponent,
+  LifecycleHandler,
+  RefElement,
+} from "../../types";
 import { assert } from "../../util/assert";
 import { LifecycleHooks } from "../lifecycle";
-import type { LifecycleHandler } from "../lifecycle";
-import type { RefElement, IComponent } from "../types";
 
 let owner: ComponentContext;
 
-const setCurrentComponent = (context: ComponentContext) => {
+function setCurrentComponent(context: ComponentContext) {
   owner = context;
   return context;
-};
+}
 
 export function getCurrentComponent(hookName: string) {
   assert(owner, `"${hookName}" called outside setup() will never be run.`);
@@ -17,7 +21,7 @@ export function getCurrentComponent(hookName: string) {
 
 let uid = 0;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// biome-ignore lint/suspicious/noExplicitAny: generic default
 class ComponentContext<T = any> {
   private [LifecycleHooks.MOUNTED]: LifecycleHandler[] = [];
   private [LifecycleHooks.UNMOUNTED]: LifecycleHandler[] = [];
@@ -27,7 +31,9 @@ class ComponentContext<T = any> {
 
   readonly uid: string;
   current = {} as ReturnType<IComponent<T>["setup"]>;
+  props = {} as Parameters<IComponent<T>["setup"]>[1];
   element: RefElement;
+  provides = new Map<symbol, unknown>();
 
   constructor(element: RefElement, name: string) {
     this.uid = `${name}.${uid++}`;
@@ -37,7 +43,7 @@ class ComponentContext<T = any> {
   onMount = () => {
     const unmounts = this[LifecycleHooks.MOUNTED]
       .map((fn) => fn())
-      .filter((cleanup) => typeof cleanup === "function") as (() => void)[];
+      .filter((cleanup) => typeof cleanup === "function") as Cleanup[];
 
     this[LifecycleHooks.UNMOUNTED].push(...unmounts);
   };
@@ -47,7 +53,9 @@ class ComponentContext<T = any> {
       ...this[LifecycleHooks.UNMOUNTED],
       ...this.#children.flatMap((child) => child.onUnmount),
     ];
-    unmounts.forEach((fn) => fn());
+    unmounts.forEach((fn) => {
+      fn();
+    });
   };
 
   addChild = (child: ComponentContext) => {
@@ -74,10 +82,16 @@ class ComponentContext<T = any> {
 export function createComponent(wrap: IComponent) {
   const parent = owner;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: internal props type
   return (root: RefElement, props: Record<string, any>) => {
     const component = new ComponentContext(root, wrap.name);
+
+    if (parent) {
+      component.parent = parent;
+    }
+
     const context = setCurrentComponent(component);
+    context.props = props || {};
 
     const provides = wrap.setup(root, props);
     context.current = provides || {};
