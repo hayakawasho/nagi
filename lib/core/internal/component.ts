@@ -42,7 +42,7 @@ class ComponentContext<T = any> {
   onMount = () => {
     const unmounts: Cleanup[] = [];
 
-    this[LifecycleHooks.MOUNTED].forEach((mount) => {
+    for (const mount of this[LifecycleHooks.MOUNTED]) {
       try {
         const cleanup = mount();
 
@@ -55,13 +55,13 @@ class ComponentContext<T = any> {
           LifecycleError.create("mount", this, cause),
         );
       }
-    });
+    }
 
     this[LifecycleHooks.UNMOUNTED].push(...unmounts);
   };
 
   onUnmount = () => {
-    this[LifecycleHooks.UNMOUNTED].forEach((unmount) => {
+    for (const unmount of this[LifecycleHooks.UNMOUNTED]) {
       try {
         unmount();
       } catch (cause) {
@@ -70,9 +70,11 @@ class ComponentContext<T = any> {
           LifecycleError.create("unmount", this, cause),
         );
       }
-    });
+    }
 
-    this.#children.forEach((child) => child.onUnmount());
+    for (const child of this.#children) {
+      child.onUnmount();
+    }
   };
 
   addChild = (child: ComponentContext) => {
