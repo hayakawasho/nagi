@@ -10,4 +10,8 @@ export interface IComponent<
   setup(el: RefElement, props: ComponentProps<Props>): SetupResult;
 }
 
-export type { ComponentContext } from "./internal/component";
+export type { ComponentContext } from "./core/internal/component";
+
+export type Cleanup = () => void;
+
+export type LifecycleHandler = () => void | Cleanup;

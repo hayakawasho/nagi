@@ -1,18 +1,18 @@
 {
   "name": "lake",
-  "version": "1.3.0",
+  "version": "2.0.0-alpha.3",
   "main": "./dist/main.umd.js",
   "module": "./dist/main.es.js",
   "exports": {
     ".": {
+      "types": "./types/main.d.ts",
       "import": "./dist/main.es.js",
       "require": "./dist/main.umd.js"
     }
   },
-  "types": "./types/main.d.ts",
   "files": [
-    "/dist",
-    "/types"
+    "dist",
+    "types"
   ],
   "author": "hayakawasho",
   "license": "MIT",
@@ -26,19 +26,22 @@
     "dom binding"
   ],
   "scripts": {
-    "dev": "vite",
     "build": "NODE_ENV=production tsc && vite build",
     "watch": "vite build -w",
-    "serve": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "oxlint ./lib",
     "format": "biome format --write ./lib",
     "fix:biome": "biome check --write ./lib",
     "fix": "npm run fix:biome"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.0.0",
-    "@playwright/test": "1.53.2",
-    "typescript": "^5.5.3",
-    "vite": "7.0.0"
+    "@biomejs/biome": "^2.4.13",
+    "happy-dom": "^20.9.0",
+    "oxlint": "^1.61.0",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.10",
+    "vitest": "^4.1.5"
   },
   "type": "module"
 }

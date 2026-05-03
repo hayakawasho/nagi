@@ -1,1 +1,1 @@
-{"version":3,"file":"useRootRef.d.ts","sourceRoot":"","sources":["../../lib/composition/useRootRef.ts"],"names":[],"mappings":"AACA,OAAO,KAAK,EAAE,UAAU,EAAE,MAAM,eAAe,CAAC;AAEhD,wBAAgB,UAAU,CAAC,CAAC,SAAS,UAAU,GAAG,UAAU,KAGhC,CAAC,CAC5B"}
+{"version":3,"file":"useRootRef.d.ts","sourceRoot":"","sources":["../../lib/composition/useRootRef.ts"],"names":[],"mappings":"AAEA,OAAO,KAAK,EAAE,UAAU,EAAE,MAAM,UAAU,CAAC;AAE3C,wBAAgB,UAAU,CAAC,CAAC,SAAS,UAAU,GAAG,UAAU,KAGhC,CAAC,CAC5B"}

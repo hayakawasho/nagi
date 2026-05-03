@@ -1,4 +1,4 @@
-import { useMount, useUnmount } from "../core/lifecycle";
+import { useUnmount } from "../core/lifecycle";
 
 export function useIntersectionWatch<T extends Element>(
   targetOrTargets: T | T[],
@@ -10,25 +10,25 @@ export function useIntersectionWatch<T extends Element>(
 ) {
   const io = new IntersectionObserver(callback, opts);
 
-  const watch = (targetOrTargets: T | T[]) => {
+  function watch(targetOrTargets: T | T[]) {
     if (Array.isArray(targetOrTargets)) {
-      targetOrTargets.forEach((el) => io.observe(el));
+      targetOrTargets.forEach((el) => {
+        io.observe(el);
+      });
     } else {
       io.observe(targetOrTargets);
     }
-  };
+  }
 
-  useMount(() => {
-    watch(targetOrTargets);
-  });
+  watch(targetOrTargets);
 
   useUnmount(() => {
     io.disconnect();
   });
 
-  const unwatch = (el: T) => {
+  function unwatch(el: T) {
     io.unobserve(el);
-  };
+  }
 
   return {
     unwatch,

@@ -1,0 +1,64 @@
+import type { RefElement } from "../types";
+import type { ComponentContext } from "./internal/component";
+
+export type LifecycleErrorDetails = {
+  phase: "setup" | "mount" | "unmount" | "removeChild";
+  name: string;
+  uid?: string;
+  path?: string;
+  parentName?: string;
+  parentUid?: string;
+  element?: RefElement;
+  props?: unknown;
+  cause: unknown;
+};
+
+export function traceComponentTree(context: ComponentContext): string {
+  const parts: string[] = [];
+  let current: ComponentContext | null = context;
+
+  while (current) {
+    parts.unshift(current.name);
+    current = current.parent;
+  }
+
+  return parts.join(" > ");
+}
+
+export class LifecycleError extends Error {
+  readonly details: LifecycleErrorDetails;
+
+  constructor(details: LifecycleErrorDetails) {
+    super(
+      `[Lake] Component error in phase "${details.phase}" for "${details.name}"${details.path ? ` (${details.path})` : ""}`,
+      { cause: details.cause },
+    );
+
+    this.name = "LifecycleError";
+    this.details = details;
+  }
+
+  static create(
+    phase: LifecycleErrorDetails["phase"],
+    target: ComponentContext,
+    cause: unknown,
+    parent: ComponentContext | null | undefined = target.parent,
+    extra?: Partial<LifecycleErrorDetails>,
+  ): LifecycleError {
+    return new LifecycleError({
+      phase,
+      name: target.name,
+      uid: target.uid,
+      path: traceComponentTree(target),
+      parentName: parent?.name,
+      parentUid: parent?.uid,
+      element: target.element,
+      cause,
+      ...extra,
+    });
+  }
+}
+
+export function isLifecycleError(error: unknown): error is LifecycleError {
+  return error instanceof LifecycleError;
+}

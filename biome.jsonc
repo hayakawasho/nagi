@@ -1,0 +1,70 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.4.13/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "ignoreUnknown": false
+  },
+  "formatter": {
+    "enabled": true,
+    "formatWithErrors": false,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineEnding": "lf",
+    "lineWidth": 80,
+    "attributePosition": "auto",
+    "bracketSpacing": true,
+    "includes": ["**", "!node_modules/**"]
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": {
+          "level": "on",
+          "options": {
+            "groups": [
+              { "source": ":NODE:", "type": false },
+              ":BLANK_LINE:",
+              { "source": ":PACKAGE:", "type": false },
+              ":BLANK_LINE:",
+              { "source": ["../**", "../*"], "type": false },
+              ":BLANK_LINE:",
+              { "source": ["./**", "./*"], "type": false },
+              ":BLANK_LINE:",
+              { "type": false },
+              ":BLANK_LINE:",
+              { "type": true }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "complexity": {
+        "recommended": true,
+        "noStaticOnlyClass": "off",
+        "noForEach": "off"
+      },
+      "correctness": {
+        "recommended": true
+      },
+      "security": {
+        "recommended": true
+      },
+      "style": {
+        "recommended": true
+      },
+      "suspicious": {
+        "recommended": true,
+        "noExplicitAny": "warn",
+        "noConfusingVoidType": "off"
+      }
+    }
+  }
+}

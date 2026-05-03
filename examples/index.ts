@@ -1,21 +1,18 @@
-import { create } from '../lib/main';
-import Parent from './Parent';
+import { create } from '../lib/main'
+import Parent from './Parent'
 
 document.addEventListener('DOMContentLoaded', () => {
-  const { component, unmount } = create();
+  const { component, unmount } = create()
 
-  const refParent = document.getElementById('parent');
-  const refTest = document.querySelector<HTMLElement>('.js-test');
+  const refParent = document.getElementById('parent')
 
   if (refParent) {
-    const createParent = component(Parent);
-    createParent(refParent);
+    const createParent = component(Parent)
+
+    createParent(refParent)
 
     setTimeout(() => {
-      unmount([refParent]);
-    }, 1000);
+      unmount([refParent])
+    }, 5000)
   }
-
-  const createParent = component(Parent);
-  createParent(refTest!);
-});
+})

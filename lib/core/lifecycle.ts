@@ -1,6 +1,6 @@
 import { getCurrentComponent } from "./internal/component";
 
-export type LifecycleHandler = () => void | (() => void);
+import type { LifecycleHandler } from "../types";
 
 export enum LifecycleHooks {
   MOUNTED = "Mounted",
