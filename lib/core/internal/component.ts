@@ -1,18 +1,15 @@
+import { assert } from "../../util/assert";
+import { isLifecycleError, LifecycleError } from "../error";
+import { LifecycleHooks } from "../lifecycle";
+
 import type {
   Cleanup,
   IComponent,
   LifecycleHandler,
   RefElement,
 } from "../../types";
-import { assert } from "../../util/assert";
-import { LifecycleHooks } from "../lifecycle";
 
 let owner: ComponentContext;
-
-function setCurrentComponent(context: ComponentContext) {
-  owner = context;
-  return context;
-}
 
 export function getCurrentComponent(hookName: string) {
   assert(owner, `"${hookName}" called outside setup() will never be run.`);
@@ -30,6 +27,7 @@ class ComponentContext<T = any> {
   #children: ComponentContext<T>[] = [];
 
   readonly uid: string;
+  readonly name: string;
   current = {} as ReturnType<IComponent<T>["setup"]>;
   props = {} as Parameters<IComponent<T>["setup"]>[1];
   element: RefElement;
@@ -37,32 +35,62 @@ class ComponentContext<T = any> {
 
   constructor(element: RefElement, name: string) {
     this.uid = `${name}.${uid++}`;
+    this.name = name;
     this.element = element;
   }
 
   onMount = () => {
-    const unmounts = this[LifecycleHooks.MOUNTED]
-      .map((fn) => fn())
-      .filter((cleanup) => typeof cleanup === "function") as Cleanup[];
+    const unmounts: Cleanup[] = [];
+
+    this[LifecycleHooks.MOUNTED].forEach((mount) => {
+      try {
+        const cleanup = mount();
+
+        if (typeof cleanup === "function") {
+          unmounts.push(cleanup as Cleanup);
+        }
+      } catch (cause) {
+        console.error(
+          "[Lake] onMount hook failed",
+          LifecycleError.create("mount", this, cause),
+        );
+      }
+    });
 
     this[LifecycleHooks.UNMOUNTED].push(...unmounts);
   };
 
   onUnmount = () => {
-    const unmounts = [
-      ...this[LifecycleHooks.UNMOUNTED],
-      ...this.#children.flatMap((child) => child.onUnmount),
-    ];
-    unmounts.forEach((fn) => {
-      fn();
+    this[LifecycleHooks.UNMOUNTED].forEach((unmount) => {
+      try {
+        unmount();
+      } catch (cause) {
+        console.error(
+          "[Lake] onUnmount cleanup failed",
+          LifecycleError.create("unmount", this, cause),
+        );
+      }
     });
+
+    this.#children.forEach((child) => child.onUnmount());
   };
 
   addChild = (child: ComponentContext) => {
     this.#children.push(child);
     child.parent = this;
 
-    child.onMount();
+    try {
+      child.onMount();
+    } catch (e) {
+      const index = this.#children.indexOf(child);
+
+      if (index !== -1) {
+        this.#children.splice(index, 1);
+      }
+
+      child.parent = null;
+      throw e;
+    }
   };
 
   removeChild = (child: ComponentContext) => {
@@ -79,27 +107,38 @@ class ComponentContext<T = any> {
   };
 }
 
-export function createComponent(wrap: IComponent) {
-  const parent = owner;
-
+export function createComponent(
+  wrap: IComponent,
+  root: RefElement,
   // biome-ignore lint/suspicious/noExplicitAny: internal props type
-  return (root: RefElement, props: Record<string, any>) => {
-    const component = new ComponentContext(root, wrap.name);
+  props: Record<string, any>,
+) {
+  const parent = owner;
+  const component = new ComponentContext(root, wrap.name);
 
-    if (parent) {
-      component.parent = parent;
+  if (parent) {
+    component.parent = parent;
+  }
+
+  owner = component;
+  component.props = props || {};
+
+  try {
+    const provides = wrap.setup(root, props);
+    component.current = provides || {};
+  } catch (cause) {
+    if (isLifecycleError(cause)) {
+      throw cause;
     }
 
-    const context = setCurrentComponent(component);
-    context.props = props || {};
+    throw LifecycleError.create("setup", component, cause, parent, {
+      props: component.props,
+    });
+  } finally {
+    owner = parent;
+  }
 
-    const provides = wrap.setup(root, props);
-    context.current = provides || {};
-
-    setCurrentComponent(parent);
-
-    return context;
-  };
+  return component;
 }
 
 export type { ComponentContext };

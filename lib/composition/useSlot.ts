@@ -1,7 +1,9 @@
+import { LifecycleError } from "../core/error";
 import {
   createComponent,
   getCurrentComponent,
 } from "../core/internal/component";
+
 import type { ComponentContext, IComponent, RefElement } from "../types";
 
 export function useSlot() {
@@ -14,7 +16,7 @@ export function useSlot() {
       props: Parameters<Child["setup"]>[1] = {},
     ): ComponentContext<ReturnType<Child["setup"]>>[] {
       const create = (el: RefElement) => {
-        const component = createComponent(child)(el, props);
+        const component = createComponent(child, el, props);
         context.addChild(component);
 
         return component;
@@ -27,7 +29,14 @@ export function useSlot() {
 
     removeChild(children: ComponentContext[]) {
       children.forEach((child) => {
-        context.removeChild(child);
+        try {
+          context.removeChild(child);
+        } catch (cause) {
+          console.error(
+            "[Lake] removeChild failed",
+            LifecycleError.create("removeChild", child, cause, context),
+          );
+        }
       });
     },
   };

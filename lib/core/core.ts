@@ -1,37 +1,28 @@
-import type { ComponentContext, IComponent, RefElement } from "../types";
+import { LifecycleError } from "./error";
 import { createComponent } from "./internal/component";
+
+import type { ComponentContext, IComponent, RefElement } from "../types";
 
 const DOM_COMPONENT_INSTANCE = new WeakMap<RefElement, ComponentContext>();
 
-function bindDOMNodeToComponent(
-  el: RefElement,
-  component: ComponentContext,
-  name: string,
-) {
+function bindDOMNodeToComponent(el: RefElement, component: ComponentContext) {
   if (DOM_COMPONENT_INSTANCE.has(el)) {
-    const report = {
-      payload: {
-        el,
-        component,
-        name,
-      },
-      reason: "",
-    };
-    throw new Error(JSON.stringify(report));
+    const existing = DOM_COMPONENT_INSTANCE.get(el) as ComponentContext;
+
+    throw LifecycleError.create(
+      "mount",
+      component,
+      new Error(
+        `Component "${existing.name}" (${existing.uid}) is already mounted on this element`,
+      ),
+      existing,
+    );
   }
 
   try {
     DOM_COMPONENT_INSTANCE.set(el, component);
-  } catch (_error) {
-    const report = {
-      payload: {
-        el,
-        component,
-        name,
-      },
-      reason: "",
-    };
-    throw new Error(JSON.stringify(report));
+  } catch (cause) {
+    throw LifecycleError.create("mount", component, cause);
   }
 }
 
@@ -40,8 +31,8 @@ export function create() {
     component(wrap: IComponent) {
       // biome-ignore lint/suspicious/noExplicitAny: internal props type
       return (el: RefElement, props: Record<string, any> = {}) => {
-        const component = createComponent(wrap)(el, props);
-        bindDOMNodeToComponent(el, component, wrap.name);
+        const component = createComponent(wrap, el, props);
+        bindDOMNodeToComponent(el, component);
 
         component.onMount();
 
@@ -54,6 +45,7 @@ export function create() {
         .filter((el) => DOM_COMPONENT_INSTANCE.has(el))
         .forEach((el) => {
           (DOM_COMPONENT_INSTANCE.get(el) as ComponentContext).onUnmount();
+          DOM_COMPONENT_INSTANCE.delete(el);
         });
     },
   };
