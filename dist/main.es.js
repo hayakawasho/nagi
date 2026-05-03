@@ -61,23 +61,21 @@ var u = 0, d = class {
 	}
 	onMount = () => {
 		let e = [];
-		this[i.MOUNTED].forEach((t) => {
-			try {
-				let n = t();
-				typeof n == "function" && e.push(n);
-			} catch (e) {
-				console.error("[Lake] onMount hook failed", n.create("mount", this, e));
-			}
-		}), this[i.UNMOUNTED].push(...e);
+		for (let t of this[i.MOUNTED]) try {
+			let n = t();
+			typeof n == "function" && e.push(n);
+		} catch (e) {
+			console.error("[Lake] onMount hook failed", n.create("mount", this, e));
+		}
+		this[i.UNMOUNTED].push(...e);
 	};
 	onUnmount = () => {
-		this[i.UNMOUNTED].forEach((e) => {
-			try {
-				e();
-			} catch (e) {
-				console.error("[Lake] onUnmount cleanup failed", n.create("unmount", this, e));
-			}
-		}), this.#e.forEach((e) => e.onUnmount());
+		for (let e of this[i.UNMOUNTED]) try {
+			e();
+		} catch (e) {
+			console.error("[Lake] onUnmount cleanup failed", n.create("unmount", this, e));
+		}
+		for (let e of this.#e) e.onUnmount();
 	};
 	addChild = (e) => {
 		this.#e.push(e), e.parent = this;
@@ -170,8 +168,9 @@ function v(e, t, n = {
 }
 //#endregion
 //#region lib/core/ref.ts
-var y = class {
+var y = Symbol("watch"), b = class {
 	#e;
+	#t = /* @__PURE__ */ new Set();
 	constructor(e) {
 		this.#e = e;
 	}
@@ -179,9 +178,17 @@ var y = class {
 		return this.#e;
 	}
 	set value(e) {
+		if (Object.is(e, this.#e)) return;
+		let t = this.#e;
 		this.#e = e;
+		for (let n of Array.from(this.#t)) n(e, t);
 	}
-}, b = (e) => new y(e), x = class {
+	[y](e) {
+		return this.#t.add(e), () => {
+			this.#t.delete(e);
+		};
+	}
+}, x = (e) => new b(e), S = class {
 	#e;
 	constructor(e) {
 		this.#e = e;
@@ -189,26 +196,35 @@ var y = class {
 	get value() {
 		return this.#e.value;
 	}
-}, S = (e) => new x(e);
+	[y](e) {
+		return this.#e[y](e);
+	}
+}, C = (e) => new S(e);
+function w(e, t) {
+	return e[y](t);
+}
+function T(e, t) {
+	s(w(e, t));
+}
 //#endregion
 //#region lib/composition/useMediaQuery.ts
-function C(e, t) {
-	let n = window.matchMedia(e), r = b(n.matches), i = null;
+function E(e, t) {
+	let n = window.matchMedia(e), r = x(n.matches), i = null;
 	function a(e) {
 		r.value = e.matches, e.matches ? i = t() : (i?.(), i = null);
 	}
 	return o(() => (n.addEventListener("change", a), n.matches && (i = t()), () => {
 		i?.(), n.removeEventListener("change", a);
-	})), { matchesQuery: S(r) };
+	})), { matchesQuery: C(r) };
 }
 //#endregion
 //#region lib/composition/useRootRef.ts
-function w() {
+function D() {
 	return l("useRootRef").element;
 }
 //#endregion
 //#region lib/composition/useSlot.ts
-function T() {
+function O() {
 	let e = l("useSlot");
 	return {
 		addChild(t, n, r = {}) {
@@ -231,30 +247,30 @@ function T() {
 }
 //#endregion
 //#region lib/core/core.ts
-var E = /* @__PURE__ */ new WeakMap();
-function D(e, t) {
-	if (E.has(e)) {
-		let r = E.get(e);
+var k = /* @__PURE__ */ new WeakMap();
+function A(e, t) {
+	if (k.has(e)) {
+		let r = k.get(e);
 		throw n.create("mount", t, /* @__PURE__ */ Error(`Component "${r.name}" (${r.uid}) is already mounted on this element`), r);
 	}
-	E.set(e, t);
+	k.set(e, t);
 }
-function O() {
+function j() {
 	return {
 		component(e) {
 			return (t, n = {}) => {
 				let r = f(e, t, n);
-				return D(t, r), r.onMount(), r;
+				return A(t, r), r.onMount(), r;
 			};
 		},
 		unmount(e) {
-			e.filter((e) => E.has(e)).forEach((e) => {
-				E.get(e).onUnmount(), E.delete(e);
+			e.filter((e) => k.has(e)).forEach((e) => {
+				k.get(e).onUnmount(), k.delete(e);
 			});
 		}
 	};
 }
-function k(e) {
+function M(e) {
 	return e === void 0 ? (e) => (t) => ({
 		name: e.name,
 		setup(n) {
@@ -263,4 +279,4 @@ function k(e) {
 	}) : e;
 }
 //#endregion
-export { n as LifecycleError, O as create, p as createContext, k as defineComponent, r as isLifecycleError, S as readonly, b as ref, g as useDomRef, _ as useEvent, v as useIntersectionWatch, C as useMediaQuery, o as useMount, w as useRootRef, T as useSlot, s as useUnmount, m as withContext };
+export { n as LifecycleError, j as create, p as createContext, M as defineComponent, r as isLifecycleError, C as readonly, x as ref, g as useDomRef, _ as useEvent, v as useIntersectionWatch, E as useMediaQuery, o as useMount, D as useRootRef, O as useSlot, s as useUnmount, T as useWatch, m as withContext };

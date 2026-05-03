@@ -8,7 +8,7 @@ export { useSlot } from "./composition/useSlot";
 export { create, defineComponent } from "./core/core";
 export { isLifecycleError, LifecycleError } from "./core/error";
 export { useMount, useUnmount } from "./core/lifecycle";
-export { readonly, ref } from "./core/ref";
+export { readonly, ref, useWatch } from "./core/ref";
 export type { Provider } from "./composition/createContext";
 export type { LifecycleErrorDetails } from "./core/error";
 export type { ReadonlyRef, Ref } from "./core/ref";
