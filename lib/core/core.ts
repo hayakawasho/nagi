@@ -19,11 +19,7 @@ function bindDOMNodeToComponent(el: RefElement, component: ComponentContext) {
     );
   }
 
-  try {
-    DOM_COMPONENT_INSTANCE.set(el, component);
-  } catch (cause) {
-    throw LifecycleError.create("mount", component, cause);
-  }
+  DOM_COMPONENT_INSTANCE.set(el, component);
 }
 
 export function create() {

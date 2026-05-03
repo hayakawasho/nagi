@@ -121,7 +121,7 @@ export function createComponent(
   }
 
   owner = component;
-  component.props = props || {};
+  component.props = props;
 
   try {
     const provides = wrap.setup(root, props);

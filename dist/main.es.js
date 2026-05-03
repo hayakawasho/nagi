@@ -95,7 +95,7 @@ var u = 0, d = class {
 };
 function f(e, t, i) {
 	let a = c, o = new d(t, e.name);
-	a && (o.parent = a), c = o, o.props = i || {};
+	a && (o.parent = a), c = o, o.props = i;
 	try {
 		o.current = e.setup(t, i) || {};
 	} catch (e) {
@@ -237,11 +237,7 @@ function D(e, t) {
 		let r = E.get(e);
 		throw n.create("mount", t, /* @__PURE__ */ Error(`Component "${r.name}" (${r.uid}) is already mounted on this element`), r);
 	}
-	try {
-		E.set(e, t);
-	} catch (e) {
-		throw n.create("mount", t, e);
-	}
+	E.set(e, t);
 }
 function O() {
 	return {
