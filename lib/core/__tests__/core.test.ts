@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+
 import { create, defineComponent } from "../core";
 import { useMount, useUnmount } from "../lifecycle";
 
@@ -71,6 +72,15 @@ describe("create", () => {
     })(el);
     unmount([other]); // 別の要素
     expect(fn).not.toHaveBeenCalled();
+  });
+
+  it("unmount 後に同じ要素へ再マウントできる", () => {
+    const el = makeEl();
+    const { component, unmount } = create();
+    const mount = component({ name: "test", setup: () => {} });
+    mount(el);
+    unmount([el]);
+    expect(() => mount(el)).not.toThrow();
   });
 });
 

@@ -22,7 +22,24 @@
   "assist": {
     "actions": {
       "source": {
-        "organizeImports": "on"
+        "organizeImports": {
+          "level": "on",
+          "options": {
+            "groups": [
+              { "source": ":NODE:", "type": false },
+              ":BLANK_LINE:",
+              { "source": ":PACKAGE:", "type": false },
+              ":BLANK_LINE:",
+              { "source": ["../**", "../*"], "type": false },
+              ":BLANK_LINE:",
+              { "source": ["./**", "./*"], "type": false },
+              ":BLANK_LINE:",
+              { "type": false },
+              ":BLANK_LINE:",
+              { "type": true }
+            ]
+          }
+        }
       }
     }
   },

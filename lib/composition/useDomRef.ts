@@ -1,5 +1,6 @@
 import { getCurrentComponent } from "../core/internal/component";
 import { domRefs } from "../core/internal/dom-refs";
+
 import type { RefElement } from "../types";
 
 export function useDomRef<

@@ -1,5 +1,6 @@
 import { useMount } from "./../core/lifecycle";
 import { readonly, ref } from "./../core/ref";
+
 import type { Cleanup } from "../types";
 
 export function useMediaQuery(
@@ -21,9 +22,9 @@ export function useMediaQuery(
     }
   }
 
-  mediaQueryList.addEventListener("change", onChangeMediaQueryList);
-
   useMount(() => {
+    mediaQueryList.addEventListener("change", onChangeMediaQueryList);
+
     if (mediaQueryList.matches) {
       cleanup = callbackWhenMatches();
     }

@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+
 import { create } from "../../core/core";
-import { useMount, useUnmount } from "../lifecycle";
 import { getCurrentComponent } from "../internal/component";
+import { useMount, useUnmount } from "../lifecycle";
+
+import type { ComponentContext } from "../internal/component";
 
 function makeEl(id?: string): HTMLElement {
   const el = document.createElement("div");
@@ -124,5 +127,57 @@ describe("ComponentContext", () => {
 describe("getCurrentComponent", () => {
   it("setup 外で呼ぶと例外を投げる", () => {
     expect(() => getCurrentComponent("testHook")).toThrow();
+  });
+});
+
+describe("addChild ロールバック", () => {
+  it("onMount が失敗した場合、child.parent が null にリセットされる", () => {
+    const root = makeEl();
+    const { component } = create();
+    let parentCtx: ComponentContext | undefined;
+
+    component({
+      name: "Parent",
+      setup: () => {
+        parentCtx = getCurrentComponent("test");
+      },
+    })(root);
+
+    const throwingChild = {
+      parent: null as ComponentContext | null,
+      onMount: () => {
+        throw new Error("onMount failed");
+      },
+      onUnmount: vi.fn(),
+    } as unknown as ComponentContext;
+
+    expect(() => parentCtx!.addChild(throwingChild)).toThrow();
+    expect(throwingChild.parent).toBeNull();
+  });
+
+  it("onMount が失敗した場合、parent の onUnmount で child の onUnmount は呼ばれない", () => {
+    const root = makeEl();
+    const { component, unmount } = create();
+    let parentCtx: ComponentContext | undefined;
+
+    component({
+      name: "Parent",
+      setup: () => {
+        parentCtx = getCurrentComponent("test");
+      },
+    })(root);
+
+    const childUnmount = vi.fn();
+    const throwingChild = {
+      parent: null as ComponentContext | null,
+      onMount: () => {
+        throw new Error("onMount failed");
+      },
+      onUnmount: childUnmount,
+    } as unknown as ComponentContext;
+
+    expect(() => parentCtx!.addChild(throwingChild)).toThrow();
+    unmount([root]);
+    expect(childUnmount).not.toHaveBeenCalled();
   });
 });

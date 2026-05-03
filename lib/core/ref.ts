@@ -32,5 +32,6 @@ class ReadonlyRef<T> {
 // biome-ignore lint/suspicious/noExplicitAny: generic default
 const readonly = <T = any>(ref: Ref<T>) => new ReadonlyRef(ref);
 
-export type { ReadonlyRef, Ref };
 export { readonly, ref };
+
+export type { ReadonlyRef, Ref };

@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
+
 import { domRefs } from "../internal/dom-refs";
 
 function createScope(html: string): HTMLElement {
