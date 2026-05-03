@@ -3,67 +3,114 @@ function e(e, t) {
 	if (!e) throw Error(t || "unexpected condition");
 }
 //#endregion
+//#region lib/core/error.ts
+function t(e) {
+	let t = [], n = e;
+	for (; n;) t.unshift(n.name), n = n.parent;
+	return t.join(" > ");
+}
+var n = class e extends Error {
+	details;
+	constructor(e) {
+		super(`[Lake] Component error in phase "${e.phase}" for "${e.name}"${e.path ? ` (${e.path})` : ""}`, { cause: e.cause }), this.name = "LifecycleError", this.details = e;
+	}
+	static create(n, r, i, a = r.parent, o) {
+		return new e({
+			phase: n,
+			name: r.name,
+			uid: r.uid,
+			path: t(r),
+			parentName: a?.name,
+			parentUid: a?.uid,
+			element: r.element,
+			cause: i,
+			...o
+		});
+	}
+};
+function r(e) {
+	return e instanceof n;
+}
+//#endregion
 //#region lib/core/lifecycle.ts
-var t = /* @__PURE__ */ function(e) {
+var i = /* @__PURE__ */ function(e) {
 	return e.MOUNTED = "Mounted", e.UNMOUNTED = "Unmounted", e;
 }({});
-function n(e) {
+function a(e) {
 	return (t) => {
-		s(e)[e].push(t);
+		l(e)[e].push(t);
 	};
 }
-var r = n(t.MOUNTED), i = n(t.UNMOUNTED), a;
-function o(e) {
-	return a = e, e;
+var o = a(i.MOUNTED), s = a(i.UNMOUNTED), c;
+function l(t) {
+	return e(c, `"${t}" called outside setup() will never be run.`), c;
 }
-function s(t) {
-	return e(a, `"${t}" called outside setup() will never be run.`), a;
-}
-var c = 0, l = class {
-	[t.MOUNTED] = [];
-	[t.UNMOUNTED] = [];
+var u = 0, d = class {
+	[i.MOUNTED] = [];
+	[i.UNMOUNTED] = [];
 	parent = null;
 	#e = [];
 	uid;
+	name;
 	current = {};
 	props = {};
 	element;
 	provides = /* @__PURE__ */ new Map();
 	constructor(e, t) {
-		this.uid = `${t}.${c++}`, this.element = e;
+		this.uid = `${t}.${u++}`, this.name = t, this.element = e;
 	}
 	onMount = () => {
-		let e = this[t.MOUNTED].map((e) => e()).filter((e) => typeof e == "function");
-		this[t.UNMOUNTED].push(...e);
+		let e = [];
+		this[i.MOUNTED].forEach((t) => {
+			try {
+				let n = t();
+				typeof n == "function" && e.push(n);
+			} catch (e) {
+				console.error("[Lake] onMount hook failed", n.create("mount", this, e));
+			}
+		}), this[i.UNMOUNTED].push(...e);
 	};
 	onUnmount = () => {
-		[...this[t.UNMOUNTED], ...this.#e.flatMap((e) => e.onUnmount)].forEach((e) => {
-			e();
-		});
+		this[i.UNMOUNTED].forEach((e) => {
+			try {
+				e();
+			} catch (e) {
+				console.error("[Lake] onUnmount cleanup failed", n.create("unmount", this, e));
+			}
+		}), this.#e.forEach((e) => e.onUnmount());
 	};
 	addChild = (e) => {
-		this.#e.push(e), e.parent = this, e.onMount();
+		this.#e.push(e), e.parent = this;
+		try {
+			e.onMount();
+		} catch (t) {
+			let n = this.#e.indexOf(e);
+			throw n !== -1 && this.#e.splice(n, 1), e.parent = null, t;
+		}
 	};
 	removeChild = (e) => {
 		let t = this.#e.indexOf(e);
 		t !== -1 && (this.#e.splice(t, 1), e.parent = null, e.onUnmount());
 	};
 };
-function u(e) {
-	let t = a;
-	return (n, r) => {
-		let i = new l(n, e.name);
-		t && (i.parent = t);
-		let a = o(i);
-		return a.props = r || {}, a.current = e.setup(n, r) || {}, o(t), a;
-	};
+function f(e, t, i) {
+	let a = c, o = new d(t, e.name);
+	a && (o.parent = a), c = o, o.props = i || {};
+	try {
+		o.current = e.setup(t, i) || {};
+	} catch (e) {
+		throw r(e) ? e : n.create("setup", o, e, a, { props: o.props });
+	} finally {
+		c = a;
+	}
+	return o;
 }
 //#endregion
 //#region lib/composition/createContext.ts
-function d() {
+function p() {
 	let e = Symbol();
 	return [{ _id: e }, () => {
-		let t = s("createContext.use").parent;
+		let t = l("createContext.use").parent;
 		for (; t !== null;) {
 			if (t.provides.has(e)) return t.provides.get(e);
 			t = t.parent;
@@ -71,17 +118,17 @@ function d() {
 		throw Error("createContext.use: no provider found");
 	}];
 }
-function f(e, t) {
+function m(e, t) {
 	return (n) => ({
 		name: n.name,
 		setup(r, i) {
-			return s(`withContext.${n.name}`).provides.set(e._id, t), n.setup(r, i);
+			return l(`withContext.${n.name}`).provides.set(e._id, t), n.setup(r, i);
 		}
 	});
 }
 //#endregion
 //#region lib/core/internal/dom-refs.ts
-function p(e, t) {
+function h(e, t) {
 	let n = (e) => {
 		let n = t ?? document, r = Array.from(n.querySelectorAll(`[data-ref="${e}"]`)), { length: i } = r;
 		return i === 0 ? null : { 1: r[0] }[i] ?? r;
@@ -90,40 +137,40 @@ function p(e, t) {
 }
 //#endregion
 //#region lib/composition/useDomRef.ts
-function m(...e) {
-	let t = s("useDomRef");
-	return { refs: p(new Set(e), t.element) };
+function g(...e) {
+	let t = l("useDomRef");
+	return { refs: h(new Set(e), t.element) };
 }
 //#endregion
 //#region lib/composition/useEvent.ts
-function h(e, t, n, i) {
-	r(() => (e.addEventListener(t, n, i), () => {
-		e.removeEventListener(t, n, i);
+function _(e, t, n, r) {
+	o(() => (e.addEventListener(t, n, r), () => {
+		e.removeEventListener(t, n, r);
 	}));
 }
 //#endregion
 //#region lib/composition/useIntersectionWatch.ts
-function g(e, t, n = {
+function v(e, t, n = {
 	rootMargin: "0px",
 	threshold: .1
 }) {
 	let r = new IntersectionObserver(t, n);
-	function a(e) {
+	function i(e) {
 		Array.isArray(e) ? e.forEach((e) => {
 			r.observe(e);
 		}) : r.observe(e);
 	}
-	a(e), i(() => {
+	i(e), s(() => {
 		r.disconnect();
 	});
-	function o(e) {
+	function a(e) {
 		r.unobserve(e);
 	}
-	return { unwatch: o };
+	return { unwatch: a };
 }
 //#endregion
 //#region lib/core/ref.ts
-var _ = class {
+var y = class {
 	#e;
 	constructor(e) {
 		this.#e = e;
@@ -134,7 +181,7 @@ var _ = class {
 	set value(e) {
 		this.#e = e;
 	}
-}, v = (e) => new _(e), y = class {
+}, b = (e) => new y(e), x = class {
 	#e;
 	constructor(e) {
 		this.#e = e;
@@ -142,83 +189,76 @@ var _ = class {
 	get value() {
 		return this.#e.value;
 	}
-}, b = (e) => new y(e);
+}, S = (e) => new x(e);
 //#endregion
 //#region lib/composition/useMediaQuery.ts
-function x(e, t) {
-	let n = window.matchMedia(e), i = v(n.matches), a = null;
-	function o(e) {
-		i.value = e.matches, e.matches ? a = t() : (a?.(), a = null);
+function C(e, t) {
+	let n = window.matchMedia(e), r = b(n.matches), i = null;
+	function a(e) {
+		r.value = e.matches, e.matches ? i = t() : (i?.(), i = null);
 	}
-	return n.addEventListener("change", o), r(() => (n.matches && (a = t()), () => {
-		a?.(), n.removeEventListener("change", o);
-	})), { matchesQuery: b(i) };
+	return o(() => (n.addEventListener("change", a), n.matches && (i = t()), () => {
+		i?.(), n.removeEventListener("change", a);
+	})), { matchesQuery: S(r) };
 }
 //#endregion
 //#region lib/composition/useRootRef.ts
-function S() {
-	return s("useRootRef").element;
+function w() {
+	return l("useRootRef").element;
 }
 //#endregion
 //#region lib/composition/useSlot.ts
-function C() {
-	let e = s("useSlot");
+function T() {
+	let e = l("useSlot");
 	return {
 		addChild(t, n, r = {}) {
 			let i = (t) => {
-				let i = u(n)(t, r);
+				let i = f(n, t, r);
 				return e.addChild(i), i;
 			};
 			return Array.isArray(t) ? t.map((e) => i(e)) : [i(t)];
 		},
 		removeChild(t) {
 			t.forEach((t) => {
-				e.removeChild(t);
+				try {
+					e.removeChild(t);
+				} catch (r) {
+					console.error("[Lake] removeChild failed", n.create("removeChild", t, r, e));
+				}
 			});
 		}
 	};
 }
 //#endregion
 //#region lib/core/core.ts
-var w = /* @__PURE__ */ new WeakMap();
-function T(e, t, n) {
-	if (w.has(e)) throw Error(JSON.stringify({
-		payload: {
-			el: e,
-			component: t,
-			name: n
-		},
-		reason: ""
-	}));
+var E = /* @__PURE__ */ new WeakMap();
+function D(e, t) {
+	if (E.has(e)) {
+		let r = E.get(e);
+		throw n.create("mount", t, /* @__PURE__ */ Error(`Component "${r.name}" (${r.uid}) is already mounted on this element`), r);
+	}
 	try {
-		w.set(e, t);
-	} catch {
-		throw Error(JSON.stringify({
-			payload: {
-				el: e,
-				component: t,
-				name: n
-			},
-			reason: ""
-		}));
+		E.set(e, t);
+	} catch (e) {
+		throw n.create("mount", t, e);
 	}
 }
-function E() {
+function O() {
 	return {
 		component(e) {
 			return (t, n = {}) => {
-				let r = u(e)(t, n);
-				return T(t, r, e.name), r.onMount(), r;
+				let r = f(e, t, n);
+				return D(t, r), r.onMount(), r;
 			};
 		},
 		unmount(e) {
-			e.filter((e) => w.has(e)).forEach((e) => {
-				w.get(e).onUnmount();
+			e.filter((e) => E.has(e)).forEach((e) => {
+				E.get(e).onUnmount(), E.delete(e);
 			});
 		}
 	};
 }
-function D(e) {
+function k(e) {
 	return e === void 0 ? (e) => (t) => ({
 		name: e.name,
 		setup(n) {
@@ -227,4 +267,4 @@ function D(e) {
 	}) : e;
 }
 //#endregion
-export { E as create, d as createContext, D as defineComponent, b as readonly, v as ref, m as useDomRef, h as useEvent, g as useIntersectionWatch, x as useMediaQuery, r as useMount, S as useRootRef, C as useSlot, i as useUnmount, f as withContext };
+export { n as LifecycleError, O as create, p as createContext, k as defineComponent, r as isLifecycleError, S as readonly, b as ref, g as useDomRef, _ as useEvent, v as useIntersectionWatch, C as useMediaQuery, o as useMount, w as useRootRef, T as useSlot, s as useUnmount, m as withContext };

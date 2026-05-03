@@ -11,6 +11,6 @@ declare class ReadonlyRef<T> {
     get value(): T;
 }
 declare const readonly: <T = any>(ref: Ref<T>) => ReadonlyRef<T>;
-export type { ReadonlyRef, Ref };
 export { readonly, ref };
+export type { ReadonlyRef, Ref };
 //# sourceMappingURL=ref.d.ts.map

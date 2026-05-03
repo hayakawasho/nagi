@@ -6,5 +6,5 @@ export interface IComponent<SetupResult = void | Record<string, unknown>, Props 
 }
 export type { ComponentContext } from "./core/internal/component";
 export type Cleanup = () => void;
-export type LifecycleHandler = () => void | (() => void);
+export type LifecycleHandler = () => void | Cleanup;
 //# sourceMappingURL=types.d.ts.map
