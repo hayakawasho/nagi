@@ -29,7 +29,7 @@ export { useParentContext }
 export default defineComponent({
   name: 'parent',
   setup(_el) {
-    const { refs } = useDomRef<Refs>('child', 'or')
+    const { refs } = useDomRef<Refs>()
     const { addChild } = useSlot()
 
     const isOpen = ref(false)

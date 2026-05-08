@@ -1,5 +1,5 @@
 import { LifecycleError } from "./error";
-import { createComponent } from "./internal/component";
+import { createComponent } from "./component";
 
 import type { ComponentContext, IComponent, RefElement } from "../types";
 

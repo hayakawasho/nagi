@@ -1,4 +1,4 @@
-import { getCurrentComponent } from "./internal/component";
+import { getCurrentComponent } from "./component";
 
 import type { LifecycleHandler } from "../types";
 
