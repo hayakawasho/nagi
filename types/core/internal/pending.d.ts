@@ -1,12 +1,12 @@
 import type { RefElement } from "../../types";
-export type PendingTask = {
+export type PendingMountTask = {
     readonly signal: AbortSignal;
     complete(): boolean;
     abort(): void;
 };
-export type PendingTasks = {
-    add(el: RefElement): PendingTask;
+export type PendingMountTasks = {
+    add(el: RefElement): PendingMountTask;
     abort(el: RefElement): void;
 };
-export declare function createPendingTasks(): PendingTasks;
+export declare function createPendingMountTasks(): PendingMountTasks;
 //# sourceMappingURL=pending.d.ts.map

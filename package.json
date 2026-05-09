@@ -10,7 +10,7 @@
       "require": "./dist/main.umd.js"
     },
     "./addons/scheduler": {
-      "types": "./types/addons/scheduler.d.ts",
+      "types": "./types/addons/scheduler/index.d.ts",
       "import": "./dist/addons/scheduler.es.js",
       "require": "./dist/addons/scheduler.umd.js"
     }

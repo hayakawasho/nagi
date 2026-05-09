@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { create } from "../core/app";
-import { useMount, useUnmount } from "../core/lifecycle";
+import { create } from "../../core/app";
+import { useMount, useUnmount } from "../../core/lifecycle";
 
-import { createScheduler } from "./scheduler";
+import { createScheduler } from "./index";
 
-import type { Scheduler } from "../types";
+import type { Scheduler } from "../../types";
 
 function makeEl(): HTMLElement {
   const el = document.createElement("div");
@@ -27,6 +27,65 @@ describe("createScheduler", () => {
   it("default priority を指定できる", () => {
     const scheduler = createScheduler({ default: "background" });
     expect(scheduler).toBeDefined();
+  });
+});
+
+describe("createScheduler — globalThis.scheduler (native)", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("schedule は postTask に priority と signal を渡す", () => {
+    const postTask = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("scheduler", { postTask });
+
+    const scheduler = createScheduler({ default: "background" });
+    const controller = new AbortController();
+    const task = vi.fn();
+
+    scheduler.schedule(task, {
+      priority: "user-blocking",
+      signal: controller.signal,
+    });
+
+    expect(postTask).toHaveBeenCalledOnce();
+    expect(postTask).toHaveBeenCalledWith(task, {
+      priority: "user-blocking",
+      signal: controller.signal,
+    });
+  });
+
+  it("createScheduler 後に globalThis.scheduler を差し替えても schedule が native を使う", () => {
+    vi.stubGlobal("scheduler", undefined);
+    const scheduler = createScheduler({ default: "user-visible" });
+
+    const postTask = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("scheduler", { postTask });
+
+    scheduler.schedule(() => {});
+
+    expect(postTask).toHaveBeenCalledOnce();
+  });
+
+  it("postTask が AbortError で reject しても unhandledrejection を増やさない", async () => {
+    const abortErr = new DOMException("aborted", "AbortError");
+    const postTask = vi.fn().mockRejectedValue(abortErr);
+    vi.stubGlobal("scheduler", { postTask });
+
+    const scheduler = createScheduler();
+    const unhandled: unknown[] = [];
+    const onUnhandled = (e: PromiseRejectionEvent) => {
+      unhandled.push(e.reason);
+    };
+    window.addEventListener("unhandledrejection", onUnhandled);
+
+    scheduler.schedule(() => {});
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    window.removeEventListener("unhandledrejection", onUnhandled);
+    expect(unhandled).toHaveLength(0);
   });
 });
 
@@ -254,7 +313,7 @@ describe("useSlot.addChild — scheduler を経由しない", () => {
   });
 
   it("addChild 内のマウントは parent setup 完了と同時に同期実行される", async () => {
-    const { useSlot } = await import("../hooks/useSlot");
+    const { useSlot } = await import("../../hooks/useSlot");
 
     const el = makeEl();
     const childEl = makeEl();

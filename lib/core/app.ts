@@ -1,4 +1,4 @@
-import { createPendingTasks } from "./internal/pending";
+import { createPendingMountTasks } from "./internal/pending";
 import {
   bindDOMNodeToComponent,
   DOM_COMPONENT_INSTANCE,
@@ -14,7 +14,7 @@ import type {
 
 export function create(config: { scheduler?: Scheduler } = {}) {
   const { scheduler } = config;
-  const pendingTasks = createPendingTasks();
+  const pendingMountTasks = createPendingMountTasks();
 
   return {
     component(
@@ -39,7 +39,7 @@ export function create(config: { scheduler?: Scheduler } = {}) {
           return mount();
         }
 
-        const task = pendingTasks.add(el);
+        const task = pendingMountTasks.add(el);
 
         scheduler.schedule(
           () => {
@@ -61,7 +61,7 @@ export function create(config: { scheduler?: Scheduler } = {}) {
 
     unmount(targets: RefElement[]) {
       for (const el of targets) {
-        pendingTasks.abort(el);
+        pendingMountTasks.abort(el);
 
         const component = DOM_COMPONENT_INSTANCE.get(el);
 

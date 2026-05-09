@@ -4,21 +4,21 @@ function e() {
 	return {
 		add(t) {
 			let n = e.get(t);
-			n && n.controller.abort();
-			let r = new AbortController(), i = { controller: r };
-			return e.set(t, i), {
+			n && n.abort();
+			let r = new AbortController();
+			return e.set(t, r), {
 				signal: r.signal,
 				complete() {
-					return e.get(t)?.controller !== r || r.signal.aborted ? !1 : (e.delete(t), !0);
+					return e.get(t) !== r || r.signal.aborted ? !1 : (e.delete(t), !0);
 				},
 				abort() {
-					e.get(t)?.controller === r && (r.abort(), e.delete(t));
+					e.get(t) === r && (r.abort(), e.delete(t));
 				}
 			};
 		},
 		abort(t) {
 			let n = e.get(t);
-			n && (n.controller.abort(), e.delete(t));
+			n && (n.abort(), e.delete(t));
 		}
 	};
 }

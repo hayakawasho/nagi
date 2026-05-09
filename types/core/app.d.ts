@@ -2,7 +2,7 @@ import type { ComponentSetup, RefElement, SchedulePriority, Scheduler } from "..
 export declare function create(config?: {
     scheduler?: Scheduler;
 }): {
-    component(wrap: ComponentSetup, { priority }?: {
+    component(wrap: ComponentSetup, { priority, }?: {
         priority?: SchedulePriority;
     }): (el: RefElement, props?: Record<string, any>) => import("./component").ComponentContext<any> | undefined;
     unmount(targets: RefElement[]): void;

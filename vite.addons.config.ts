@@ -9,7 +9,7 @@ export default defineConfig({
     emptyOutDir: false,
     lib: {
       entry: {
-        'addons/scheduler': resolve(__dirname, 'lib/addons/scheduler.ts'),
+        'addons/scheduler': resolve(__dirname, 'lib/addons/scheduler/index.ts'),
       },
       formats: ['es'],
       fileName: (_format, entryName) => `${entryName}.es.js`,

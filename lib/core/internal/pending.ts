@@ -1,41 +1,35 @@
 import type { RefElement } from "../../types";
 
-type Stored = { controller: AbortController };
-
-export type PendingTask = {
+export type PendingMountTask = {
   readonly signal: AbortSignal;
   complete(): boolean;
   abort(): void;
 };
 
-export type PendingTasks = {
-  add(el: RefElement): PendingTask;
+export type PendingMountTasks = {
+  add(el: RefElement): PendingMountTask;
   abort(el: RefElement): void;
 };
 
-export function createPendingTasks(): PendingTasks {
-  const tasks = new Map<RefElement, Stored>();
+export function createPendingMountTasks(): PendingMountTasks {
+  const tasks = new Map<RefElement, AbortController>();
 
   return {
     add(el) {
       const previous = tasks.get(el);
 
       if (previous) {
-        previous.controller.abort();
+        previous.abort();
       }
 
       const controller = new AbortController();
-      const stored: Stored = { controller };
-      tasks.set(el, stored);
+      tasks.set(el, controller);
 
       return {
         signal: controller.signal,
 
         complete() {
-          if (
-            tasks.get(el)?.controller !== controller ||
-            controller.signal.aborted
-          ) {
+          if (tasks.get(el) !== controller || controller.signal.aborted) {
             return false;
           }
 
@@ -44,7 +38,7 @@ export function createPendingTasks(): PendingTasks {
         },
 
         abort() {
-          if (tasks.get(el)?.controller !== controller) {
+          if (tasks.get(el) !== controller) {
             return;
           }
 
@@ -55,13 +49,13 @@ export function createPendingTasks(): PendingTasks {
     },
 
     abort(el) {
-      const stored = tasks.get(el);
+      const controller = tasks.get(el);
 
-      if (!stored) {
+      if (!controller) {
         return;
       }
 
-      stored.controller.abort();
+      controller.abort();
       tasks.delete(el);
     },
   };
