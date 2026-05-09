@@ -1,4 +1,4 @@
-import { getCurrentComponent } from "../core/component";
+import { getCurrentComponent } from "../core/runtime";
 
 import type { RefElement } from "../types";
 

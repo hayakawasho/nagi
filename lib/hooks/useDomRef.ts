@@ -1,5 +1,6 @@
-import { getCurrentComponent } from "../core/component";
-import { domRefs } from "./dom-refs";
+import { getCurrentComponent } from "../core/runtime";
+
+import { domRefs } from "./domRefs";
 
 import type { RefElement } from "../types";
 

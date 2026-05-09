@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { create } from "../core/core";
+import { create } from "../core/app";
 import { useMount, useUnmount } from "../core/lifecycle";
+
 import { useSlot } from "./useSlot";
 
 afterEach(() => {

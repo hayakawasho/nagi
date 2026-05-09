@@ -1,6 +1,7 @@
-import { getCurrentComponent } from "../core/component";
+import { getCurrentComponent } from "../core/runtime";
 
-import type { ComponentContext, IComponent, RefElement } from "../types";
+import type { ComponentContext } from "../core/component";
+import type { ComponentSetup, RefElement } from "../types";
 
 export type Provider<T> = {
   readonly _id: symbol;
@@ -36,8 +37,8 @@ export function withContext<T>(
   SetupResult extends Record<string, unknown> | void,
   Props extends Record<string, unknown>,
 >(
-  component: IComponent<SetupResult, Props>,
-) => IComponent<SetupResult, Props> {
+  component: ComponentSetup<SetupResult, Props>,
+) => ComponentSetup<SetupResult, Props> {
   return (component) => ({
     name: component.name,
     setup(el: RefElement, props) {

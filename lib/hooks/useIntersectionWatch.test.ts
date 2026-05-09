@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { create } from "../core/core";
+import { create } from "../core/app";
+
 import { useIntersectionWatch } from "./useIntersectionWatch";
 
 const mockObserve = vi.fn();

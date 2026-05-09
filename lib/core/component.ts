@@ -1,30 +1,21 @@
-import { isLifecycleError, LifecycleError } from "./error";
-import { LifecycleHooks } from "./lifecycle";
+import { LifecycleError } from "./error";
 
 import type {
   Cleanup,
-  IComponent,
+  ComponentSetup,
   LifecycleHandler,
   RefElement,
 } from "../types";
 
-function assert(condition: unknown, message?: string): asserts condition {
-  if (!condition) {
-    throw new Error(message || "unexpected condition");
-  }
-}
-
-let owner: ComponentContext;
-
-export function getCurrentComponent(hookName: string) {
-  assert(owner, `"${hookName}" called outside setup() will never be run.`);
-  return owner;
+export enum LifecycleHooks {
+  MOUNTED = "Mounted",
+  UNMOUNTED = "Unmounted",
 }
 
 let uid = 0;
 
 // biome-ignore lint/suspicious/noExplicitAny: generic default
-class ComponentContext<T = any> {
+export class ComponentContext<T = any> {
   private [LifecycleHooks.MOUNTED]: LifecycleHandler[] = [];
   private [LifecycleHooks.UNMOUNTED]: LifecycleHandler[] = [];
 
@@ -33,8 +24,8 @@ class ComponentContext<T = any> {
 
   readonly uid: string;
   readonly name: string;
-  current = {} as ReturnType<IComponent<T>["setup"]>;
-  props = {} as Parameters<IComponent<T>["setup"]>[1];
+  current = {} as ReturnType<ComponentSetup<T>["setup"]>;
+  props = {} as Parameters<ComponentSetup<T>["setup"]>[1];
   element: RefElement;
   provides = new Map<symbol, unknown>();
 
@@ -118,38 +109,29 @@ class ComponentContext<T = any> {
   }
 }
 
-export function createComponent(
-  wrap: IComponent,
-  root: RefElement,
-  // biome-ignore lint/suspicious/noExplicitAny: internal props type
-  props: Record<string, any>,
-) {
-  const parent = owner;
-  const component = new ComponentContext(root, wrap.name);
+export function defineComponent<Context extends Record<string, unknown>>(): <
+  SetupResult extends Record<string, unknown> | void,
+>(opts: {
+  name: string;
+  setup(el: RefElement, context: Context): SetupResult;
+}) => (context: Context) => ComponentSetup<SetupResult>;
 
-  if (parent) {
-    component.parent = parent;
-  }
+export function defineComponent<
+  SetupResult extends Record<string, unknown> | void,
+  Props extends Record<string, unknown>,
+>(opts: ComponentSetup<SetupResult, Props>): ComponentSetup<SetupResult, Props>;
 
-  owner = component;
-  component.props = props;
-
-  try {
-    const provides = wrap.setup(root, props);
-    component.current = provides || {};
-  } catch (cause) {
-    if (isLifecycleError(cause)) {
-      throw cause;
-    }
-
-    throw LifecycleError.create("setup", component, cause, parent, {
-      props: component.props,
+// biome-ignore lint/suspicious/noExplicitAny: overload implementation
+export function defineComponent(opts?: any) {
+  if (opts === undefined) {
+    // biome-ignore lint/suspicious/noExplicitAny: overload implementation
+    return (opts: any) => (context: any) => ({
+      name: opts.name,
+      setup(el: RefElement) {
+        return opts.setup(el, context);
+      },
     });
-  } finally {
-    owner = parent;
   }
 
-  return component;
+  return opts;
 }
-
-export type { ComponentContext };

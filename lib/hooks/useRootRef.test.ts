@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { create } from "../core/core";
+import { create } from "../core/app";
+
 import { useRootRef } from "./useRootRef";
 
 afterEach(() => {

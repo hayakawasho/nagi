@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { create } from "../core/core";
+import { create } from "../core/app";
+
 import { useEvent } from "./useEvent";
 
 afterEach(() => {

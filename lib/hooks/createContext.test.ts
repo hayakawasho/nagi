@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { create } from "../core/core";
+import { create } from "../core/app";
+
 import { createContext, withContext } from "./createContext";
 import { useSlot } from "./useSlot";
 

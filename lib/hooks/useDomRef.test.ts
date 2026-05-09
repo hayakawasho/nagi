@@ -1,8 +1,10 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { create, defineComponent } from "../core/core";
-import { useSlot } from "./useSlot";
+import { create } from "../core/app";
+import { defineComponent } from "../core/component";
+
 import { useDomRef } from "./useDomRef";
+import { useSlot } from "./useSlot";
 
 function makeEl(html = ""): HTMLElement {
   const el = document.createElement("div");

@@ -1,14 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { useSlot } from "../hooks/useSlot";
-import { create } from "./core";
-import {
-  isLifecycleError,
-  LifecycleError,
-  traceComponentTree,
-} from "./error";
+
+import { create } from "./app";
+import { isLifecycleError, LifecycleError, traceComponentTree } from "./error";
 import { useMount, useUnmount } from "./lifecycle";
-import { getCurrentComponent } from "./component";
+import { getCurrentComponent } from "./runtime";
 
 function makeEl(): HTMLElement {
   const el = document.createElement("div");

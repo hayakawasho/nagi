@@ -1,5 +1,5 @@
 import { useMount } from "../core/lifecycle";
-import { readonly, ref } from "../core/ref";
+import { readonly, ref } from "../core/reactivity";
 
 import type { Cleanup } from "../types";
 

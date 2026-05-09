@@ -1,16 +1,14 @@
 import { LifecycleError } from "../core/error";
-import {
-  createComponent,
-  getCurrentComponent,
-} from "../core/component";
+import { createComponent, getCurrentComponent } from "../core/runtime";
 
-import type { ComponentContext, IComponent, RefElement } from "../types";
+import type { ComponentContext } from "../core/component";
+import type { ComponentSetup, RefElement } from "../types";
 
 export function useSlot() {
   const context = getCurrentComponent("useSlot");
 
   return {
-    addChild<Child extends IComponent>(
+    addChild<Child extends ComponentSetup>(
       targetOrTargets: RefElement | RefElement[],
       child: Child,
       props: Parameters<Child["setup"]>[1] = {},

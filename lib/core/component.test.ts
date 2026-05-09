@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { create } from "./core";
-import { getCurrentComponent } from "./component";
+import { create } from "./app";
 import { useMount, useUnmount } from "./lifecycle";
+import { getCurrentComponent } from "./runtime";
 
 import type { ComponentContext } from "./component";
 
