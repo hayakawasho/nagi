@@ -1,18 +1,21 @@
-import { create } from '../lib/main'
-import Parent from './Parent'
+import { create } from "../lib/main";
+import { createScheduler } from "../lib/addons/scheduler";
+import Parent from "./Parent";
 
-document.addEventListener('DOMContentLoaded', () => {
-  const { component, unmount } = create()
+document.addEventListener("DOMContentLoaded", () => {
+  const app = create({
+    scheduler: createScheduler(),
+  });
 
-  const refParent = document.getElementById('parent')
+  const refParent = document.getElementById("parent");
 
   if (refParent) {
-    const createParent = component(Parent)
+    const createParent = app.component(Parent);
 
-    createParent(refParent)
+    const a = createParent(refParent); // void
 
     setTimeout(() => {
-      unmount([refParent])
-    }, 5000)
+      app.unmount([refParent]);
+    }, 5000);
   }
-})
+});

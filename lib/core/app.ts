@@ -11,8 +11,43 @@ import type {
   SchedulePriority,
   Scheduler,
 } from "../types";
+import type { ComponentContext } from "./component";
 
-export function create(config: { scheduler?: Scheduler } = {}) {
+type AppOptions = { priority?: SchedulePriority };
+
+type SyncApp = {
+  component<S extends ComponentSetup>(
+    wrap: S,
+    opts?: AppOptions,
+  ): (
+    el: RefElement,
+    // biome-ignore lint/suspicious/noExplicitAny: internal props type
+    props?: Record<string, any>,
+  ) => ComponentContext<ReturnType<S["setup"]>>;
+  unmount(targets: RefElement[]): void;
+};
+
+type AsyncApp = {
+  component<S extends ComponentSetup>(
+    wrap: S,
+    opts?: AppOptions,
+  ): (
+    el: RefElement,
+    // biome-ignore lint/suspicious/noExplicitAny: internal props type
+    props?: Record<string, any>,
+  ) => void;
+  unmount(targets: RefElement[]): void;
+};
+
+export function create(): SyncApp;
+export function create(config: { scheduler?: undefined }): SyncApp;
+export function create(config: { scheduler: Scheduler }): AsyncApp;
+export function create(config: {
+  scheduler?: Scheduler | undefined;
+}): SyncApp | AsyncApp;
+export function create(
+  config: { scheduler?: Scheduler } = {},
+): SyncApp | AsyncApp {
   const { scheduler } = config;
   const pendingMountTasks = createPendingMountTasks();
 

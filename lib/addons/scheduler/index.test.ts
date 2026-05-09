@@ -94,8 +94,7 @@ describe("create({ scheduler }) — 基本動作", () => {
     const el = makeEl();
     const scheduler = createScheduler();
     const { component } = create({ scheduler });
-    const result = component({ name: "test", setup: () => {} })(el);
-    expect(result).toBeUndefined();
+    expect(component({ name: "test", setup: () => {} })(el)).toBeUndefined();
   });
 
   it("scheduler なし (従来) は ComponentContext を返す", () => {
@@ -103,7 +102,7 @@ describe("create({ scheduler }) — 基本動作", () => {
     const { component } = create();
     const result = component({ name: "test", setup: () => {} })(el);
     expect(result).toBeDefined();
-    expect(result?.name).toBe("test");
+    expect(result.name).toBe("test");
   });
 });
 
