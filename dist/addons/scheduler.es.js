@@ -41,7 +41,7 @@ function a(e, t, n) {
 //#endregion
 //#region lib/addons/scheduler/index.ts
 function o(e = {}) {
-	let t = e.default ?? "user-visible";
+	let t = e.priority ?? "user-visible";
 	return { schedule(e, n = {}) {
 		a(e, n.priority ?? t, n.signal);
 	} };

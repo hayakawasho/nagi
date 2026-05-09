@@ -25,7 +25,7 @@ describe("createScheduler", () => {
   });
 
   it("default priority を指定できる", () => {
-    const scheduler = createScheduler({ default: "background" });
+    const scheduler = createScheduler({ priority: "background" });
     expect(scheduler).toBeDefined();
   });
 });
@@ -39,7 +39,7 @@ describe("createScheduler — globalThis.scheduler (native)", () => {
     const postTask = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal("scheduler", { postTask });
 
-    const scheduler = createScheduler({ default: "background" });
+    const scheduler = createScheduler({ priority: "background" });
     const controller = new AbortController();
     const task = vi.fn();
 
@@ -57,7 +57,7 @@ describe("createScheduler — globalThis.scheduler (native)", () => {
 
   it("createScheduler 後に globalThis.scheduler を差し替えても schedule が native を使う", () => {
     vi.stubGlobal("scheduler", undefined);
-    const scheduler = createScheduler({ default: "user-visible" });
+    const scheduler = createScheduler({ priority: "user-visible" });
 
     const postTask = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal("scheduler", { postTask });
@@ -117,7 +117,7 @@ describe("scheduler — user-blocking (queueMicrotask)", () => {
     const el = makeEl();
     const setupFn = vi.fn();
     const { component } = create({
-      scheduler: createScheduler({ default: "user-blocking" }),
+      scheduler: createScheduler({ priority: "user-blocking" }),
     });
 
     component({ name: "test", setup: setupFn })(el);
@@ -131,7 +131,7 @@ describe("scheduler — user-blocking (queueMicrotask)", () => {
     const el = makeEl();
     const mountFn = vi.fn();
     const { component } = create({
-      scheduler: createScheduler({ default: "user-blocking" }),
+      scheduler: createScheduler({ priority: "user-blocking" }),
     });
 
     component({
@@ -161,7 +161,7 @@ describe("scheduler — user-visible (requestAnimationFrame)", () => {
     });
 
     const { component } = create({
-      scheduler: createScheduler({ default: "user-visible" }),
+      scheduler: createScheduler({ priority: "user-visible" }),
     });
     component({ name: "test", setup: setupFn })(el);
     expect(setupFn).not.toHaveBeenCalled();
@@ -174,7 +174,7 @@ describe("scheduler — user-visible (requestAnimationFrame)", () => {
     const el = makeEl();
     const setupFn = vi.fn();
     const { component } = create({
-      scheduler: createScheduler({ default: "user-visible" }),
+      scheduler: createScheduler({ priority: "user-visible" }),
     });
 
     component(
@@ -198,7 +198,7 @@ describe("scheduler — unmount によるキャンセル", () => {
     const setupFn = vi.fn();
 
     const { component, unmount } = create({
-      scheduler: createScheduler({ default: "user-blocking" }),
+      scheduler: createScheduler({ priority: "user-blocking" }),
     });
     component({ name: "test", setup: setupFn })(el);
 
@@ -214,7 +214,7 @@ describe("scheduler — unmount によるキャンセル", () => {
     const unmountFn = vi.fn();
 
     const { component, unmount } = create({
-      scheduler: createScheduler({ default: "user-blocking" }),
+      scheduler: createScheduler({ priority: "user-blocking" }),
     });
     component({
       name: "test",
@@ -240,7 +240,7 @@ describe("scheduler — 同一要素への二重登録", () => {
     const setupSecond = vi.fn();
 
     const { component } = create({
-      scheduler: createScheduler({ default: "user-blocking" }),
+      scheduler: createScheduler({ priority: "user-blocking" }),
     });
 
     component({ name: "first", setup: setupFirst })(el);
@@ -291,7 +291,7 @@ describe("scheduler + unmount の連携", () => {
     const unmountFn = vi.fn();
 
     const { component, unmount } = create({
-      scheduler: createScheduler({ default: "user-blocking" }),
+      scheduler: createScheduler({ priority: "user-blocking" }),
     });
     component({
       name: "test",
@@ -320,7 +320,7 @@ describe("useSlot.addChild — scheduler を経由しない", () => {
     const childSetupFn = vi.fn();
 
     const { component } = create({
-      scheduler: createScheduler({ default: "user-blocking" }),
+      scheduler: createScheduler({ priority: "user-blocking" }),
     });
 
     component({

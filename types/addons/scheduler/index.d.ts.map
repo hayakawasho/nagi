@@ -1,1 +1,1 @@
-{"version":3,"file":"index.d.ts","sourceRoot":"","sources":["../../../lib/addons/scheduler/index.ts"],"names":[],"mappings":"AAEA,OAAO,KAAK,EAAE,gBAAgB,EAAE,SAAS,EAAE,MAAM,aAAa,CAAC;AAE/D,wBAAgB,eAAe,CAC7B,IAAI,GAAE;IAAE,OAAO,CAAC,EAAE,gBAAgB,CAAA;CAAO,GACxC,SAAS,CAQX"}
+{"version":3,"file":"index.d.ts","sourceRoot":"","sources":["../../../lib/addons/scheduler/index.ts"],"names":[],"mappings":"AAEA,OAAO,KAAK,EAAE,gBAAgB,EAAE,SAAS,EAAE,MAAM,aAAa,CAAC;AAE/D,wBAAgB,eAAe,CAC7B,IAAI,GAAE;IAAE,QAAQ,CAAC,EAAE,gBAAgB,CAAA;CAAO,GACzC,SAAS,CAQX"}

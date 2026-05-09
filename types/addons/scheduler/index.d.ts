@@ -1,5 +1,5 @@
 import type { SchedulePriority, Scheduler } from "../../types";
 export declare function createScheduler(opts?: {
-    default?: SchedulePriority;
+    priority?: SchedulePriority;
 }): Scheduler;
 //# sourceMappingURL=index.d.ts.map
