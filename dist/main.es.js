@@ -230,7 +230,7 @@ function w(e, t) {
 function T() {
 	let e = Symbol();
 	return [{ _id: e }, () => {
-		let t = f("createContext.use").parent;
+		let t = f("createContext.use");
 		for (; t !== null;) {
 			if (t.provides.has(e)) return t.provides.get(e);
 			t = t.parent;

@@ -159,4 +159,83 @@ describe("createContext", () => {
     const [, use] = createContext<string>();
     expect(() => use()).toThrow();
   });
+
+  it("withContext でラップしたコンポーネント自身が use で値を取れる", () => {
+    const [Provider, use] = createContext<string>();
+    const root = makeEl();
+
+    let received: string | undefined;
+
+    const { component } = create();
+    component(
+      withContext(
+        Provider,
+        "self",
+      )({
+        name: "self-consumer",
+        setup: () => {
+          received = use();
+        },
+      }),
+    )(root);
+
+    expect(received).toBe("self");
+  });
+
+  it("addChild の引数として withContext でラップした子は自身で use できる", () => {
+    const [Provider, use] = createContext<string>();
+    const root = makeEl();
+    const childEl = makeEl();
+
+    let received: string | undefined;
+
+    const childComp = {
+      name: "child",
+      setup: () => {
+        received = use();
+      },
+    };
+
+    const { component } = create();
+    component({
+      name: "parent",
+      setup: () => {
+        const { addChild } = useSlot();
+        addChild(childEl, withContext(Provider, "from-wrap")(childComp), {});
+      },
+    })(root);
+
+    expect(received).toBe("from-wrap");
+  });
+
+  it("自身の provide が祖先の provide を上書きする（自身優先）", () => {
+    const [Provider, use] = createContext<string>();
+    const root = makeEl();
+    const childEl = makeEl();
+
+    let received: string | undefined;
+
+    const childComp = {
+      name: "child",
+      setup: () => {
+        received = use();
+      },
+    };
+
+    const { component } = create();
+    component(
+      withContext(
+        Provider,
+        "ancestor",
+      )({
+        name: "parent",
+        setup: () => {
+          const { addChild } = useSlot();
+          addChild(childEl, withContext(Provider, "self")(childComp), {});
+        },
+      }),
+    )(root);
+
+    expect(received).toBe("self");
+  });
 });

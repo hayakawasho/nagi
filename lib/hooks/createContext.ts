@@ -10,12 +10,11 @@ export type Provider<T> = {
 
 export function createContext<T>(): [Provider<T>, () => Readonly<T>] {
   const id = Symbol();
-
   const key: Provider<T> = { _id: id };
 
   const use = (): Readonly<T> => {
     const component = getCurrentComponent("createContext.use");
-    let current: ComponentContext | null = component.parent;
+    let current: ComponentContext | null = component;
 
     while (current !== null) {
       if (current.provides.has(id)) {
