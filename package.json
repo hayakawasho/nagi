@@ -13,6 +13,11 @@
       "types": "./types/addons/scheduler/index.d.ts",
       "import": "./dist/addons/scheduler.es.js",
       "require": "./dist/addons/scheduler.umd.js"
+    },
+    "./addons/cue": {
+      "types": "./types/addons/cue/index.d.ts",
+      "import": "./dist/addons/cue.es.js",
+      "require": "./dist/addons/cue.umd.js"
     }
   },
   "files": [

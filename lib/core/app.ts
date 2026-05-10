@@ -1,3 +1,5 @@
+import { isAbortError } from "../utils/isAbortError";
+
 import { createPendingMountTasks } from "./internal/pending";
 import {
   bindDOMNodeToComponent,
@@ -7,13 +9,20 @@ import { createComponent } from "./runtime";
 
 import type {
   ComponentSetup,
+  Cue,
   RefElement,
   SchedulePriority,
   Scheduler,
 } from "../types";
 import type { ComponentContext } from "./component";
 
-type AppOptions = { priority?: SchedulePriority };
+type AppOptions = {
+  priority?: SchedulePriority;
+};
+
+type AsyncAppOptions = AppOptions & {
+  when?: Cue;
+};
 
 type SyncApp = {
   component<S extends ComponentSetup>(
@@ -21,7 +30,6 @@ type SyncApp = {
     opts?: AppOptions,
   ): (
     el: RefElement,
-    // biome-ignore lint/suspicious/noExplicitAny: internal props type
     props?: Record<string, any>,
   ) => ComponentContext<ReturnType<S["setup"]>>;
   unmount(targets: RefElement[]): void;
@@ -30,7 +38,7 @@ type SyncApp = {
 type AsyncApp = {
   component<S extends ComponentSetup>(
     wrap: S,
-    opts?: AppOptions,
+    opts?: AsyncAppOptions,
   ): (
     el: RefElement,
     // biome-ignore lint/suspicious/noExplicitAny: internal props type
@@ -52,14 +60,7 @@ export function create(
   const pendingMountTasks = createPendingMountTasks();
 
   return {
-    component(
-      wrap: ComponentSetup,
-      {
-        priority,
-      }: {
-        priority?: SchedulePriority;
-      } = {},
-    ) {
+    component(wrap: ComponentSetup, { priority, when }: AsyncAppOptions = {}) {
       // biome-ignore lint/suspicious/noExplicitAny: internal props type
       return (el: RefElement, props: Record<string, any> = {}) => {
         function mount() {
@@ -76,19 +77,42 @@ export function create(
 
         const task = pendingMountTasks.add(el);
 
-        scheduler.schedule(
-          () => {
-            if (!task.complete()) {
-              return;
-            }
+        const dispatch = () => {
+          scheduler.schedule(
+            () => {
+              if (!task.complete()) {
+                return;
+              }
 
-            mount();
-          },
-          {
-            priority,
-            signal: task.signal,
-          },
-        );
+              mount();
+            },
+            {
+              priority,
+              signal: task.signal,
+            },
+          );
+        };
+
+        if (when) {
+          when(el, task.signal).then(
+            () => {
+              if (!task.signal.aborted) {
+                dispatch();
+              }
+            },
+            (reason) => {
+              if (isAbortError(reason)) {
+                return;
+              }
+
+              queueMicrotask(() => {
+                throw reason;
+              });
+            },
+          );
+        } else {
+          dispatch();
+        }
 
         return undefined;
       };

@@ -10,6 +10,7 @@ export default defineConfig({
     lib: {
       entry: {
         'addons/scheduler': resolve(__dirname, 'lib/addons/scheduler/index.ts'),
+        'addons/cue': resolve(__dirname, 'lib/addons/cue/index.ts'),
       },
       formats: ['es'],
       fileName: (_format, entryName) => `${entryName}.es.js`,

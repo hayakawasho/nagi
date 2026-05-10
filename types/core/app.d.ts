@@ -1,14 +1,17 @@
-import type { ComponentSetup, RefElement, SchedulePriority, Scheduler } from "../types";
+import type { ComponentSetup, Cue, RefElement, SchedulePriority, Scheduler } from "../types";
 import type { ComponentContext } from "./component";
 type AppOptions = {
     priority?: SchedulePriority;
+};
+type AsyncAppOptions = AppOptions & {
+    when?: Cue;
 };
 type SyncApp = {
     component<S extends ComponentSetup>(wrap: S, opts?: AppOptions): (el: RefElement, props?: Record<string, any>) => ComponentContext<ReturnType<S["setup"]>>;
     unmount(targets: RefElement[]): void;
 };
 type AsyncApp = {
-    component<S extends ComponentSetup>(wrap: S, opts?: AppOptions): (el: RefElement, props?: Record<string, any>) => void;
+    component<S extends ComponentSetup>(wrap: S, opts?: AsyncAppOptions): (el: RefElement, props?: Record<string, any>) => void;
     unmount(targets: RefElement[]): void;
 };
 export declare function create(): SyncApp;

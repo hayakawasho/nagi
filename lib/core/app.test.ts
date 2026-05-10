@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { create, defineComponent } from "./app";
+import { create } from "./app";
+import { defineComponent } from "./component";
 import { useMount, useUnmount } from "./lifecycle";
 
 function makeEl(): HTMLElement {

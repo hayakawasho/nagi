@@ -31,3 +31,5 @@ export type Scheduler = {
     },
   ): void;
 };
+
+export type Cue = (el: RefElement, signal: AbortSignal) => Promise<void>;

@@ -15,4 +15,5 @@ export type Scheduler = {
         signal?: AbortSignal;
     }): void;
 };
+export type Cue = (el: RefElement, signal: AbortSignal) => Promise<void>;
 //# sourceMappingURL=types.d.ts.map
