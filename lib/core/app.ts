@@ -105,6 +105,8 @@ export function create(
                 return;
               }
 
+              task.abort();
+
               queueMicrotask(() => {
                 throw reason;
               });
