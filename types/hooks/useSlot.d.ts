@@ -4,4 +4,3 @@ export declare function useSlot(): {
     addChild<Child extends ComponentSetup>(targetOrTargets: RefElement | RefElement[], child: Child, props?: Parameters<Child["setup"]>[1]): ComponentContext<ReturnType<Child["setup"]>>[];
     removeChild(children: ComponentContext[]): void;
 };
-//# sourceMappingURL=useSlot.d.ts.map

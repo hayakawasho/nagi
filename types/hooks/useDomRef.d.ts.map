@@ -1,1 +1,0 @@
-{"version":3,"file":"useDomRef.d.ts","sourceRoot":"","sources":["../../lib/hooks/useDomRef.ts"],"names":[],"mappings":"AAIA,OAAO,KAAK,EAAE,UAAU,EAAE,MAAM,UAAU,CAAC;AAE3C,wBAAgB,SAAS,CACvB,CAAC,SAAS,MAAM,CAAC,MAAM,EAAE,UAAU,GAAG,UAAU,EAAE,GAAG,IAAI,CAAC,KACvD;IACH,IAAI,EAAE,CAAC,CAAC;CACT,CAMA"}

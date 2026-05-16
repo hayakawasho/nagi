@@ -8,7 +8,6 @@
     "rootDir": "./lib",
     "emitDeclarationOnly": true,
     "declaration": true,
-    "declarationMap": true,
     "declarationDir": "./types",
     "noUnusedLocals": true,
     "noUnusedParameters": true,

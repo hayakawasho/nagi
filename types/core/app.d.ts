@@ -25,4 +25,3 @@ export declare function create(config: {
     scheduler?: Scheduler | undefined;
 }): SyncApp | AsyncApp;
 export {};
-//# sourceMappingURL=app.d.ts.map

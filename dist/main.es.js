@@ -165,9 +165,9 @@ function m(n = {}) {
 				a ? a(s, u.signal).then(() => {
 					u.signal.aborted || d();
 				}, (t) => {
-					e(t) || queueMicrotask(() => {
+					e(t) || (u.abort(), queueMicrotask(() => {
 						throw t;
-					});
+					}));
 				}) : d();
 			};
 		},

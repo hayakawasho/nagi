@@ -15,4 +15,3 @@ export type { LifecycleErrorDetails } from "./core/error";
 export type { ReadonlyRef, Ref } from "./core/reactivity";
 export type { Provider } from "./hooks/createContext";
 export type { ComponentSetup, Cue, IComponent, RefElement, SchedulePriority, Scheduler, } from "./types";
-//# sourceMappingURL=main.d.ts.map

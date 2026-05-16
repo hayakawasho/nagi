@@ -19,4 +19,3 @@ declare const readonly: <T = any>(ref: Ref<T>) => ReadonlyRef<T>;
 declare function useWatch<T>(ref: Ref<T> | ReadonlyRef<T>, callback: WatchCallback<T>): void;
 export { readonly, ref, useWatch };
 export type { ReadonlyRef, Ref };
-//# sourceMappingURL=reactivity.d.ts.map

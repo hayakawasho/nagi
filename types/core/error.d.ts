@@ -18,4 +18,3 @@ export declare class LifecycleError extends Error {
     static create(phase: LifecycleErrorDetails["phase"], target: ComponentContext, cause: unknown, parent?: ComponentContext | null | undefined, extra?: Partial<LifecycleErrorDetails>): LifecycleError;
 }
 export declare function isLifecycleError(error: unknown): error is LifecycleError;
-//# sourceMappingURL=error.d.ts.map

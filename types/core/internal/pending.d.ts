@@ -9,4 +9,3 @@ export type PendingMountTasks = {
     abort(el: RefElement): void;
 };
 export declare function createPendingMountTasks(): PendingMountTasks;
-//# sourceMappingURL=pending.d.ts.map

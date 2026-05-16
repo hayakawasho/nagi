@@ -17,7 +17,9 @@ export declare class ComponentContext<T = any> {
     constructor(element: RefElement, name: string);
     onMount: () => void;
     onUnmount: () => void;
+    /** @internal useSlot から呼び出される内部 API。外部利用は非推奨。 */
     addChild: (child: ComponentContext) => void;
+    /** @internal useSlot から呼び出される内部 API。外部利用は非推奨。 */
     removeChild: (child: ComponentContext) => void;
     get childElements(): RefElement[];
 }
@@ -26,4 +28,3 @@ export declare function defineComponent<Context extends Record<string, unknown>>
     setup(el: RefElement, context: Context): SetupResult;
 }) => (context: Context) => ComponentSetup<SetupResult>;
 export declare function defineComponent<SetupResult extends Record<string, unknown> | void, Props extends Record<string, unknown>>(opts: ComponentSetup<SetupResult, Props>): ComponentSetup<SetupResult, Props>;
-//# sourceMappingURL=component.d.ts.map
