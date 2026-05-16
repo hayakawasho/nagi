@@ -17,6 +17,7 @@ export type { ReadonlyRef, Ref } from "./core/reactivity";
 export type { Provider } from "./hooks/createContext";
 export type {
   ComponentSetup,
+  Cue,
   IComponent,
   RefElement,
   SchedulePriority,

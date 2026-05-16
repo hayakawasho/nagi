@@ -12,12 +12,12 @@
     "./addons/scheduler": {
       "types": "./types/addons/scheduler/index.d.ts",
       "import": "./dist/addons/scheduler.es.js",
-      "require": "./dist/addons/scheduler.umd.js"
+      "require": "./dist/addons/scheduler.cjs.js"
     },
     "./addons/cue": {
       "types": "./types/addons/cue/index.d.ts",
       "import": "./dist/addons/cue.es.js",
-      "require": "./dist/addons/cue.umd.js"
+      "require": "./dist/addons/cue.cjs.js"
     }
   },
   "files": [
