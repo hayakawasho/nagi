@@ -1,0 +1,77 @@
+//#region lib/addons/cue/index.ts
+function e() {
+	return new DOMException("aborted", "AbortError");
+}
+function t(t, n, r) {
+	t.addEventListener("abort", () => {
+		n(), r(e());
+	}, { once: !0 });
+}
+function n(n) {
+	return (r, i) => new Promise((a, o) => {
+		if (i.aborted) {
+			o(e());
+			return;
+		}
+		let s = new IntersectionObserver((e) => {
+			for (let t of e) if (t.isIntersecting) {
+				s.disconnect(), a();
+				return;
+			}
+		}, n);
+		s.observe(r), t(i, () => s.disconnect(), o);
+	});
+}
+function r(n) {
+	return (r, i) => new Promise((r, a) => {
+		if (i.aborted) {
+			a(e());
+			return;
+		}
+		if (typeof requestIdleCallback != "function") {
+			let e = setTimeout(() => r(), n ?? 0);
+			t(i, () => clearTimeout(e), a);
+			return;
+		}
+		let o = requestIdleCallback(() => r(), n == null ? void 0 : { timeout: n });
+		t(i, () => cancelIdleCallback(o), a);
+	});
+}
+function i(n) {
+	return (r, i) => new Promise((r, a) => {
+		if (i.aborted) {
+			a(e());
+			return;
+		}
+		let o = matchMedia(n);
+		if (o.matches) {
+			r();
+			return;
+		}
+		let s = () => {
+			o.matches && (o.removeEventListener("change", s), r());
+		};
+		o.addEventListener("change", s), t(i, () => o.removeEventListener("change", s), a);
+	});
+}
+function a(n = [
+	"click",
+	"focus",
+	"pointerenter"
+]) {
+	return (r, i) => new Promise((a, o) => {
+		if (i.aborted) {
+			o(e());
+			return;
+		}
+		let s = () => {
+			for (let e of n) r.removeEventListener(e, c);
+		}, c = () => {
+			s(), a();
+		};
+		for (let e of n) r.addEventListener(e, c, { once: !0 });
+		t(i, s, o);
+	});
+}
+//#endregion
+export { r as idle, a as interaction, i as media, n as visible };

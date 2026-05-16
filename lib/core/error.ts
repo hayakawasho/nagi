@@ -1,5 +1,5 @@
 import type { RefElement } from "../types";
-import type { ComponentContext } from "./internal/component";
+import type { ComponentContext } from "./component";
 
 export type LifecycleErrorDetails = {
   phase: "setup" | "mount" | "unmount" | "removeChild";

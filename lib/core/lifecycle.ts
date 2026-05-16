@@ -1,11 +1,7 @@
-import { getCurrentComponent } from "./internal/component";
+import { LifecycleHooks } from "./component";
+import { getCurrentComponent } from "./runtime";
 
 import type { LifecycleHandler } from "../types";
-
-export enum LifecycleHooks {
-  MOUNTED = "Mounted",
-  UNMOUNTED = "Unmounted",
-}
 
 function createHook(lifecycleType: LifecycleHooks) {
   return (hook: LifecycleHandler) => {

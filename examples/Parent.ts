@@ -9,57 +9,67 @@ import {
   withContext,
   ref,
   readonly,
-} from '../lib/main'
-import type { ReadonlyRef } from '../lib/main'
-import Child from './Child'
+} from "../lib/main";
+import type { ReadonlyRef } from "../lib/main";
+import Child from "./Child";
 
 type Refs = {
-  child: HTMLButtonElement
-  or: HTMLElement | null
-}
+  child: HTMLButtonElement;
+  or: HTMLElement | null;
+};
 
 const [ParentProvider, useParentContext] = createContext<{
-  isOpen: ReadonlyRef<boolean>
-  onOpen: () => void
-  onClose: () => void
-}>()
+  isOpen: ReadonlyRef<boolean>;
+  onOpen: () => void;
+  onClose: () => void;
+}>();
 
-export { useParentContext }
+export { useParentContext };
 
 export default defineComponent({
-  name: 'parent',
+  name: "parent",
   setup(_el) {
-    const { refs } = useDomRef<Refs>('child', 'or')
-    const { addChild } = useSlot()
+    const { refs } = useDomRef<Refs>();
+    const { addChild } = useSlot();
 
-    const isOpen = ref(false)
+    const isOpen = ref(false);
 
-    const [child] = addChild(refs.child, withContext(ParentProvider, {
-      isOpen: readonly(isOpen),
-      onOpen: () => {
-        isOpen.value = true;
-      },
-      onClose: () => {
-        isOpen.value = false;
-      },
-    })(Child), {})
+    const [child] = addChild(
+      refs.child,
+      withContext(ParentProvider, {
+        isOpen: readonly(isOpen),
+        onOpen: () => {
+          isOpen.value = true;
+        },
+        onClose: () => {
+          isOpen.value = false;
+        },
+      })(Child),
+      {},
+    );
 
-    child.current.test()
+    child.current.test();
 
     useMount(() => {
-      console.log('parent:mount')
-    })
+      console.log("parent:mount");
+    });
 
     useUnmount(() => {
-      console.log('parent:unmount')
-    })
+      console.log("parent:unmount");
+    });
 
-    useMediaQuery('(min-width:640px)', () => {
-      console.log('mq:mount')
+    useMediaQuery("(min-width:640px)", () => {
+      console.log("mq:mount");
 
       return () => {
-        console.log('mq:cleanup')
-      }
-    })
+        console.log("mq:cleanup");
+      };
+    });
+
+    return {
+      hoge: () => {
+        return "hoge";
+      },
+    };
   },
-})
+});

@@ -1,6 +1,6 @@
 {
   "name": "lake",
-  "version": "2.0.0-alpha.3",
+  "version": "2.0.0-beta.1",
   "main": "./dist/main.umd.js",
   "module": "./dist/main.es.js",
   "exports": {
@@ -8,6 +8,16 @@
       "types": "./types/main.d.ts",
       "import": "./dist/main.es.js",
       "require": "./dist/main.umd.js"
+    },
+    "./addons/scheduler": {
+      "types": "./types/addons/scheduler/index.d.ts",
+      "import": "./dist/addons/scheduler.es.js",
+      "require": "./dist/addons/scheduler.cjs.js"
+    },
+    "./addons/cue": {
+      "types": "./types/addons/cue/index.d.ts",
+      "import": "./dist/addons/cue.es.js",
+      "require": "./dist/addons/cue.cjs.js"
     }
   },
   "files": [
@@ -26,7 +36,7 @@
     "dom binding"
   ],
   "scripts": {
-    "build": "NODE_ENV=production tsc && vite build",
+    "build": "NODE_ENV=production tsc && vite build && vite build --config vite.addons.config.ts",
     "watch": "vite build -w",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -43,5 +53,6 @@
     "vite": "^8.0.10",
     "vitest": "^4.1.5"
   },
-  "type": "module"
+  "type": "module",
+  "sideEffects": false
 }

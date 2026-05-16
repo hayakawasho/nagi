@@ -1,5 +1,5 @@
 import type { RefElement } from "../types";
-import type { ComponentContext } from "./internal/component";
+import type { ComponentContext } from "./component";
 export type LifecycleErrorDetails = {
     phase: "setup" | "mount" | "unmount" | "removeChild";
     name: string;
@@ -18,4 +18,3 @@ export declare class LifecycleError extends Error {
     static create(phase: LifecycleErrorDetails["phase"], target: ComponentContext, cause: unknown, parent?: ComponentContext | null | undefined, extra?: Partial<LifecycleErrorDetails>): LifecycleError;
 }
 export declare function isLifecycleError(error: unknown): error is LifecycleError;
-//# sourceMappingURL=error.d.ts.map
