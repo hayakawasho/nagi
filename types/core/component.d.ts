@@ -17,9 +17,7 @@ export declare class ComponentContext<T = any> {
     constructor(element: RefElement, name: string);
     onMount: () => void;
     onUnmount: () => void;
-    /** @internal useSlot から呼び出される内部 API。外部利用は非推奨。 */
     addChild: (child: ComponentContext) => void;
-    /** @internal useSlot から呼び出される内部 API。外部利用は非推奨。 */
     removeChild: (child: ComponentContext) => void;
     get childElements(): RefElement[];
 }
