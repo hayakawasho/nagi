@@ -1,4 +1,10 @@
-import { create, defineComponent, ref, useDomRef, useUnmount } from "../../lib/main";
+import {
+  create,
+  defineComponent,
+  ref,
+  useDomRef,
+  useUnmount,
+} from "../../lib/main";
 
 const Counter = defineComponent({
   name: "counter",

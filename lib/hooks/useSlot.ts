@@ -31,7 +31,7 @@ export function useSlot() {
           context.removeChild(child);
         } catch (cause) {
           console.error(
-            "[Lake] removeChild failed",
+            "[nagi] removeChild failed",
             LifecycleError.create("removeChild", child, cause, context),
           );
         }

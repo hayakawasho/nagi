@@ -1,70 +1,86 @@
 import {
-	create,
-	createContext,
-	defineComponent,
-	readonly,
-	ref,
-	useDomRef,
-	useEvent,
-	useSlot,
-	useWatch,
-	withContext,
+  create,
+  createContext,
+  defineComponent,
+  readonly,
+  ref,
+  useDomRef,
+  useEvent,
+  useSlot,
+  useWatch,
+  withContext,
 } from "../../lib/main";
 import type { ReadonlyRef } from "../../lib/main";
 
 type DisclosureContext = {
-	isOpen: ReadonlyRef<boolean>;
-	toggle: () => void;
+  isOpen: ReadonlyRef<boolean>;
+  toggle: () => void;
 };
 
-const [DisclosureProvider, useDisclosureContext] = createContext<DisclosureContext>();
+type TriggerProps = {
+  label: string;
+};
 
-const Trigger = defineComponent({
-	name: "trigger",
-	setup(el: HTMLButtonElement) {
-		const { isOpen, toggle } = useDisclosureContext();
+const [DisclosureProvider, useDisclosureContext] =
+  createContext<DisclosureContext>();
 
-		useEvent(el, "click", toggle);
+const Trigger = defineComponent<{ focus: () => void }, TriggerProps>({
+  name: "trigger",
+  setup(el: HTMLButtonElement, props) {
+    const { isOpen, toggle } = useDisclosureContext();
 
-		useWatch(isOpen, (open) => {
-			el.setAttribute("aria-expanded", String(open));
-		});
-	},
+    el.textContent = props.label;
+    useEvent(el, "click", toggle);
+
+    useWatch(isOpen, (open) => {
+      el.setAttribute("aria-expanded", String(open));
+    });
+
+    return {
+      focus() {
+        el.focus();
+      },
+    };
+  },
 });
 
 const Disclosure = defineComponent({
-	name: "disclosure",
-	setup() {
-		const { refs } = useDomRef<{
-			trigger: HTMLButtonElement;
-			panel: HTMLDivElement;
-		}>();
-		const { addChild } = useSlot();
+  name: "disclosure",
+  setup() {
+    const { refs } = useDomRef<{
+      trigger: HTMLButtonElement;
+      panel: HTMLDivElement;
+    }>();
+    const { addChild } = useSlot();
 
-		const isOpen = ref(false);
+    const isOpen = ref(false);
 
-		const toggle = () => {
-			isOpen.value = !isOpen.value;
-		};
+    const toggle = () => {
+      isOpen.value = !isOpen.value;
+    };
 
-		addChild(
-			refs.trigger,
-			withContext(DisclosureProvider, {
-				isOpen: readonly(isOpen),
-				toggle,
-			})(Trigger),
-			{},
-		);
+    const [trigger] = addChild(
+      refs.trigger,
+      withContext(DisclosureProvider, {
+        isOpen: readonly(isOpen),
+        toggle,
+      })(Trigger),
+      { label: "Toggle panel" },
+    );
 
-		useWatch(isOpen, (open) => {
-			refs.panel.hidden = !open;
-		});
-	},
+    useWatch(isOpen, (open) => {
+      refs.panel.hidden = !open;
+
+      if (!open) {
+        trigger.current.focus();
+      }
+    });
+  },
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-	const root = document.getElementById("disclosure");
-	if (!root) return;
-	const app = create();
-	app.component(Disclosure)(root);
+  const root = document.getElementById("disclosure");
+  if (!root) return;
+  const app = create();
+  app.component(Disclosure)(root);
 });

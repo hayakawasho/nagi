@@ -37,7 +37,7 @@ function n(e) {
 var r = class e extends Error {
 	details;
 	constructor(e) {
-		super(`[Lake] Component error in phase "${e.phase}" for "${e.name}"${e.path ? ` (${e.path})` : ""}`, { cause: e.cause }), this.name = "LifecycleError", this.details = e;
+		super(`[nagi] Component error in phase "${e.phase}" for "${e.name}"${e.path ? ` (${e.path})` : ""}`, { cause: e.cause }), this.name = "LifecycleError", this.details = e;
 	}
 	static create(t, r, i, a = r.parent, o) {
 		return new e({
@@ -88,7 +88,7 @@ var s = /* @__PURE__ */ function(e) {
 			let n = t();
 			typeof n == "function" && e.push(n);
 		} catch (e) {
-			console.error("[Lake] onMount hook failed", r.create("mount", this, e));
+			console.error("[nagi] onMount hook failed", r.create("mount", this, e));
 		}
 		this.Unmounted.push(...e);
 	};
@@ -96,7 +96,7 @@ var s = /* @__PURE__ */ function(e) {
 		for (let e of this.Unmounted) try {
 			e();
 		} catch (e) {
-			console.error("[Lake] onUnmount cleanup failed", r.create("unmount", this, e));
+			console.error("[nagi] onUnmount cleanup failed", r.create("unmount", this, e));
 		}
 		for (let e of this.#e) e.onUnmount();
 	};
@@ -367,7 +367,7 @@ function L() {
 				try {
 					e.removeChild(t);
 				} catch (n) {
-					console.error("[Lake] removeChild failed", r.create("removeChild", t, n, e));
+					console.error("[nagi] removeChild failed", r.create("removeChild", t, n, e));
 				}
 			});
 		}
