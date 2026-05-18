@@ -13,15 +13,12 @@
 ## Why nagi?
 
 **Can be added in small parts to existing HTML**
-
 You can add `setup()`, lifecycle, and reactivity to WordPress, CMS, Webflow, static sites, etc., without introducing a virtual DOM or templates.
 
 **Compatible with animation**
-
 You can initialize GSAP, Lenis, IntersectionObserver, etc., in `setup()` and clean them up with `useUnmount()`.
 
 **Does not restrict mounting strategies**
-
 You are free to implement `[data-component]` scanning, manifests, lazy imports, MutationObserver, and so on, on the consuming side.
 
 ---
@@ -120,11 +117,11 @@ An example of automatic mounting by combining `[data-component]` scanning, manif
 
 ### Reactivity
 
-| API                 | Description                                                    |
-| ------------------- | -------------------------------------------------------------- |
-| `ref(value)`        | Creates a reactive reference                                   |
-| `readonly(ref)`     | Read-only wrapper around a ref                                 |
-| `computed(fn)`      | Derived value that auto-tracks `ref` dependencies              |
+| API                 | Description                                                       |
+| ------------------- | ----------------------------------------------------------------- |
+| `ref(value)`        | Creates a reactive reference                                      |
+| `readonly(ref)`     | Read-only wrapper around a ref                                    |
+| `computed(fn)`      | Derived value that auto-tracks `ref` dependencies                 |
 | `useWatch(ref, cb)` | Calls `cb` on value change; automatically unsubscribes on unmount |
 
 ```ts
@@ -139,10 +136,10 @@ useWatch(area, (v) => {
 
 ### Lifecycle
 
-| API              | Description                               |
-| ---------------- | ----------------------------------------- |
-| `useMount(fn)`   | Runs once after the component mounts      |
-| `useUnmount(fn)` | Runs on unmount; use for cleanup          |
+| API              | Description                          |
+| ---------------- | ------------------------------------ |
+| `useMount(fn)`   | Runs once after the component mounts |
+| `useUnmount(fn)` | Runs on unmount; use for cleanup     |
 
 ```ts
 import gsap from 'gsap';
@@ -155,12 +152,12 @@ setup(el) {
 
 ### DOM helpers
 
-| API                            | Description                                                  |
-| ------------------------------ | ------------------------------------------------------------ |
-| `useDomRef<T>()`               | Typed access to `[data-ref]` elements                        |
-| `useRootRef()`                 | Returns the component root element                           |
-| `useEvent(el, event, handler)` | Adds an event listener; automatically removed on unmount     |
-| `useSlot()`                    | Mounts child components; tied to the parent's unmount        |
+| API                            | Description                                              |
+| ------------------------------ | -------------------------------------------------------- |
+| `useDomRef<T>()`               | Typed access to `[data-ref]` elements                    |
+| `useRootRef()`                 | Returns the component root element                       |
+| `useEvent(el, event, handler)` | Adds an event listener; automatically removed on unmount |
+| `useSlot()`                    | Mounts child components; tied to the parent's unmount    |
 
 ### Parent / child
 
@@ -182,13 +179,13 @@ import { createScheduler } from "@usenagi/core/addons/scheduler";
 import { visible, idle, interaction, media } from "@usenagi/core/addons/cue";
 ```
 
-| API                      | Description                                                           |
-| ------------------------ | --------------------------------------------------------------------- |
+| API                      | Description                                                             |
+| ------------------------ | ----------------------------------------------------------------------- |
 | `createScheduler(opts?)` | Returns a Scheduler implementing `schedule(task, { priority, signal })` |
-| `visible(opts?)`         | A Cue that resolves when the element enters the viewport              |
-| `idle(timeout?)`         | A Cue that resolves via `requestIdleCallback`                         |
-| `interaction(events?)`   | A Cue that resolves on the first user interaction                     |
-| `media(query)`           | A Cue that resolves when the media query matches                      |
+| `visible(opts?)`         | A Cue that resolves when the element enters the viewport                |
+| `idle(timeout?)`         | A Cue that resolves via `requestIdleCallback`                           |
+| `interaction(events?)`   | A Cue that resolves on the first user interaction                       |
+| `media(query)`           | A Cue that resolves when the media query matches                        |
 
 ---
 
@@ -221,7 +218,6 @@ import { visible, idle, interaction, media } from "@usenagi/core/addons/cue";
 - Scenarios where you only need to add interactive UI to specific parts of a page.
 - When you want to use a composition-style approach with `setup()`, lifecycle hooks, and reactivity, but do not require a virtual DOM.
 
-
 **Not Recommended For:**
 
 - When you want to handle list rendering or conditional logic via HTML templates (it does not support equivalents to `v-for` or `v-if`).
@@ -233,13 +229,13 @@ import { visible, idle, interaction, media } from "@usenagi/core/addons/cue";
 
 ## Examples
 
-| Example                                               | Description                                            |
-| ----------------------------------------------------- | ------------------------------------------------------ |
-| [basic-counter](./examples/basic-counter/)            | Minimal `ref` + `useWatch` example                     |
-| [computed](./examples/computed/)                      | Derived value with `computed` (width × height = area)  |
-| [parent-child](./examples/parent-child/)              | `createContext` + `withContext` + `useSlot`            |
-| [lenis-scroll-scene](./examples/lenis-scroll-scene/)  | Scroll-progress animation with Lenis + `computed`      |
-| [byo-mounter recipe](./examples/recipes/byo-mounter/) | `[data-component]` scanning + manifest + cue           |
+| Example                                               | Description                                           |
+| ----------------------------------------------------- | ----------------------------------------------------- |
+| [basic-counter](./examples/basic-counter/)            | Minimal `ref` + `useWatch` example                    |
+| [computed](./examples/computed/)                      | Derived value with `computed` (width × height = area) |
+| [parent-child](./examples/parent-child/)              | `createContext` + `withContext` + `useSlot`           |
+| [lenis-scroll-scene](./examples/lenis-scroll-scene/)  | Scroll-progress animation with Lenis + `computed`     |
+| [byo-mounter recipe](./examples/recipes/byo-mounter/) | `[data-component]` scanning + manifest + cue          |
 
 ---
 
