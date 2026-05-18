@@ -37,7 +37,7 @@ function n(e) {
 var r = class e extends Error {
 	details;
 	constructor(e) {
-		super(`[Lake] Component error in phase "${e.phase}" for "${e.name}"${e.path ? ` (${e.path})` : ""}`, { cause: e.cause }), this.name = "LifecycleError", this.details = e;
+		super(`[nagi] Component error in phase "${e.phase}" for "${e.name}"${e.path ? ` (${e.path})` : ""}`, { cause: e.cause }), this.name = "LifecycleError", this.details = e;
 	}
 	static create(t, r, i, a = r.parent, o) {
 		return new e({
@@ -69,8 +69,8 @@ function o(e, t) {
 var s = /* @__PURE__ */ function(e) {
 	return e.MOUNTED = "Mounted", e.UNMOUNTED = "Unmounted", e;
 }({}), c = 0, l = class {
-	[s.MOUNTED] = [];
-	[s.UNMOUNTED] = [];
+	Mounted = [];
+	Unmounted = [];
 	parent = null;
 	#e = [];
 	uid;
@@ -84,19 +84,19 @@ var s = /* @__PURE__ */ function(e) {
 	}
 	onMount = () => {
 		let e = [];
-		for (let t of this[s.MOUNTED]) try {
+		for (let t of this.Mounted) try {
 			let n = t();
 			typeof n == "function" && e.push(n);
 		} catch (e) {
-			console.error("[Lake] onMount hook failed", r.create("mount", this, e));
+			console.error("[nagi] onMount hook failed", r.create("mount", this, e));
 		}
-		this[s.UNMOUNTED].push(...e);
+		this.Unmounted.push(...e);
 	};
 	onUnmount = () => {
-		for (let e of this[s.UNMOUNTED]) try {
+		for (let e of this.Unmounted) try {
 			e();
 		} catch (e) {
-			console.error("[Lake] onUnmount cleanup failed", r.create("unmount", this, e));
+			console.error("[nagi] onUnmount cleanup failed", r.create("unmount", this, e));
 		}
 		for (let e of this.#e) e.onUnmount();
 	};
@@ -187,14 +187,14 @@ function h(e) {
 		f(e)[e].push(t);
 	};
 }
-var g = h(s.MOUNTED), _ = h(s.UNMOUNTED), v = Symbol("watch"), y = class {
+var g = h(s.MOUNTED), _ = h(s.UNMOUNTED), v = Symbol("watch"), y = null, b = class {
 	#e;
 	#t = /* @__PURE__ */ new Set();
 	constructor(e) {
 		this.#e = e;
 	}
 	get value() {
-		return this.#e;
+		return y !== null && y.add(this), this.#e;
 	}
 	set value(e) {
 		if (Object.is(e, this.#e)) return;
@@ -207,7 +207,7 @@ var g = h(s.MOUNTED), _ = h(s.UNMOUNTED), v = Symbol("watch"), y = class {
 			this.#t.delete(e);
 		};
 	}
-}, b = (e) => new y(e), x = class {
+}, x = (e) => new b(e), S = class {
 	#e;
 	constructor(e) {
 		this.#e = e;
@@ -218,16 +218,38 @@ var g = h(s.MOUNTED), _ = h(s.UNMOUNTED), v = Symbol("watch"), y = class {
 	[v](e) {
 		return this.#e[v](e);
 	}
-}, S = (e) => new x(e);
-function C(e, t) {
+}, C = (e) => new S(e);
+function w(e, t) {
 	return e[v](t);
 }
-function w(e, t) {
-	_(C(e, t));
+function T(e, t) {
+	_(w(e, t));
+}
+function E(e) {
+	let t = x(void 0), n = [], r = () => {
+		n.forEach((e) => {
+			e();
+		}), n = [];
+	}, i = () => {
+		r();
+		let a = y, o = /* @__PURE__ */ new Set();
+		y = o;
+		let s;
+		try {
+			s = e();
+		} finally {
+			y = a;
+		}
+		t.value = s;
+		for (let e of o) n.push(e[v](() => {
+			i();
+		}));
+	};
+	return i(), _(r), C(t);
 }
 //#endregion
 //#region lib/hooks/createContext.ts
-function T() {
+function D() {
 	let e = Symbol();
 	return [{ _id: e }, () => {
 		let t = f("createContext.use");
@@ -238,7 +260,7 @@ function T() {
 		throw Error("createContext.use: no provider found");
 	}];
 }
-function E(e, t) {
+function O(e, t) {
 	return (n) => ({
 		name: n.name,
 		setup(r, i) {
@@ -248,20 +270,20 @@ function E(e, t) {
 }
 //#endregion
 //#region lib/hooks/domRefs.ts
-function D(e, t) {
+function k(e, t) {
 	return t.some((t) => t !== e && t.contains(e));
 }
-function O(e, t, n) {
-	let r = `[data-ref="${CSS.escape(e)}"]`, i = Array.from(t.querySelectorAll(r)).filter((e) => !D(e, n));
+function A(e, t, n) {
+	let r = `[data-ref="${CSS.escape(e)}"]`, i = Array.from(t.querySelectorAll(r)).filter((e) => !k(e, n));
 	return i.length === 0 ? null : i.length === 1 ? i[0] : i;
 }
-function k(e, t) {
+function j(e, t) {
 	let n = /* @__PURE__ */ new Map();
 	return new Proxy({}, {
 		get(r, i) {
 			if (typeof i == "symbol" || i === "then") return;
 			if (n.has(i)) return n.get(i);
-			let a = O(i, e, t());
+			let a = A(i, e, t());
 			return n.set(i, a), a;
 		},
 		has(e, t) {
@@ -281,20 +303,20 @@ function k(e, t) {
 }
 //#endregion
 //#region lib/hooks/useDomRef.ts
-function A() {
+function M() {
 	let e = f("useDomRef");
-	return { refs: k(e.element, () => e.childElements) };
+	return { refs: j(e.element, () => e.childElements) };
 }
 //#endregion
 //#region lib/hooks/useEvent.ts
-function j(e, t, n, r) {
+function N(e, t, n, r) {
 	g(() => (e.addEventListener(t, n, r), () => {
 		e.removeEventListener(t, n, r);
 	}));
 }
 //#endregion
 //#region lib/hooks/useIntersectionWatch.ts
-function M(e, t, n = {
+function P(e, t, n = {
 	rootMargin: "0px",
 	threshold: .1
 }) {
@@ -314,23 +336,23 @@ function M(e, t, n = {
 }
 //#endregion
 //#region lib/hooks/useMediaQuery.ts
-function N(e, t) {
-	let n = window.matchMedia(e), r = b(n.matches), i = null;
+function F(e, t) {
+	let n = window.matchMedia(e), r = x(n.matches), i = null;
 	function a(e) {
 		r.value = e.matches, e.matches ? i = t() : (i?.(), i = null);
 	}
 	return g(() => (n.addEventListener("change", a), n.matches && (i = t()), () => {
 		i?.(), n.removeEventListener("change", a);
-	})), { matchesQuery: S(r) };
+	})), { matchesQuery: C(r) };
 }
 //#endregion
 //#region lib/hooks/useRootRef.ts
-function P() {
+function I() {
 	return f("useRootRef").element;
 }
 //#endregion
 //#region lib/hooks/useSlot.ts
-function F() {
+function L() {
 	let e = f("useSlot");
 	return {
 		addChild(t, n, r = {}) {
@@ -345,11 +367,11 @@ function F() {
 				try {
 					e.removeChild(t);
 				} catch (n) {
-					console.error("[Lake] removeChild failed", r.create("removeChild", t, n, e));
+					console.error("[nagi] removeChild failed", r.create("removeChild", t, n, e));
 				}
 			});
 		}
 	};
 }
 //#endregion
-export { r as LifecycleError, m as create, T as createContext, u as defineComponent, i as isLifecycleError, S as readonly, b as ref, A as useDomRef, j as useEvent, M as useIntersectionWatch, N as useMediaQuery, g as useMount, P as useRootRef, F as useSlot, _ as useUnmount, w as useWatch, E as withContext };
+export { r as LifecycleError, E as computed, m as create, D as createContext, u as defineComponent, i as isLifecycleError, C as readonly, x as ref, M as useDomRef, N as useEvent, P as useIntersectionWatch, F as useMediaQuery, g as useMount, I as useRootRef, L as useSlot, _ as useUnmount, T as useWatch, O as withContext };

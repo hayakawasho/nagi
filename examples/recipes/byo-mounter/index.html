@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>byo-mounter recipe</title>
+		<style>
+			body {
+				font-family: sans-serif;
+				padding: 2rem;
+				max-width: 600px;
+			}
+
+			h1 {
+				font-size: 1.25rem;
+				margin-bottom: 2rem;
+			}
+			h2 {
+				font-size: 0.875rem;
+				color: #888;
+				text-transform: uppercase;
+				letter-spacing: 0.05em;
+				margin: 2rem 0 0.5rem;
+			}
+
+			.card {
+				border: 1px solid #ddd;
+				border-radius: 6px;
+				padding: 1rem;
+				margin-bottom: 1rem;
+			}
+
+			.counter-controls {
+				display: flex;
+				align-items: center;
+				gap: 1rem;
+			}
+
+			button {
+				padding: 0.25rem 0.75rem;
+				border: 1px solid #ccc;
+				border-radius: 4px;
+				cursor: pointer;
+				background: #fff;
+			}
+
+			[data-component="banner"],
+			[data-component="idle-widget"] {
+				opacity: 0;
+				transition: opacity 0.4s;
+				padding: 0.75rem 1rem;
+				border: 1px dashed #bbb;
+				border-radius: 6px;
+				color: #555;
+				font-size: 0.9rem;
+			}
+
+			.spacer {
+				height: 120vh;
+				display: flex;
+				align-items: center;
+				color: #aaa;
+				font-size: 0.875rem;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>BYO mounter recipe</h1>
+		<p style="font-size: 0.875rem; color: #666">
+			Scan <code>[data-component]</code>, look up a manifest, pass <code>data-priority</code> and
+			<code>data-when</code> to the scheduler. Core has no opinions — this is one way to do it.
+		</p>
+
+		<!-- immediately mounted (no data-when) -->
+		<h2>Immediate</h2>
+		<div class="card" data-component="counter" data-mount-when="interaction:click,focus,pointerdown">
+			<div class="counter-controls">
+				<button data-ref="dec" type="button">−</button>
+				<span data-ref="count">0</span>
+				<button data-ref="inc" type="button">+</button>
+			</div>
+		</div>
+
+		<!-- idle mount — after browser has time -->
+		<h2>Idle mount <code>data-when="idle"</code></h2>
+		<div data-component="idle-widget" data-mount-when="idle" data-priority="background"></div>
+
+		<!-- unknown component — Noop fallback fires, warning in console -->
+		<h2>Unknown component → Noop fallback</h2>
+		<div class="card" style="font-size: 0.875rem; color: #888">
+			<code>[data-component="does-not-exist"]</code> — check the console for the warning.
+			<div data-component="does-not-exist" style="display: none"></div>
+		</div>
+
+		<!-- visible mount — scroll down to trigger -->
+		<div class="spacer">↓ scroll down to trigger the visible-mount</div>
+
+		<h2>Visible mount <code>data-mount-when="visible"</code></h2>
+		<div data-component="banner" data-mount-when="visible"></div>
+
+		<script type="module" src="./main.ts"></script>
+	</body>
+</html>

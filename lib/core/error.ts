@@ -30,7 +30,7 @@ export class LifecycleError extends Error {
 
   constructor(details: LifecycleErrorDetails) {
     super(
-      `[Lake] Component error in phase "${details.phase}" for "${details.name}"${details.path ? ` (${details.path})` : ""}`,
+      `[nagi] Component error in phase "${details.phase}" for "${details.name}"${details.path ? ` (${details.path})` : ""}`,
       { cause: details.cause },
     );
 

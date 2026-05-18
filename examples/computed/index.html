@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>computed example</title>
+    <style>
+      body { font-family: sans-serif; padding: 2rem; }
+      label { display: block; margin-bottom: 0.5rem; }
+      output { display: block; margin-top: 1rem; font-size: 1.5rem; font-weight: bold; }
+      p { margin-top: 0.5rem; color: #666; font-size: 0.875rem; }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <label>
+        Width
+        <input data-ref="width" type="number" value="10" min="0" />
+      </label>
+      <label>
+        Height
+        <input data-ref="height" type="number" value="5" min="0" />
+      </label>
+      <output data-ref="area"></output>
+      <p data-ref="label"></p>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

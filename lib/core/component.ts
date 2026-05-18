@@ -47,7 +47,7 @@ export class ComponentContext<T = any> {
         }
       } catch (cause) {
         console.error(
-          "[Lake] onMount hook failed",
+          "[nagi] onMount hook failed",
           LifecycleError.create("mount", this, cause),
         );
       }
@@ -62,7 +62,7 @@ export class ComponentContext<T = any> {
         unmount();
       } catch (cause) {
         console.error(
-          "[Lake] onUnmount cleanup failed",
+          "[nagi] onUnmount cleanup failed",
           LifecycleError.create("unmount", this, cause),
         );
       }

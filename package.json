@@ -1,6 +1,7 @@
 {
-  "name": "lake",
-  "version": "2.0.0-beta.1",
+  "name": "@usenagi/core",
+  "version": "0.1.0",
+  "description": "Composition-API ergonomics for vanilla DOM. Bring your own mounter.",
   "main": "./dist/main.umd.js",
   "module": "./dist/main.es.js",
   "exports": {
@@ -26,15 +27,27 @@
   ],
   "author": "hayakawasho",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/hayakawasho/lake/issues"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hayakawasho/nagi.git"
   },
-  "homepage": "https://github.com/hayakawasho/lake#readme",
+  "bugs": {
+    "url": "https://github.com/hayakawasho/nagi/issues"
+  },
+  "homepage": "https://github.com/hayakawasho/nagi#readme",
   "keywords": [
-    "component register",
-    "functional component",
-    "dom binding"
+    "dom",
+    "component",
+    "reactivity",
+    "composition-api",
+    "gsap",
+    "animation",
+    "vanilla",
+    "progressive-enhancement"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "NODE_ENV=production tsc && vite build && vite build --config vite.addons.config.ts",
     "watch": "vite build -w",

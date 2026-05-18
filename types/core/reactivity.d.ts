@@ -17,5 +17,6 @@ declare class ReadonlyRef<T> {
 }
 declare const readonly: <T = any>(ref: Ref<T>) => ReadonlyRef<T>;
 declare function useWatch<T>(ref: Ref<T> | ReadonlyRef<T>, callback: WatchCallback<T>): void;
-export { readonly, ref, useWatch };
+declare function computed<T>(getter: () => T): ReadonlyRef<T>;
+export { computed, readonly, ref, useWatch };
 export type { ReadonlyRef, Ref };
