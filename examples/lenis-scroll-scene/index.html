@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>lenis-scroll-scene</title>
+    <link rel="stylesheet" href="https://unpkg.com/lenis@1.3.15/dist/lenis.css" />
+    <style>
+      html.lenis,
+      html.lenis body {
+        height: auto;
+      }
+      .lenis.lenis-smooth [data-lenis-prevent] {
+        overscroll-behavior: contain;
+      }
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        color: #111;
+      }
+      .bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 4px;
+        width: 0%;
+        background: #2563eb;
+        z-index: 10;
+      }
+      .readout {
+        position: fixed;
+        bottom: 1rem;
+        right: 1rem;
+        padding: 0.5rem 0.75rem;
+        background: rgb(0 0 0 / 75%);
+        color: white;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        z-index: 10;
+      }
+      section {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: clamp(1.5rem, 4vw, 3rem);
+      }
+      section:nth-child(odd) {
+        background: #f8fafc;
+      }
+      section:nth-child(even) {
+        background: #e2e8f0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="scroll-ui" class="scroll-root">
+      <div class="bar" data-ref="bar"></div>
+      <div class="readout"><span data-ref="label">0%</span> scroll</div>
+      <section>Section 1</section>
+      <section>Section 2</section>
+      <section>Section 3</section>
+    </div>
+    <script src="https://unpkg.com/lenis@1.3.15/dist/lenis.min.js"></script>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
