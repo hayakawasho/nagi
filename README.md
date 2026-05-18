@@ -1,3 +1,5 @@
+**English** | [日本語](./README.ja.md)
+
 # nagi
 
 **Composition-style ergonomics for vanilla DOM. Bring your own mounter.**
@@ -10,14 +12,17 @@
 
 ## Why nagi?
 
-**既存 HTML に小さく足せる**
-WordPress、CMS、Webflow、静的サイトなどに、仮想 DOM やテンプレートを持ち込まず `setup()` / lifecycle / reactivity を追加できる。
+**Can be added in small parts to existing HTML**
 
-**アニメーションと相性が良い**
-GSAP、Lenis、IntersectionObserver などを `setup()` で初期化し、`useUnmount()` でクリーンアップできる。
+You can add `setup()`, lifecycle, and reactivity to WordPress, CMS, Webflow, static sites, etc., without introducing a virtual DOM or templates.
 
-**マウント戦略を縛らない**
-`[data-component]` スキャン、manifest、lazy import、MutationObserver などは利用側で自由に組める。
+**Compatible with animation**
+
+You can initialize GSAP, Lenis, IntersectionObserver, etc., in `setup()` and clean them up with `useUnmount()`.
+
+**Does not restrict mounting strategies**
+
+You are free to implement `[data-component]` scanning, manifests, lazy imports, MutationObserver, and so on, on the consuming side.
 
 ---
 
@@ -86,7 +91,7 @@ create().component(Greeting)(document.querySelector("#app")!);
 
 ### Scheduler + deferred mount
 
-遅延マウントが必要なら scheduler / cue addons を追加する。
+If delayed mounting is required, add the scheduler / cue addons.
 
 ```ts
 import { create } from "@usenagi/core";
@@ -95,18 +100,18 @@ import { visible, idle } from "@usenagi/core/addons/cue";
 
 const app = create({ scheduler: createScheduler() });
 
-// Intersection で visible になってからマウント
+// mount when the element enters the viewport
 app.component(HeavyWidget, { when: visible() })(el);
 
-// requestIdleCallback でマウント
+// mount during browser idle time
 app.component(Analytics, { when: idle() })(el);
 ```
 
-`when` は `setup()` の前に待機する条件、`priority` は `setup()` を含む mount task の実行タイミングを決める。
+`when` is a condition to wait for before `setup()`, and `priority` determines the execution timing of the mount task that includes `setup()`.
 
 ### BYO mounter recipe
 
-`[data-component]` スキャン、manifest、cue を組み合わせて自動マウントする一例。
+An example of automatic mounting by combining `[data-component]` scanning, manifests, and cues.
 → [examples/recipes/byo-mounter](./examples/recipes/byo-mounter/main.ts)
 
 ---
@@ -115,17 +120,17 @@ app.component(Analytics, { when: idle() })(el);
 
 ### Reactivity
 
-| API                 | 説明                                         |
-| ------------------- | -------------------------------------------- |
-| `ref(value)`        | リアクティブな参照を作成                     |
-| `readonly(ref)`     | 読み取り専用ラッパー                         |
-| `computed(fn)`      | 依存する `ref` を自動追跡する派生値          |
-| `useWatch(ref, cb)` | 値変更時にコールバック。unmount 時に自動解除 |
+| API                 | Description                                                    |
+| ------------------- | -------------------------------------------------------------- |
+| `ref(value)`        | Creates a reactive reference                                   |
+| `readonly(ref)`     | Read-only wrapper around a ref                                 |
+| `computed(fn)`      | Derived value that auto-tracks `ref` dependencies              |
+| `useWatch(ref, cb)` | Calls `cb` on value change; automatically unsubscribes on unmount |
 
 ```ts
 const width = ref(10);
 const height = ref(5);
-const area = computed(() => width.value * height.value); // 自動再計算
+const area = computed(() => width.value * height.value); // auto-recomputed
 
 useWatch(area, (v) => {
   output.textContent = String(v);
@@ -134,10 +139,10 @@ useWatch(area, (v) => {
 
 ### Lifecycle
 
-| API              | 説明                                       |
-| ---------------- | ------------------------------------------ |
-| `useMount(fn)`   | マウント完了後に1回実行                    |
-| `useUnmount(fn)` | アンマウント時に実行。クリーンアップに使う |
+| API              | Description                               |
+| ---------------- | ----------------------------------------- |
+| `useMount(fn)`   | Runs once after the component mounts      |
+| `useUnmount(fn)` | Runs on unmount; use for cleanup          |
 
 ```ts
 import gsap from 'gsap';
@@ -150,25 +155,25 @@ setup(el) {
 
 ### DOM helpers
 
-| API                            | 説明                                            |
-| ------------------------------ | ----------------------------------------------- |
-| `useDomRef<T>()`               | `[data-ref]` 要素を型付きで取得                 |
-| `useRootRef()`                 | ルート要素を取得                                |
-| `useEvent(el, event, handler)` | イベントリスナーを登録。unmount 時に自動除去    |
-| `useSlot()`                    | 子コンポーネントをマウント。親の unmount に連動 |
+| API                            | Description                                                  |
+| ------------------------------ | ------------------------------------------------------------ |
+| `useDomRef<T>()`               | Typed access to `[data-ref]` elements                        |
+| `useRootRef()`                 | Returns the component root element                           |
+| `useEvent(el, event, handler)` | Adds an event listener; automatically removed on unmount     |
+| `useSlot()`                    | Mounts child components; tied to the parent's unmount        |
 
 ### Parent / child
 
-`useSlot()` で子コンポーネントをマウントできる。親から子へは `props` または `createContext` / `withContext` で値を渡せる。`addChild()` が返す child context から、子の `setup()` 返り値も参照できる。
+You can mount child components with `useSlot()`. You can pass values from parent to child via `props` or `createContext` / `withContext`. From the child context returned by `addChild()`, you can also reference the return value of the child's `setup()`.
 
 → [examples/parent-child](./examples/parent-child/main.ts)
 
 ### Observers
 
-| API                               | 説明                                                |
-| --------------------------------- | --------------------------------------------------- |
-| `useIntersectionWatch(cb, opts?)` | IntersectionObserver。unmount 時に自動解除          |
-| `useMediaQuery(query)`            | `matchMedia` の結果を `ReadonlyRef<boolean>` で返す |
+| API                               | Description                                                         |
+| --------------------------------- | ------------------------------------------------------------------- |
+| `useIntersectionWatch(cb, opts?)` | IntersectionObserver wrapper; automatically disconnected on unmount |
+| `useMediaQuery(query)`            | Returns `matchMedia` result as a `ReadonlyRef<boolean>`             |
 
 ### Addons
 
@@ -177,13 +182,13 @@ import { createScheduler } from "@usenagi/core/addons/scheduler";
 import { visible, idle, interaction, media } from "@usenagi/core/addons/cue";
 ```
 
-| API                      | 説明                                                                         |
-| ------------------------ | ---------------------------------------------------------------------------- |
-| `createScheduler(opts?)` | `scheduler.schedule(task, { priority, signal })` を実装した Scheduler を返す |
-| `visible(opts?)`         | 要素が viewport に入ったら解決する Cue                                       |
-| `idle(timeout?)`         | `requestIdleCallback` で解決する Cue                                         |
-| `interaction(events?)`   | 最初のユーザー操作で解決する Cue                                             |
-| `media(query)`           | media query が一致したら解決する Cue                                         |
+| API                      | Description                                                           |
+| ------------------------ | --------------------------------------------------------------------- |
+| `createScheduler(opts?)` | Returns a Scheduler implementing `schedule(task, { priority, signal })` |
+| `visible(opts?)`         | A Cue that resolves when the element enters the viewport              |
+| `idle(timeout?)`         | A Cue that resolves via `requestIdleCallback`                         |
+| `interaction(events?)`   | A Cue that resolves on the first user interaction                     |
+| `media(query)`           | A Cue that resolves when the media query matches                      |
 
 ---
 
@@ -199,41 +204,42 @@ import { visible, idle, interaction, media } from "@usenagi/core/addons/cue";
 | `computed`              | ◯           | ◯         | ✗        | ◯          |
 | Core gzip               | ~2.6-2.9 kB | ~16 kB    | ~8 kB    | ~6 kB      |
 
-◯ = built-in、△ = userland / convention で対応可能、✗ = primary feature ではない。
+(◯ = built-in, △ = handled via userland/convention, ✗ = not a primary feature)
 
-- **vs Alpine / petite-vue**: HTML に式を書かず、ロジックを `.ts` に寄せる。
-- **vs Stimulus**: Controller 規約なし。mounter は利用側で自由に組める。
-- **vs React / Vue**: 宣言的 UI フレームワークではなく、既存 DOM に lifecycle を足す layer。
+- **vs Alpine / petite-vue**: Instead of writing logic expressions directly in HTML, you centralize your logic in `.ts` files.
+- **vs Stimulus**: No controller conventions; you are free to implement your own mounting strategy.
+- **vs React / Vue**: It is not a declarative UI framework, but rather a thin layer that adds lifecycle hooks to existing DOM.
 
 ---
 
 ## When to use / When not to
 
-**向いているケース**:
+**Recommended Use Cases:**
 
-- React/Vue ほどのランタイムを持ち込みにくいプロジェクト（CMS、Webflow、WordPress 等）
-- GSAP/Lenis を多用する、アニメーション主体のサイト
-- ページの一部だけに interactive な UI を追加したい
-- Composition-style な `setup()` / lifecycle / reactivity で書きたいが、仮想 DOM は不要
+- Projects where you cannot justify the runtime overhead of React or Vue (e.g., CMS, Webflow, WordPress).
+- Animation-heavy sites that rely heavily on libraries like GSAP or Lenis.
+- Scenarios where you only need to add interactive UI to specific parts of a page.
+- When you want to use a composition-style approach with `setup()`, lifecycle hooks, and reactivity, but do not require a virtual DOM.
 
-**向いていないケース**:
 
-- リスト描画や条件分岐を HTML テンプレートで書きたい（`v-for`, `v-if` 相当は持たない）
-- 深いオブジェクトのリアクティビティが必要（`reactive({})` は提供しない）
-- SSR/hydration が必要
-- アプリ全体の状態管理、ルーティング、宣言的な view rendering をまとめて任せたい
+**Not Recommended For:**
+
+- When you want to handle list rendering or conditional logic via HTML templates (it does not support equivalents to `v-for` or `v-if`).
+- When you need deep reactivity for complex objects (it does not provide `reactive({})`).
+- When SSR/hydration is required.
+- When you want a full-featured framework to handle global state management, routing, and declarative view rendering.
 
 ---
 
 ## Examples
 
-| Example                                               | 説明                                         |
-| ----------------------------------------------------- | -------------------------------------------- |
-| [basic-counter](./examples/basic-counter/)            | `ref` + `useWatch` の最小例                  |
-| [computed](./examples/computed/)                      | `computed` で派生値 (width × height = area)  |
-| [parent-child](./examples/parent-child/)              | `createContext` + `withContext` + `useSlot`  |
-| [lenis-scroll-scene](./examples/lenis-scroll-scene/)  | Lenis + `computed` でスクロール進捗連動      |
-| [byo-mounter recipe](./examples/recipes/byo-mounter/) | `[data-component]` スキャン + manifest + cue |
+| Example                                               | Description                                            |
+| ----------------------------------------------------- | ------------------------------------------------------ |
+| [basic-counter](./examples/basic-counter/)            | Minimal `ref` + `useWatch` example                     |
+| [computed](./examples/computed/)                      | Derived value with `computed` (width × height = area)  |
+| [parent-child](./examples/parent-child/)              | `createContext` + `withContext` + `useSlot`            |
+| [lenis-scroll-scene](./examples/lenis-scroll-scene/)  | Scroll-progress animation with Lenis + `computed`      |
+| [byo-mounter recipe](./examples/recipes/byo-mounter/) | `[data-component]` scanning + manifest + cue           |
 
 ---
 
