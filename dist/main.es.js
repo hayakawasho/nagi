@@ -227,7 +227,9 @@ function T(e, t) {
 }
 function E(e) {
 	let t = x(void 0), n = [], r = () => {
-		n.forEach((e) => e()), n = [];
+		n.forEach((e) => {
+			e();
+		}), n = [];
 	}, i = () => {
 		r();
 		let a = y, o = /* @__PURE__ */ new Set();
