@@ -13,12 +13,15 @@
 ## Why nagi?
 
 **Can be added in small parts to existing HTML**
+
 You can add `setup()`, lifecycle, and reactivity to WordPress, CMS, Webflow, static sites, etc., without introducing a virtual DOM or templates.
 
 **Compatible with animation**
+
 You can initialize GSAP, Lenis, IntersectionObserver, etc., in `setup()` and clean them up with `useUnmount()`.
 
 **Does not restrict mounting strategies**
+
 You are free to implement `[data-component]` scanning, manifests, lazy imports, MutationObserver, and so on, on the consuming side.
 
 ---

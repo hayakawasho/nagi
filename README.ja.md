@@ -13,12 +13,15 @@
 ## Why nagi?
 
 **既存 HTML に小さく足せる**
+
 WordPress、CMS、Webflow、静的サイトなどに、仮想 DOM やテンプレートを持ち込まず `setup()` / lifecycle / reactivity を追加できる。
 
 **アニメーションと相性が良い**
+
 GSAP、Lenis、IntersectionObserver などを `setup()` で初期化し、`useUnmount()` でクリーンアップできる。
 
 **マウント戦略を縛らない**
+
 `[data-component]` スキャン、manifest、lazy import、MutationObserver などは利用側で自由に組める。
 
 ---
