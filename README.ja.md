@@ -124,7 +124,7 @@ app.component(Analytics, { when: idle() })(el);
 | ---------------------- | -------------------------------------------------------------------- |
 | `signal(value)`        | `.value` を持つリアクティブな値コンテナを作成する                      |
 | `readonly(signal)`     | 書き込み可能な `signal` の読み取り専用ラッパー                         |
-| `useComputed(fn)`      | `signal` の依存を自動追跡する派生値（setup 内のみ）                   |
+| `useComputed(fn)`      | `signal` の依存を自動追跡する派生値                                   |
 | `useWatch(target, cb)` | 値変更時に `cb` を呼ぶ。unmount 時に自動で購読解除する                 |
 
 ```ts

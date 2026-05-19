@@ -124,7 +124,7 @@ An example of automatic mounting by combining `[data-component]` scanning, manif
 | ---------------------- | -------------------------------------------------------------- |
 | `signal(value)`        | Creates a reactive value container (`.value`)                    |
 | `readonly(signal)`     | Read-only wrapper around a writable `signal`                    |
-| `useComputed(fn)`      | Derived value that auto-tracks `signal` dependencies (setup only) |
+| `useComputed(fn)`      | Derived value that auto-tracks `signal` dependencies              |
 | `useWatch(target, cb)` | Calls `cb` on value change; automatically unsubscribes on unmount |
 
 ```ts
