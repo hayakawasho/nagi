@@ -1,4 +1,4 @@
-import { create, computed, ref, useMount, useWatch } from "../../lib/main";
+import { create, signal, useComputed, useMount, useWatch } from "../../lib/main";
 import { useDomRef } from "../../lib/hooks/useDomRef";
 
 type Refs = {
@@ -15,12 +15,12 @@ component({
   setup() {
     const { refs } = useDomRef<Refs>();
 
-    const width = ref(Number(refs.width.value));
-    const height = ref(Number(refs.height.value));
+    const width = signal(Number(refs.width.value));
+    const height = signal(Number(refs.height.value));
 
-    // 複数の ref から派生する値。width か height が変わると自動で再計算される
-    const area = computed(() => width.value * height.value);
-    const label = computed(() =>
+    // 複数の signal に依存した派生値。width か height が変わると自動で再計算される
+    const area = useComputed(() => width.value * height.value);
+    const label = useComputed(() =>
       area.value > 100 ? "大きい面積です" : "小さい面積です",
     );
 

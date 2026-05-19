@@ -1,7 +1,14 @@
 declare const Lenis: any;
 
-import { create, defineComponent } from "../../lib/main";
-import { computed, ref, useDomRef, useMount, useWatch } from "../../lib/main";
+import {
+  create,
+  defineComponent,
+  signal,
+  useComputed,
+  useDomRef,
+  useMount,
+  useWatch,
+} from "../../lib/main";
 
 const ScrollScene = defineComponent({
   name: "scrollScene",
@@ -11,15 +18,15 @@ const ScrollScene = defineComponent({
       label: HTMLSpanElement;
     }>();
 
-    const scrollY = ref(0);
+    const scrollY = signal(0);
 
-    const progress = computed(() => {
+    const progress = useComputed(() => {
       const max = document.documentElement.scrollHeight - window.innerHeight;
       if (max <= 0) return 0;
       return Math.min(1, Math.max(0, scrollY.value / max));
     });
 
-    const labelText = computed(() => `${Math.round(progress.value * 100)}%`);
+    const labelText = useComputed(() => `${Math.round(progress.value * 100)}%`);
 
     useWatch(progress, () => {
       refs.bar.style.width = `${progress.value * 100}%`;

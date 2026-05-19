@@ -3,17 +3,17 @@ import {
   createContext,
   defineComponent,
   readonly,
-  ref,
+  signal,
   useDomRef,
   useEvent,
   useSlot,
   useWatch,
   withContext,
 } from "../../lib/main";
-import type { ReadonlyRef } from "../../lib/main";
+import type { ReadonlySignal } from "../../lib/main";
 
 type DisclosureContext = {
-  isOpen: ReadonlyRef<boolean>;
+  isOpen: ReadonlySignal<boolean>;
   toggle: () => void;
 };
 
@@ -53,7 +53,7 @@ const Disclosure = defineComponent({
     }>();
     const { addChild } = useSlot();
 
-    const isOpen = ref(false);
+    const isOpen = signal(false);
 
     const toggle = () => {
       isOpen.value = !isOpen.value;

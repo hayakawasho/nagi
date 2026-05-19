@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { create } from "./app";
-import { computed, readonly, ref, useWatch } from "./reactivity";
+import { readonly, signal, useComputed, useWatch } from "./reactivity";
 
 function makeEl(): HTMLElement {
   const el = document.createElement("div");
@@ -13,46 +13,46 @@ afterEach(() => {
   document.body.innerHTML = "";
 });
 
-describe("ref", () => {
-  it("初期値を持つ Ref を作成できる", () => {
-    const r = ref(42);
+describe("signal", () => {
+  it("初期値を持つ Signal を作成できる", () => {
+    const r = signal(42);
     expect(r.value).toBe(42);
   });
 
   it("value を書き換えられる", () => {
-    const r = ref(0);
+    const r = signal(0);
     r.value = 99;
     expect(r.value).toBe(99);
   });
 
   it("各種型に対応できる", () => {
-    expect(ref("hello").value).toBe("hello");
-    expect(ref(false).value).toBe(false);
-    expect(ref(null).value).toBeNull();
+    expect(signal("hello").value).toBe("hello");
+    expect(signal(false).value).toBe(false);
+    expect(signal(null).value).toBeNull();
     const obj = { a: 1 };
-    expect(ref(obj).value).toBe(obj);
+    expect(signal(obj).value).toBe(obj);
   });
 });
 
 describe("readonly", () => {
-  it("ReadonlyRef は元の Ref の値を返す", () => {
-    const r = ref(10);
+  it("ReadonlySignal は元の Signal の値を返す", () => {
+    const r = signal(10);
     const ro = readonly(r);
     expect(ro.value).toBe(10);
   });
 
-  it("元の Ref を変更すると ReadonlyRef にも反映される", () => {
-    const r = ref(10);
+  it("元の Signal を変更すると ReadonlySignal にも反映される", () => {
+    const r = signal(10);
     const ro = readonly(r);
     r.value = 20;
     expect(ro.value).toBe(20);
   });
 
-  it("ReadonlyRef に setter は存在しないため代入すると例外を投げる", () => {
-    const r = ref(10);
+  it("ReadonlySignal に setter は存在しないため代入すると例外を投げる", () => {
+    const r = signal(10);
     const ro = readonly(r);
     expect(() => {
-      // @ts-expect-error: ReadonlyRef には setter がない
+      // @ts-expect-error: ReadonlySignal には setter がない
       ro.value = 99;
     }).toThrow(TypeError);
     // value は書き換わっていない
@@ -61,9 +61,9 @@ describe("readonly", () => {
 });
 
 describe("useWatch", () => {
-  it("Ref の値変更時に newVal と oldVal を渡して同期的に通知する", () => {
+  it("Signal の値変更時に newVal と oldVal を渡して同期的に通知する", () => {
     const el = makeEl();
-    const r = ref(0);
+    const r = signal(0);
     const callback = vi.fn();
     const { component } = create();
 
@@ -81,7 +81,7 @@ describe("useWatch", () => {
 
   it("同値代入では通知しない", () => {
     const el = makeEl();
-    const r = ref(0);
+    const r = signal(0);
     const callback = vi.fn();
     const { component } = create();
 
@@ -98,7 +98,7 @@ describe("useWatch", () => {
 
   it("NaN の再代入では通知しない", () => {
     const el = makeEl();
-    const r = ref(Number.NaN);
+    const r = signal(Number.NaN);
     const callback = vi.fn();
     const { component } = create();
 
@@ -113,9 +113,9 @@ describe("useWatch", () => {
     expect(callback).not.toHaveBeenCalled();
   });
 
-  it("ReadonlyRef 経由でも元の Ref の変更を通知する", () => {
+  it("ReadonlySignal 経由でも元の Signal の変更を通知する", () => {
     const el = makeEl();
-    const r = ref(10);
+    const r = signal(10);
     const ro = readonly(r);
     const callback = vi.fn();
     const { component } = create();
@@ -134,7 +134,7 @@ describe("useWatch", () => {
 
   it("component unmount 後は通知しない", () => {
     const el = makeEl();
-    const r = ref(0);
+    const r = signal(0);
     const callback = vi.fn();
     const { component, unmount } = create();
 
@@ -152,7 +152,7 @@ describe("useWatch", () => {
 
   it("複数 useWatch は登録順に呼ばれる", () => {
     const el = makeEl();
-    const r = ref(0);
+    const r = signal(0);
     const calls: string[] = [];
     const { component } = create();
 
@@ -170,7 +170,7 @@ describe("useWatch", () => {
 
   it("component unmount 時に unsubscribe する", () => {
     const el = makeEl();
-    const r = ref(0);
+    const r = signal(0);
     const callback = vi.fn();
     const { component, unmount } = create();
 
@@ -190,34 +190,34 @@ describe("useWatch", () => {
   });
 });
 
-describe("computed", () => {
+describe("useComputed", () => {
   it("初期値が即評価される", () => {
     const el = makeEl();
     const { component } = create();
 
-    let c: ReturnType<typeof computed<number>>;
+    let c: ReturnType<typeof useComputed<number>>;
 
     component({
       name: "test",
       setup: () => {
-        c = computed(() => 42);
+        c = useComputed(() => 42);
       },
     })(el);
 
     expect(c!.value).toBe(42);
   });
 
-  it("単一 ref 依存で値変更時に再計算される", () => {
+  it("単一 signal 依存で値変更時に再計算される", () => {
     const el = makeEl();
-    const r = ref(1);
+    const r = signal(1);
     const { component } = create();
 
-    let c: ReturnType<typeof computed<number>>;
+    let c: ReturnType<typeof useComputed<number>>;
 
     component({
       name: "test",
       setup: () => {
-        c = computed(() => r.value * 2);
+        c = useComputed(() => r.value * 2);
       },
     })(el);
 
@@ -226,18 +226,18 @@ describe("computed", () => {
     expect(c!.value).toBe(6);
   });
 
-  it("複数 ref 依存で片方変更時に再計算される", () => {
+  it("複数 signal 依存で片方変更時に再計算される", () => {
     const el = makeEl();
-    const a = ref(1);
-    const b = ref(10);
+    const a = signal(1);
+    const b = signal(10);
     const { component } = create();
 
-    let c: ReturnType<typeof computed<number>>;
+    let c: ReturnType<typeof useComputed<number>>;
 
     component({
       name: "test",
       setup: () => {
-        c = computed(() => a.value + b.value);
+        c = useComputed(() => a.value + b.value);
       },
     })(el);
 
@@ -248,18 +248,18 @@ describe("computed", () => {
     expect(c!.value).toBe(22);
   });
 
-  it("同じ ref を複数回読んでも重複購読しない", () => {
+  it("同じ signal を複数回読んでも重複購読しない", () => {
     const el = makeEl();
-    const r = ref(1);
+    const r = signal(1);
     const evalCount = vi.fn();
     const { component } = create();
 
-    let c: ReturnType<typeof computed<number>>;
+    let c: ReturnType<typeof useComputed<number>>;
 
     component({
       name: "test",
       setup: () => {
-        c = computed(() => {
+        c = useComputed(() => {
           evalCount();
           return r.value + r.value;
         });
@@ -274,14 +274,14 @@ describe("computed", () => {
 
   it("同値代入では再計算しない", () => {
     const el = makeEl();
-    const r = ref(5);
+    const r = signal(5);
     const evalCount = vi.fn();
     const { component } = create();
 
     component({
       name: "test",
       setup: () => {
-        computed(() => {
+        useComputed(() => {
           evalCount();
           return r.value;
         });
@@ -293,19 +293,19 @@ describe("computed", () => {
     expect(evalCount).not.toHaveBeenCalled();
   });
 
-  it("ネスト computed（computed が computed に依存）", () => {
+  it("ネスト useComputed（useComputed が useComputed に依存）", () => {
     const el = makeEl();
-    const r = ref(1);
+    const r = signal(1);
     const { component } = create();
 
-    let inner: ReturnType<typeof computed<number>>;
-    let outer: ReturnType<typeof computed<number>>;
+    let inner: ReturnType<typeof useComputed<number>>;
+    let outer: ReturnType<typeof useComputed<number>>;
 
     component({
       name: "test",
       setup: () => {
-        inner = computed(() => r.value * 2);
-        outer = computed(() => inner!.value + 1);
+        inner = useComputed(() => r.value * 2);
+        outer = useComputed(() => inner!.value + 1);
       },
     })(el);
 
@@ -317,16 +317,16 @@ describe("computed", () => {
 
   it("readonly 経由で参照しても依存追跡できる", () => {
     const el = makeEl();
-    const r = ref(1);
+    const r = signal(1);
     const ro = readonly(r);
     const { component } = create();
 
-    let c: ReturnType<typeof computed<number>>;
+    let c: ReturnType<typeof useComputed<number>>;
 
     component({
       name: "test",
       setup: () => {
-        c = computed(() => ro.value * 3);
+        c = useComputed(() => ro.value * 3);
       },
     })(el);
 
@@ -337,16 +337,16 @@ describe("computed", () => {
 
   it("component unmount 後は再計算されない", () => {
     const el = makeEl();
-    const r = ref(0);
+    const r = signal(0);
     const evalCount = vi.fn();
     const { component, unmount } = create();
 
-    let c: ReturnType<typeof computed<number>>;
+    let c: ReturnType<typeof useComputed<number>>;
 
     component({
       name: "test",
       setup: () => {
-        c = computed(() => {
+        c = useComputed(() => {
           evalCount();
           return r.value;
         });
@@ -362,7 +362,7 @@ describe("computed", () => {
 
   it("setup() 外で呼ぶとエラーになる", () => {
     expect(() => {
-      computed(() => 1);
+      useComputed(() => 1);
     }).toThrow();
   });
 });

@@ -1,7 +1,7 @@
 import {
   create,
   defineComponent,
-  ref,
+  signal,
   useDomRef,
   useUnmount,
 } from "../../lib/main";
@@ -14,7 +14,7 @@ const Counter = defineComponent({
       decrement: HTMLButtonElement;
       count: HTMLSpanElement;
     }>();
-    const n = ref(0);
+    const n = signal(0);
 
     const sync = () => {
       refs.count.textContent = String(n.value);

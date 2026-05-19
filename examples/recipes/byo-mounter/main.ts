@@ -14,7 +14,7 @@
 import {
   create,
   defineComponent,
-  ref,
+  signal,
   useDomRef,
   useWatch,
   useMount,
@@ -37,7 +37,7 @@ const Counter = defineComponent({
       dec: HTMLButtonElement;
     }>();
 
-    const n = ref(0);
+    const n = signal(0);
 
     useWatch(n, (v) => {
       refs.count.textContent = String(v);

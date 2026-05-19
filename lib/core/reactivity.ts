@@ -6,10 +6,10 @@ type Unwatch = () => void;
 
 const WATCH = Symbol("watch");
 
-// computed の getter 実行中のみ Set。それ以外は null。Ref 単位で重複購読を防ぐ。
-let currentDeps: Set<Ref<unknown>> | null = null;
+// useComputed の getter 実行中のみ Set。それ以外は null。Signal 単位で重複購読を防ぐ。
+let currentDeps: Set<Signal<unknown>> | null = null;
 
-class Ref<T> {
+class Signal<T> {
   #rawValue: T;
   #watchers = new Set<WatchCallback<T>>();
 
@@ -19,7 +19,7 @@ class Ref<T> {
 
   get value() {
     if (currentDeps !== null) {
-      currentDeps.add(this as Ref<unknown>);
+      currentDeps.add(this as Signal<unknown>);
     }
 
     return this.#rawValue;
@@ -48,37 +48,43 @@ class Ref<T> {
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: generic default
-const ref = <T = any>(val: T) => new Ref(val);
+const signal = <T = any>(val: T) => new Signal(val);
 
-class ReadonlyRef<T> {
-  #ref: Ref<T>;
+class ReadonlySignal<T> {
+  #inner: Signal<T>;
 
-  constructor(value: Ref<T>) {
-    this.#ref = value;
+  constructor(value: Signal<T>) {
+    this.#inner = value;
   }
 
   get value() {
-    return this.#ref.value;
+    return this.#inner.value;
   }
 
   [WATCH](callback: WatchCallback<T>) {
-    return this.#ref[WATCH](callback);
+    return this.#inner[WATCH](callback);
   }
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: generic default
-const readonly = <T = any>(ref: Ref<T>) => new ReadonlyRef(ref);
+const readonly = <T = any>(s: Signal<T>) => new ReadonlySignal(s);
 
-function watch<T>(ref: Ref<T> | ReadonlyRef<T>, callback: WatchCallback<T>) {
-  return ref[WATCH](callback);
+function watch<T>(
+  target: Signal<T> | ReadonlySignal<T>,
+  callback: WatchCallback<T>,
+) {
+  return target[WATCH](callback);
 }
 
-function useWatch<T>(ref: Ref<T> | ReadonlyRef<T>, callback: WatchCallback<T>) {
-  useUnmount(watch(ref, callback));
+function useWatch<T>(
+  target: Signal<T> | ReadonlySignal<T>,
+  callback: WatchCallback<T>,
+) {
+  useUnmount(watch(target, callback));
 }
 
-function computed<T>(getter: () => T): ReadonlyRef<T> {
-  const result = ref<T>(undefined as T);
+function useComputed<T>(getter: () => T): ReadonlySignal<T> {
+  const result = signal<T>(undefined as T);
   let unwatchers: Unwatch[] = [];
 
   const cleanup = () => {
@@ -92,7 +98,7 @@ function computed<T>(getter: () => T): ReadonlyRef<T> {
     cleanup();
 
     const prev = currentDeps;
-    const deps = new Set<Ref<unknown>>();
+    const deps = new Set<Signal<unknown>>();
     currentDeps = deps;
 
     let nextValue: T;
@@ -104,7 +110,7 @@ function computed<T>(getter: () => T): ReadonlyRef<T> {
 
     // この時点で依存収集は既に終了 (currentDeps 復元済み) なので、
     // 下の result.value 代入で watcher が result.value を読んでも
-    // この computed が自分自身に依存してしまうことはない。
+    // この useComputed が自分自身に依存してしまうことはない。
     result.value = nextValue;
 
     for (const dep of deps) {
@@ -122,6 +128,6 @@ function computed<T>(getter: () => T): ReadonlyRef<T> {
   return readonly(result);
 }
 
-export { computed, readonly, ref, useWatch };
+export { readonly, signal, useComputed, useWatch };
 
-export type { ReadonlyRef, Ref };
+export type { ReadonlySignal, Signal };

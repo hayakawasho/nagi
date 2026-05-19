@@ -1,5 +1,5 @@
 import { useMount } from "../core/lifecycle";
-import { readonly, ref } from "../core/reactivity";
+import { readonly, signal } from "../core/reactivity";
 
 import type { Cleanup } from "../types";
 
@@ -8,7 +8,7 @@ export function useMediaQuery(
   callbackWhenMatches: () => Cleanup,
 ) {
   const mediaQueryList = window.matchMedia(query);
-  const matchesQuery = ref(mediaQueryList.matches);
+  const matchesQuery = signal(mediaQueryList.matches);
 
   let cleanup: Cleanup | null = null;
 

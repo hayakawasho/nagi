@@ -30,7 +30,7 @@ You are free to implement `[data-component]` scanning, manifests, lazy imports, 
 
 ```ts
 // counter.ts
-import { create, ref, useWatch, useDomRef } from "@usenagi/core";
+import { create, signal, useWatch, useDomRef } from "@usenagi/core";
 
 const { component } = create();
 
@@ -42,7 +42,7 @@ component({
       btn: HTMLButtonElement;
     }>();
 
-    const n = ref(0);
+    const n = signal(0);
     useWatch(n, (v) => {
       refs.count.textContent = String(v);
     });
@@ -71,13 +71,13 @@ npm i @usenagi/core
 ### First component
 
 ```ts
-import { create, defineComponent, ref, useWatch, useDomRef } from "@usenagi/core";
+import { create, defineComponent, signal, useWatch, useDomRef } from "@usenagi/core";
 
 const Greeting = defineComponent({
   name: "greeting",
   setup(el, props) {
     const { refs } = useDomRef<{ message: HTMLParagraphElement }>();
-    const text = ref((props.name as string) ?? "world");
+    const text = signal((props.name as string) ?? "world");
 
     useWatch(text, (v) => {
       refs.message.textContent = `Hello, ${v}!`;
@@ -120,17 +120,17 @@ An example of automatic mounting by combining `[data-component]` scanning, manif
 
 ### Reactivity
 
-| API                 | Description                                                       |
-| ------------------- | ----------------------------------------------------------------- |
-| `ref(value)`        | Creates a reactive reference                                      |
-| `readonly(ref)`     | Read-only wrapper around a ref                                    |
-| `computed(fn)`      | Derived value that auto-tracks `ref` dependencies                 |
-| `useWatch(ref, cb)` | Calls `cb` on value change; automatically unsubscribes on unmount |
+| API                    | Description                                                    |
+| ---------------------- | -------------------------------------------------------------- |
+| `signal(value)`        | Creates a reactive value container (`.value`)                    |
+| `readonly(signal)`     | Read-only wrapper around a writable `signal`                    |
+| `useComputed(fn)`      | Derived value that auto-tracks `signal` dependencies              |
+| `useWatch(target, cb)` | Calls `cb` on value change; automatically unsubscribes on unmount |
 
 ```ts
-const width = ref(10);
-const height = ref(5);
-const area = computed(() => width.value * height.value); // auto-recomputed
+const width = signal(10);
+const height = signal(5);
+const area = useComputed(() => width.value * height.value); // auto-recomputed
 
 useWatch(area, (v) => {
   output.textContent = String(v);
@@ -139,10 +139,10 @@ useWatch(area, (v) => {
 
 ### Lifecycle
 
-| API              | Description                          |
-| ---------------- | ------------------------------------ |
-| `useMount(fn)`   | Runs once after the component mounts |
-| `useUnmount(fn)` | Runs on unmount; use for cleanup     |
+| API              | Description                               |
+| ---------------- | ----------------------------------------- |
+| `useMount(fn)`   | Runs once after the component mounts      |
+| `useUnmount(fn)` | Runs on unmount; use for cleanup          |
 
 ```ts
 import gsap from 'gsap';
@@ -155,12 +155,13 @@ setup(el) {
 
 ### DOM helpers
 
-| API                            | Description                                              |
-| ------------------------------ | -------------------------------------------------------- |
-| `useDomRef<T>()`               | Typed access to `[data-ref]` elements                    |
-| `useRootRef()`                 | Returns the component root element                       |
-| `useEvent(el, event, handler)` | Adds an event listener; automatically removed on unmount |
-| `useSlot()`                    | Mounts child components; tied to the parent's unmount    |
+Use **`setup(el)`** for the root element and **`useDomRef()`** for `[data-ref]` descendants.
+
+| API                            | Description                                                  |
+| ------------------------------ | ------------------------------------------------------------ |
+| `useDomRef<T>()`               | Typed access to `[data-ref]` elements                        |
+| `useEvent(el, event, handler)` | Adds an event listener; automatically removed on unmount     |
+| `useSlot()`                    | Mounts child components; tied to the parent's unmount        |
 
 ### Parent / child
 
@@ -173,7 +174,7 @@ You can mount child components with `useSlot()`. You can pass values from parent
 | API                               | Description                                                         |
 | --------------------------------- | ------------------------------------------------------------------- |
 | `useIntersectionWatch(cb, opts?)` | IntersectionObserver wrapper; automatically disconnected on unmount |
-| `useMediaQuery(query)`            | Returns `matchMedia` result as a `ReadonlyRef<boolean>`             |
+| `useMediaQuery(query)`            | Returns `matchMedia` result as a `ReadonlySignal<boolean>`           |
 
 ### Addons
 
@@ -182,13 +183,13 @@ import { createScheduler } from "@usenagi/core/addons/scheduler";
 import { visible, idle, interaction, media } from "@usenagi/core/addons/cue";
 ```
 
-| API                      | Description                                                             |
-| ------------------------ | ----------------------------------------------------------------------- |
+| API                      | Description                                                           |
+| ------------------------ | --------------------------------------------------------------------- |
 | `createScheduler(opts?)` | Returns a Scheduler implementing `schedule(task, { priority, signal })` |
-| `visible(opts?)`         | A Cue that resolves when the element enters the viewport                |
-| `idle(timeout?)`         | A Cue that resolves via `requestIdleCallback`                           |
-| `interaction(events?)`   | A Cue that resolves on the first user interaction                       |
-| `media(query)`           | A Cue that resolves when the media query matches                        |
+| `visible(opts?)`         | A Cue that resolves when the element enters the viewport              |
+| `idle(timeout?)`         | A Cue that resolves via `requestIdleCallback`                         |
+| `interaction(events?)`   | A Cue that resolves on the first user interaction                     |
+| `media(query)`           | A Cue that resolves when the media query matches                      |
 
 ---
 
@@ -201,8 +202,8 @@ import { visible, idle, interaction, media } from "@usenagi/core/addons/cue";
 | BYO mounter             | ◯           | △         | △        | △          |
 | Async mount cue         | ◯           | ✗         | ✗        | ✗          |
 | Lifecycle cleanup       | ◯           | △         | ◯        | △          |
-| `computed`              | ◯           | ◯         | ✗        | ◯          |
-| Core gzip               | ~2.6-2.9 kB | ~16 kB    | ~8 kB    | ~6 kB      |
+| `useComputed` (derived signals) | ◯           | ◯         | ✗        | ◯          |
+| Core gzip               | ~2.5 kB     | ~16 kB    | ~8 kB    | ~6 kB      |
 
 (◯ = built-in, △ = handled via userland/convention, ✗ = not a primary feature)
 
@@ -232,13 +233,13 @@ import { visible, idle, interaction, media } from "@usenagi/core/addons/cue";
 
 ## Examples
 
-| Example                                               | Description                                           |
-| ----------------------------------------------------- | ----------------------------------------------------- |
-| [basic-counter](./examples/basic-counter/)            | Minimal `ref` + `useWatch` example                    |
-| [computed](./examples/computed/)                      | Derived value with `computed` (width × height = area) |
-| [parent-child](./examples/parent-child/)              | `createContext` + `withContext` + `useSlot`           |
-| [lenis-scroll-scene](./examples/lenis-scroll-scene/)  | Scroll-progress animation with Lenis + `computed`     |
-| [byo-mounter recipe](./examples/recipes/byo-mounter/) | `[data-component]` scanning + manifest + cue          |
+| Example                                               | Description                                            |
+| ----------------------------------------------------- | ------------------------------------------------------ |
+| [basic-counter](./examples/basic-counter/)            | Minimal `signal` + `useWatch` example                          |
+| [computed](./examples/computed/)                     | Derived value with `useComputed` (width × height = area)        |
+| [parent-child](./examples/parent-child/)              | `createContext` + `withContext` + `useSlot`            |
+| [lenis-scroll-scene](./examples/lenis-scroll-scene/)  | Scroll-progress animation with Lenis + `useComputed`          |
+| [byo-mounter recipe](./examples/recipes/byo-mounter/) | `[data-component]` scanning + manifest + cue           |
 
 ---
 
