@@ -137,13 +137,6 @@ useWatch(area, (v) => {
 });
 ```
 
-If you come from Vue: `signal` replaces `ref` for **state**, and DOM elements still use `[data-ref]` + `useDomRef()` (different meaning from “refs”).
-
-| Vue (or previous naming) | nagi |
-| ----------------------- | ----- |
-| `ref(x)`               | `signal(x)` |
-| `computed(fn)`          | `useComputed(fn)` |
-
 ### Lifecycle
 
 | API              | Description                               |
@@ -162,10 +155,11 @@ setup(el) {
 
 ### DOM helpers
 
+Use **`setup(el)`** for the root element and **`useDomRef()`** for `[data-ref]` descendants.
+
 | API                            | Description                                                  |
 | ------------------------------ | ------------------------------------------------------------ |
 | `useDomRef<T>()`               | Typed access to `[data-ref]` elements                        |
-| `useRootRef()`                 | Returns the component root element                           |
 | `useEvent(el, event, handler)` | Adds an event listener; automatically removed on unmount     |
 | `useSlot()`                    | Mounts child components; tied to the parent's unmount        |
 
@@ -227,7 +221,6 @@ import { visible, idle, interaction, media } from "@usenagi/core/addons/cue";
 - Animation-heavy sites that rely heavily on libraries like GSAP or Lenis.
 - Scenarios where you only need to add interactive UI to specific parts of a page.
 - When you want to use a composition-style approach with `setup()`, lifecycle hooks, and reactivity, but do not require a virtual DOM.
-
 
 **Not Recommended For:**
 

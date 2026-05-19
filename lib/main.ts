@@ -8,7 +8,6 @@ export { useDomRef } from "./hooks/useDomRef";
 export { useEvent } from "./hooks/useEvent";
 export { useIntersectionWatch } from "./hooks/useIntersectionWatch";
 export { useMediaQuery } from "./hooks/useMediaQuery";
-export { useRootRef } from "./hooks/useRootRef";
 export { useSlot } from "./hooks/useSlot";
 
 export type { ComponentContext } from "./core/component";

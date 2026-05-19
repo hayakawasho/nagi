@@ -134,13 +134,6 @@ useWatch(area, (v) => {
 });
 ```
 
-Vue 利用者向け：**状態**は Vue の `ref` にあたる `signal` で持ち、`[data-ref]` + `useDomRef()` で触る DOM とは語が別です。
-
-| Vue（または旧名前） | nagi |
-| ------------------- | ------ |
-| `ref(x)`            | `signal(x)` |
-| `computed(fn)`      | `useComputed(fn)` |
-
 ### Lifecycle
 
 | API              | 説明                                       |
@@ -159,10 +152,11 @@ setup(el) {
 
 ### DOM helpers
 
+ルート要素は **`setup(el)`**、`[data-ref]` の子要素は **`useDomRef()`** で扱います。
+
 | API                            | 説明                                            |
 | ------------------------------ | ----------------------------------------------- |
 | `useDomRef<T>()`               | `[data-ref]` 要素を型付きで取得                 |
-| `useRootRef()`                 | ルート要素を取得                                |
 | `useEvent(el, event, handler)` | イベントリスナーを登録。unmount 時に自動除去    |
 | `useSlot()`                    | 子コンポーネントをマウント。親の unmount に連動 |
 
