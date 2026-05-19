@@ -27,7 +27,7 @@ GSAP、Lenis、IntersectionObserver などを `setup()` で初期化し、`useUn
 
 ```ts
 // counter.ts
-import { create, ref, useWatch, useDomRef } from "@usenagi/core";
+import { create, signal, useWatch, useDomRef } from "@usenagi/core";
 
 const { component } = create();
 
@@ -39,7 +39,7 @@ component({
       btn: HTMLButtonElement;
     }>();
 
-    const n = ref(0);
+    const n = signal(0);
     useWatch(n, (v) => {
       refs.count.textContent = String(v);
     });
@@ -68,13 +68,13 @@ npm i @usenagi/core
 ### First component
 
 ```ts
-import { create, defineComponent, ref, useWatch, useDomRef } from "@usenagi/core";
+import { create, defineComponent, signal, useWatch, useDomRef } from "@usenagi/core";
 
 const Greeting = defineComponent({
   name: "greeting",
   setup(el, props) {
     const { refs } = useDomRef<{ message: HTMLParagraphElement }>();
-    const text = ref((props.name as string) ?? "world");
+    const text = signal((props.name as string) ?? "world");
 
     useWatch(text, (v) => {
       refs.message.textContent = `Hello, ${v}!`;
@@ -117,22 +117,29 @@ app.component(Analytics, { when: idle() })(el);
 
 ### Reactivity
 
-| API                 | 説明                                         |
-| ------------------- | -------------------------------------------- |
-| `ref(value)`        | リアクティブな参照を作成                     |
-| `readonly(ref)`     | 読み取り専用ラッパー                         |
-| `computed(fn)`      | 依存する `ref` を自動追跡する派生値          |
-| `useWatch(ref, cb)` | 値変更時にコールバック。unmount 時に自動解除 |
+| API                       | 説明                                         |
+| ------------------------- | -------------------------------------------- |
+| `signal(value)`           | リアクティブな値コンテナを作成（`.value`）   |
+| `readonly(signal)`      | `signal` を読み取り専用で包む               |
+| `useComputed(fn)`       | `signal` に依存した派生値（`setup()` 内のみ） |
+| `useWatch(target, cb)` | 値変更時にコールバック。unmount 時に自動解除 |
 
 ```ts
-const width = ref(10);
-const height = ref(5);
-const area = computed(() => width.value * height.value); // 自動再計算
+const width = signal(10);
+const height = signal(5);
+const area = useComputed(() => width.value * height.value); // 自動再計算
 
 useWatch(area, (v) => {
   output.textContent = String(v);
 });
 ```
+
+Vue 利用者向け：**状態**は Vue の `ref` にあたる `signal` で持ち、`[data-ref]` + `useDomRef()` で触る DOM とは語が別です。
+
+| Vue（または旧名前） | nagi |
+| ------------------- | ------ |
+| `ref(x)`            | `signal(x)` |
+| `computed(fn)`      | `useComputed(fn)` |
 
 ### Lifecycle
 
@@ -170,7 +177,7 @@ setup(el) {
 | API                               | 説明                                                |
 | --------------------------------- | --------------------------------------------------- |
 | `useIntersectionWatch(cb, opts?)` | IntersectionObserver。unmount 時に自動解除          |
-| `useMediaQuery(query)`            | `matchMedia` の結果を `ReadonlyRef<boolean>` で返す |
+| `useMediaQuery(query)`            | `matchMedia` の結果を `ReadonlySignal<boolean>` で返す |
 
 ### Addons
 
@@ -198,7 +205,7 @@ import { visible, idle, interaction, media } from "@usenagi/core/addons/cue";
 | BYO mounter             | ◯           | △         | △        | △          |
 | Async mount cue         | ◯           | ✗         | ✗        | ✗          |
 | Lifecycle cleanup       | ◯           | △         | ◯        | △          |
-| `computed`              | ◯           | ◯         | ✗        | ◯          |
+| `useComputed`（派生 signal） | ◯           | ◯         | ✗        | ◯          |
 | Core gzip               | ~2.6-2.9 kB | ~16 kB    | ~8 kB    | ~6 kB      |
 
 ◯ = built-in、△ = userland / convention で対応可能、✗ = primary feature ではない。
@@ -231,10 +238,10 @@ import { visible, idle, interaction, media } from "@usenagi/core/addons/cue";
 
 | Example                                               | 説明                                         |
 | ----------------------------------------------------- | -------------------------------------------- |
-| [basic-counter](./examples/basic-counter/)            | `ref` + `useWatch` の最小例                  |
-| [computed](./examples/computed/)                      | `computed` で派生値 (width × height = area)  |
+| [basic-counter](./examples/basic-counter/)            | `signal` + `useWatch` の最小例                  |
+| [computed](./examples/computed/)                      | `useComputed` で派生値 (width × height = area)  |
 | [parent-child](./examples/parent-child/)              | `createContext` + `withContext` + `useSlot`  |
-| [lenis-scroll-scene](./examples/lenis-scroll-scene/)  | Lenis + `computed` でスクロール進捗連動      |
+| [lenis-scroll-scene](./examples/lenis-scroll-scene/)  | Lenis + `useComputed` でスクロール進捗連動      |
 | [byo-mounter recipe](./examples/recipes/byo-mounter/) | `[data-component]` スキャン + manifest + cue |
 
 ---

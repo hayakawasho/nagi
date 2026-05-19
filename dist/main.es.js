@@ -374,4 +374,4 @@ function L() {
 	};
 }
 //#endregion
-export { r as LifecycleError, E as computed, m as create, D as createContext, u as defineComponent, i as isLifecycleError, C as readonly, x as ref, M as useDomRef, N as useEvent, P as useIntersectionWatch, F as useMediaQuery, g as useMount, I as useRootRef, L as useSlot, _ as useUnmount, T as useWatch, O as withContext };
+export { r as LifecycleError, m as create, D as createContext, u as defineComponent, i as isLifecycleError, C as readonly, x as signal, E as useComputed, M as useDomRef, N as useEvent, P as useIntersectionWatch, F as useMediaQuery, g as useMount, I as useRootRef, L as useSlot, _ as useUnmount, T as useWatch, O as withContext };

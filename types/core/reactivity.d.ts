@@ -1,22 +1,22 @@
 type WatchCallback<T> = (newVal: T, oldVal: T) => void;
 type Unwatch = () => void;
 declare const WATCH: unique symbol;
-declare class Ref<T> {
+declare class Signal<T> {
     #private;
     constructor(value: T);
     get value(): T;
     set value(newVal: T);
     [WATCH](callback: WatchCallback<T>): Unwatch;
 }
-declare const ref: <T = any>(val: T) => Ref<T>;
-declare class ReadonlyRef<T> {
+declare const signal: <T = any>(val: T) => Signal<T>;
+declare class ReadonlySignal<T> {
     #private;
-    constructor(value: Ref<T>);
+    constructor(value: Signal<T>);
     get value(): T;
     [WATCH](callback: WatchCallback<T>): Unwatch;
 }
-declare const readonly: <T = any>(ref: Ref<T>) => ReadonlyRef<T>;
-declare function useWatch<T>(ref: Ref<T> | ReadonlyRef<T>, callback: WatchCallback<T>): void;
-declare function computed<T>(getter: () => T): ReadonlyRef<T>;
-export { computed, readonly, ref, useWatch };
-export type { ReadonlyRef, Ref };
+declare const readonly: <T = any>(s: Signal<T>) => ReadonlySignal<T>;
+declare function useWatch<T>(target: Signal<T> | ReadonlySignal<T>, callback: WatchCallback<T>): void;
+declare function useComputed<T>(getter: () => T): ReadonlySignal<T>;
+export { readonly, signal, useComputed, useWatch };
+export type { ReadonlySignal, Signal };

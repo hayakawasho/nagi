@@ -51,7 +51,7 @@ function makeEl(): HTMLElement {
 }
 
 describe("useMediaQuery", () => {
-  it("matchesQuery を ReadonlyRef として返す", () => {
+  it("matchesQuery を ReadonlySignal として返す", () => {
     const root = makeEl();
     let matchesQuery: unknown;
     const { component } = create();
