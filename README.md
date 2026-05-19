@@ -203,7 +203,7 @@ import { visible, idle, interaction, media } from "@usenagi/core/addons/cue";
 | Async mount cue         | ◯           | ✗         | ✗        | ✗          |
 | Lifecycle cleanup       | ◯           | △         | ◯        | △          |
 | `useComputed` (derived signals) | ◯           | ◯         | ✗        | ◯          |
-| Core gzip               | ~2.6-2.9 kB | ~16 kB    | ~8 kB    | ~6 kB      |
+| Core gzip               | ~2.5 kB     | ~16 kB    | ~8 kB    | ~6 kB      |
 
 (◯ = built-in, △ = handled via userland/convention, ✗ = not a primary feature)
 
