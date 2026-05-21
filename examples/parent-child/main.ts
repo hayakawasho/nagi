@@ -11,6 +11,7 @@ import {
   useWatch,
   withContext,
 } from "../../lib/main";
+
 import type { ReadonlySignal } from "../../lib/main";
 
 type DisclosureContext = {
@@ -18,8 +19,7 @@ type DisclosureContext = {
   toggle: () => void;
 };
 
-const [DisclosureProvider, useDisclosureContext] =
-  createContext<DisclosureContext>();
+const [DisclosureProvider, useDisclosureContext] = createContext<DisclosureContext>();
 
 const Trigger = defineComponent({
   name: "trigger",
