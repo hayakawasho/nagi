@@ -4,7 +4,14 @@ import { isAbortError } from "../../utils/isAbortError";
 import { createPendingMounts } from "./pending";
 import { createScheduler } from "./scheduler";
 
-import type { SchedulePriority } from "../../types";
+import type { Cue, SchedulePriority } from "../../types";
+
+declare module "../../core/addon" {
+  interface MountOptions {
+    priority?: SchedulePriority;
+    when?: Cue;
+  }
+}
 
 export function schedulerAddon(opts?: { priority?: SchedulePriority }) {
   return defineAddon({

@@ -107,7 +107,7 @@ app.component(HeavyWidget, { when: visible() })(el);
 app.component(Analytics, { when: idle() })(el);
 ```
 
-`when` is a condition to wait for before `setup()`, and `priority` determines the execution timing of the mount task that includes `setup()`.
+With `schedulerAddon()`, `when` is a condition to wait for before `setup()`, and `priority` determines the execution timing of the mount task that includes `setup()`.
 
 ### BYO mounter recipe
 
@@ -194,7 +194,7 @@ const app = create().install(schedulerAddon(), myAddon());
 
 `addMountMiddleware`, `addUnmountMiddleware`, and `addComponentMiddleware` apply **outermost for addons installed later** (`install(a, b)` runs as `b → a → core`).
 
-Deferred mounting requires `schedulerAddon()`. The same applies when using `when`. Addon state (scheduler / pending) is created **per app `install`**, not per addon instance.
+Deferred mounting requires `schedulerAddon()`. The same applies when using `when` or `priority`; these mount options are interpreted by the scheduler addon. Addon state (scheduler / pending) is created **per app `install`**, not per addon instance.
 
 #### Scheduler + cue
 

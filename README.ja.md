@@ -107,7 +107,7 @@ app.component(HeavyWidget, { when: visible() })(el);
 app.component(Analytics, { when: idle() })(el);
 ```
 
-`when` は `setup()` の前に待機する条件、`priority` は `setup()` を含む mount task の実行タイミングを決める。
+`schedulerAddon()` を使うと、`when` は `setup()` の前に待機する条件、`priority` は `setup()` を含む mount task の実行タイミングを決める。
 
 ### BYO mounter recipe
 
@@ -194,7 +194,7 @@ const app = create().install(schedulerAddon(), myAddon());
 
 `addMountMiddleware` / `addUnmountMiddleware` / `addComponentMiddleware` は **後から install した addon ほど外側**に適用される（`install(a, b)` なら実行順は `b → a → コア`）。
 
-遅延 mount には `schedulerAddon()` が必要。`when` を使う場合も同様。addon の状態（scheduler / pending）は **各 app の `install` ごと**に作られる。
+遅延 mount には `schedulerAddon()` が必要。`when` や `priority` を使う場合も同様で、これらの mount option は scheduler addon が解釈する。addon の状態（scheduler / pending）は **各 app の `install` ごと**に作られる。
 
 #### Scheduler + cue
 

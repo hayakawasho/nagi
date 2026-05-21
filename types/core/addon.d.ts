@@ -1,9 +1,9 @@
-import type { ComponentSetup, Cue, RefElement, SchedulePriority } from "../types";
-/** Options for `app.component(setup, opts)` — used by mount addons (e.g. scheduler). */
-export type MountOptions = {
-    priority?: SchedulePriority;
-    when?: Cue;
-};
+import type { ComponentSetup, RefElement } from "../types";
+declare const mountOptionsBrand: unique symbol;
+/** Options for `app.component(setup, opts)` — extended by mount addons. */
+export interface MountOptions {
+    readonly [mountOptionsBrand]?: never;
+}
 /** Mount after addon middleware runs — may return void when mount is deferred (e.g. scheduler). */
 export type MountFn = (el: RefElement, props: Record<string, any>) => any;
 export type UnmountFn = (targets: RefElement[]) => void;
