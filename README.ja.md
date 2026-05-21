@@ -32,9 +32,9 @@ GSAP、Lenis、IntersectionObserver などを `setup()` で初期化し、`useUn
 // counter.ts
 import { create, signal, useWatch, useDomRef } from "@usenagi/core";
 
-const { component } = create();
+const app = create();
 
-component({
+app.component({
   name: "counter",
   setup() {
     const { refs } = useDomRef<{
@@ -71,13 +71,14 @@ npm i @usenagi/core
 ### First component
 
 ```ts
-import { create, defineComponent, signal, useWatch, useDomRef } from "@usenagi/core";
+import { create, defineComponent, propTypes, signal, useWatch, useDomRef } from "@usenagi/core";
 
 const Greeting = defineComponent({
   name: "greeting",
+  props: propTypes<{ name: string }>(),
   setup(el, props) {
     const { refs } = useDomRef<{ message: HTMLParagraphElement }>();
-    const text = signal((props.name as string) ?? "world");
+    const text = signal(props.name ?? "world");
 
     useWatch(text, (v) => {
       refs.message.textContent = `Hello, ${v}!`;
@@ -117,6 +118,13 @@ app.component(Analytics, { when: idle() })(el);
 ---
 
 ## API
+
+### Component Definition
+
+| API                    | 説明                                                             |
+| ---------------------- | ---------------------------------------------------------------- |
+| `defineComponent(opts)` | 型安全な `ComponentSetup` 定義ヘルパー                          |
+| `propTypes<T>()`       | コンポーネント props の型マーカー（ランタイムコストゼロ）         |
 
 ### Reactivity
 
