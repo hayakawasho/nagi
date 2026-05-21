@@ -95,10 +95,10 @@ create().component(Greeting)(document.querySelector("#app")!);
 
 ```ts
 import { create } from "@usenagi/core";
-import { createScheduler } from "@usenagi/core/addons/scheduler";
+import { schedulerAddon } from "@usenagi/core/addons/scheduler";
 import { visible, idle } from "@usenagi/core/addons/cue";
 
-const app = create({ scheduler: createScheduler() });
+const app = create().install(schedulerAddon());
 
 // mount when the element enters the viewport
 app.component(HeavyWidget, { when: visible() })(el);
@@ -179,17 +179,38 @@ setup(el) {
 ### Addons
 
 ```ts
-import { createScheduler } from "@usenagi/core/addons/scheduler";
+import { create, defineAddon } from "@usenagi/core";
+import { schedulerAddon } from "@usenagi/core/addons/scheduler";
+
+const app = create().install(schedulerAddon(), myAddon());
+```
+
+| API | 説明 |
+| --- | --- |
+| `defineAddon({ name, install(ctx) })` | addon を定義する（`ctx` は `AddonContext`） |
+| `app.install(...addons)` | app に addon を登録する（複数可） |
+| `ctx.addMountMiddleware` / `addUnmountMiddleware` / `addComponentMiddleware` | mount / unmount / ComponentSetup の middleware を追加する |
+| `ctx.installedAddons` | この app に install 済みの addon 名 |
+
+`addMountMiddleware` / `addUnmountMiddleware` / `addComponentMiddleware` は **後から install した addon ほど外側**に適用される（`install(a, b)` なら実行順は `b → a → コア`）。
+
+遅延 mount には `schedulerAddon()` が必要。`when` を使う場合も同様。addon の状態（scheduler / pending）は **各 app の `install` ごと**に作られる。
+
+#### Scheduler + cue
+
+```ts
+import { schedulerAddon } from "@usenagi/core/addons/scheduler";
 import { visible, idle, interaction, media } from "@usenagi/core/addons/cue";
 ```
 
-| API                      | 説明                                                               |
-| ------------------------ | ------------------------------------------------------------------ |
-| `createScheduler(opts?)` | `schedule(task, { priority, signal })` を実装した Scheduler を返す |
-| `visible(opts?)`         | 要素が viewport に入ったときに解決する Cue                         |
-| `idle(timeout?)`         | `requestIdleCallback` で解決する Cue                               |
-| `interaction(events?)`   | 最初のユーザー操作で解決する Cue                                   |
-| `media(query)`           | media query が一致したときに解決する Cue                           |
+| API | 説明 |
+| --- | --- |
+| `schedulerAddon(opts?)` | 遅延 mount 用 addon（内部で `createScheduler` を使用） |
+| `createScheduler(opts?)` | カスタム Scheduler 実装用の low-level API |
+| `visible(opts?)` | 要素が viewport に入ったときに解決する Cue |
+| `idle(timeout?)` | `requestIdleCallback` で解決する Cue |
+| `interaction(events?)` | 最初のユーザー操作で解決する Cue |
+| `media(query)` | media query が一致したときに解決する Cue |
 
 ---
 

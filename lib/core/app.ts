@@ -1,136 +1,67 @@
-import { isAbortError } from "../utils/isAbortError";
-
-import { createPendingMountTasks } from "./internal/pending";
+import { createAddonRegistry } from "./addon";
 import {
   bindDOMNodeToComponent,
   DOM_COMPONENT_INSTANCE,
 } from "./internal/registry";
 import { createComponent } from "./runtime";
 
-import type {
-  ComponentSetup,
-  Cue,
-  RefElement,
-  SchedulePriority,
-  Scheduler,
-} from "../types";
+import type { ComponentSetup, RefElement } from "../types";
+import type { Addon, MountOptions } from "./addon";
 import type { ComponentContext } from "./component";
 
-type AppOptions = {
-  priority?: SchedulePriority;
-};
-
-type AsyncAppOptions = AppOptions & {
-  when?: Cue;
-};
-
-type SyncApp = {
+type App = {
+  install(...addons: Addon[]): App;
   component<S extends ComponentSetup>(
-    wrap: S,
-    opts?: AppOptions,
-  ): (
-    el: RefElement,
-    props?: Record<string, any>,
-  ) => ComponentContext<ReturnType<S["setup"]>>;
-  unmount(targets: RefElement[]): void;
-};
-
-type AsyncApp = {
-  component<S extends ComponentSetup>(
-    wrap: S,
-    opts?: AsyncAppOptions,
+    component: S,
+    opts?: MountOptions,
   ): (
     el: RefElement,
     // biome-ignore lint/suspicious/noExplicitAny: internal props type
     props?: Record<string, any>,
-  ) => void;
+  ) => ComponentContext<ReturnType<S["setup"]>> | void;
   unmount(targets: RefElement[]): void;
 };
 
-export function create(): SyncApp;
-export function create(config: { scheduler?: undefined }): SyncApp;
-export function create(config: { scheduler: Scheduler }): AsyncApp;
-export function create(config: {
-  scheduler?: Scheduler | undefined;
-}): SyncApp | AsyncApp;
-export function create(
-  config: { scheduler?: Scheduler } = {},
-): SyncApp | AsyncApp {
-  const { scheduler } = config;
-  const pendingMountTasks = createPendingMountTasks();
+export function create(): App {
+  const addonRegistry = createAddonRegistry();
 
-  return {
-    component(wrap: ComponentSetup, { priority, when }: AsyncAppOptions = {}) {
-      // biome-ignore lint/suspicious/noExplicitAny: internal props type
-      return (el: RefElement, props?: Record<string, any>) => {
-        function mount() {
-          const component = createComponent(wrap, el, props);
-          bindDOMNodeToComponent(el, component);
-          component.onMount();
+  const baseUnmount = (targets: RefElement[]) => {
+    for (const el of targets) {
+      const component = DOM_COMPONENT_INSTANCE.get(el);
 
-          return component;
-        }
+      if (component) {
+        component.onUnmount();
+        DOM_COMPONENT_INSTANCE.delete(el);
+      }
+    }
+  };
 
-        if (!scheduler) {
-          return mount();
-        }
-
-        const task = pendingMountTasks.add(el);
-
-        const dispatch = () => {
-          scheduler.schedule(
-            () => {
-              if (!task.complete()) {
-                return;
-              }
-
-              mount();
-            },
-            {
-              priority,
-              signal: task.signal,
-            },
-          );
-        };
-
-        if (when) {
-          when(el, task.signal).then(
-            () => {
-              if (!task.signal.aborted) {
-                dispatch();
-              }
-            },
-            (reason) => {
-              if (isAbortError(reason)) {
-                return;
-              }
-
-              task.abort();
-
-              queueMicrotask(() => {
-                throw reason;
-              });
-            },
-          );
-        } else {
-          dispatch();
-        }
-
-        return undefined;
-      };
+  const app: App = {
+    install(...addons) {
+      addons.forEach(addonRegistry.install);
+      return app;
     },
 
-    unmount(targets: RefElement[]) {
-      for (const el of targets) {
-        pendingMountTasks.abort(el);
+    component(rawComponent, opts = {}) {
+      const componentSetup = addonRegistry.composeComponent(rawComponent);
 
-        const component = DOM_COMPONENT_INSTANCE.get(el);
+      const baseMount = (el: RefElement, props: Record<string, unknown>) => {
+        const component = createComponent(componentSetup, el, props);
+        bindDOMNodeToComponent(el, component);
+        component.onMount();
 
-        if (component) {
-          component.onUnmount();
-          DOM_COMPONENT_INSTANCE.delete(el);
-        }
-      }
+        return component;
+      };
+
+      const mount = addonRegistry.composeMount(baseMount, componentSetup, opts);
+
+      return (el, props = {}) => mount(el, props);
+    },
+
+    unmount(targets) {
+      addonRegistry.composeUnmount(baseUnmount)(targets);
     },
   };
+
+  return app;
 }

@@ -6,7 +6,8 @@ type Unwatch = () => void;
 
 const WATCH = Symbol("watch");
 
-// useComputed の getter 実行中のみ Set。それ以外は null。Signal 単位で重複購読を防ぐ。
+// Set only during the execution of the useComputed getter. Null otherwise.
+// Prevent duplicate subscriptions on a per-Signal basis.
 let currentDeps: Set<Signal<unknown>> | null = null;
 
 class Signal<T> {
@@ -108,9 +109,9 @@ function useComputed<T>(getter: () => T): ReadonlySignal<T> {
       currentDeps = prev;
     }
 
-    // この時点で依存収集は既に終了 (currentDeps 復元済み) なので、
-    // 下の result.value 代入で watcher が result.value を読んでも
-    // この useComputed が自分自身に依存してしまうことはない。
+    // At this point, dependency collection has already finished (with currentDeps restored), so
+    // even if the watcher reads result.value during the assignment below,
+    // this useComputed will not become dependent on itself.
     result.value = nextValue;
 
     for (const dep of deps) {

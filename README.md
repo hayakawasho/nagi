@@ -95,10 +95,10 @@ If delayed mounting is required, add the scheduler / cue addons.
 
 ```ts
 import { create } from "@usenagi/core";
-import { createScheduler } from "@usenagi/core/addons/scheduler";
+import { schedulerAddon } from "@usenagi/core/addons/scheduler";
 import { visible, idle } from "@usenagi/core/addons/cue";
 
-const app = create({ scheduler: createScheduler() });
+const app = create().install(schedulerAddon());
 
 // mount when the element enters the viewport
 app.component(HeavyWidget, { when: visible() })(el);
@@ -179,17 +179,38 @@ You can mount child components with `useSlot()`. You can pass values from parent
 ### Addons
 
 ```ts
-import { createScheduler } from "@usenagi/core/addons/scheduler";
+import { create, defineAddon } from "@usenagi/core";
+import { schedulerAddon } from "@usenagi/core/addons/scheduler";
+
+const app = create().install(schedulerAddon(), myAddon());
+```
+
+| API | Description |
+| --- | --- |
+| `defineAddon({ name, install(ctx) })` | Defines an addon (`ctx` is `AddonContext`) |
+| `app.install(...addons)` | Registers one or more addons on the app |
+| `ctx.addMountMiddleware` / `addUnmountMiddleware` / `addComponentMiddleware` | Add mount / unmount / ComponentSetup middleware |
+| `ctx.installedAddons` | Addon names already installed on this app |
+
+`addMountMiddleware`, `addUnmountMiddleware`, and `addComponentMiddleware` apply **outermost for addons installed later** (`install(a, b)` runs as `b → a → core`).
+
+Deferred mounting requires `schedulerAddon()`. The same applies when using `when`. Addon state (scheduler / pending) is created **per app `install`**, not per addon instance.
+
+#### Scheduler + cue
+
+```ts
+import { schedulerAddon } from "@usenagi/core/addons/scheduler";
 import { visible, idle, interaction, media } from "@usenagi/core/addons/cue";
 ```
 
-| API                      | Description                                                             |
-| ------------------------ | ----------------------------------------------------------------------- |
-| `createScheduler(opts?)` | Returns a Scheduler implementing `schedule(task, { priority, signal })` |
-| `visible(opts?)`         | A Cue that resolves when the element enters the viewport                |
-| `idle(timeout?)`         | A Cue that resolves via `requestIdleCallback`                           |
-| `interaction(events?)`   | A Cue that resolves on the first user interaction                       |
-| `media(query)`           | A Cue that resolves when the media query matches                        |
+| API | Description |
+| --- | --- |
+| `schedulerAddon(opts?)` | Addon for deferred mount (uses `createScheduler` internally) |
+| `createScheduler(opts?)` | Low-level API for custom Scheduler implementations |
+| `visible(opts?)` | A Cue that resolves when the element enters the viewport |
+| `idle(timeout?)` | A Cue that resolves via `requestIdleCallback` |
+| `interaction(events?)` | A Cue that resolves on the first user interaction |
+| `media(query)` | A Cue that resolves when the media query matches |
 
 ---
 

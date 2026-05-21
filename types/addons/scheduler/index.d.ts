@@ -1,4 +1,2 @@
-import type { SchedulePriority, Scheduler } from "../../types";
-export declare function createScheduler(opts?: {
-    priority?: SchedulePriority;
-}): Scheduler;
+export { schedulerAddon } from "./addon";
+export { createScheduler } from "./scheduler";
