@@ -32,9 +32,9 @@ You are free to implement `[data-component]` scanning, manifests, lazy imports, 
 // counter.ts
 import { create, signal, useWatch, useDomRef } from "@usenagi/core";
 
-const { component } = create();
+const app = create();
 
-component({
+app.component({
   name: "counter",
   setup() {
     const { refs } = useDomRef<{
@@ -71,13 +71,14 @@ npm i @usenagi/core
 ### First component
 
 ```ts
-import { create, defineComponent, signal, useWatch, useDomRef } from "@usenagi/core";
+import { create, defineComponent, propTypes, signal, useWatch, useDomRef } from "@usenagi/core";
 
 const Greeting = defineComponent({
   name: "greeting",
+  props: propTypes<{ name: string }>(),
   setup(el, props) {
     const { refs } = useDomRef<{ message: HTMLParagraphElement }>();
-    const text = signal((props.name as string) ?? "world");
+    const text = signal(props.name ?? "world");
 
     useWatch(text, (v) => {
       refs.message.textContent = `Hello, ${v}!`;
@@ -117,6 +118,13 @@ An example of automatic mounting by combining `[data-component]` scanning, manif
 ---
 
 ## API
+
+### Component Definition
+
+| API                    | Description                                                                 |
+| ---------------------- | --------------------------------------------------------------------------- |
+| `defineComponent(opts)` | Type-safe helper to define a `ComponentSetup` object                       |
+| `propTypes<T>()`       | Type-only marker for declaring component props shape (zero runtime cost)    |
 
 ### Reactivity
 
