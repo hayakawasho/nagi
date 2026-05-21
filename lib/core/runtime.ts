@@ -19,7 +19,7 @@ export function createComponent(
   wrap: ComponentSetup,
   root: RefElement,
   // biome-ignore lint/suspicious/noExplicitAny: internal props type
-  props: Record<string, any>,
+  props: Record<string, any> = {},
 ) {
   const component = new ComponentContext(root, wrap.name);
   const parent = owner;

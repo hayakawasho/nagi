@@ -62,7 +62,7 @@ export function create(
   return {
     component(wrap: ComponentSetup, { priority, when }: AsyncAppOptions = {}) {
       // biome-ignore lint/suspicious/noExplicitAny: internal props type
-      return (el: RefElement, props: Record<string, any> = {}) => {
+      return (el: RefElement, props?: Record<string, any>) => {
         function mount() {
           const component = createComponent(wrap, el, props);
           bindDOMNodeToComponent(el, component);

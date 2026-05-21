@@ -2,6 +2,7 @@ import { LifecycleError } from "./error";
 
 import type {
   Cleanup,
+  ComponentProps,
   ComponentSetup,
   LifecycleHandler,
   RefElement,
@@ -109,29 +110,28 @@ export class ComponentContext<T = any> {
   }
 }
 
-export function defineComponent<Context extends Record<string, unknown>>(): <
-  SetupResult extends Record<string, unknown> | void,
->(opts: {
-  name: string;
-  setup(el: RefElement, context: Context): SetupResult;
-}) => (context: Context) => ComponentSetup<SetupResult>;
-
 export function defineComponent<
   SetupResult extends Record<string, unknown> | void,
   Props extends Record<string, unknown>,
->(opts: ComponentSetup<SetupResult, Props>): ComponentSetup<SetupResult, Props>;
-
-// biome-ignore lint/suspicious/noExplicitAny: overload implementation
-export function defineComponent(opts?: any) {
-  if (opts === undefined) {
-    // biome-ignore lint/suspicious/noExplicitAny: overload implementation
-    return (opts: any) => (context: any) => ({
-      name: opts.name,
-      setup(el: RefElement) {
-        return opts.setup(el, context);
-      },
-    });
-  }
-
+>(opts: {
+  name: string;
+  props: Props;
+  setup(el: RefElement, props: ComponentProps<Props>): SetupResult;
+}): ComponentSetup<SetupResult, Props>;
+export function defineComponent<
+  SetupResult extends Record<string, unknown> | void,
+  Props extends Record<string, unknown>,
+>(opts: {
+  name: string;
+  setup(el: RefElement, props: ComponentProps<Props>): SetupResult;
+}): ComponentSetup<SetupResult, Props>;
+export function defineComponent<
+  SetupResult extends Record<string, unknown> | void,
+>(opts: {
+  name: string;
+  setup(el: RefElement): SetupResult;
+}): ComponentSetup<SetupResult, Record<string, never>>;
+export function defineComponent(opts: ComponentSetup): ComponentSetup;
+export function defineComponent(opts: ComponentSetup) {
   return opts;
 }

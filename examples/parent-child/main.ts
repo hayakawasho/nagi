@@ -2,6 +2,7 @@ import {
   create,
   createContext,
   defineComponent,
+  propTypes,
   readonly,
   signal,
   useDomRef,
@@ -17,19 +18,17 @@ type DisclosureContext = {
   toggle: () => void;
 };
 
-type TriggerProps = {
-  label: string;
-};
-
 const [DisclosureProvider, useDisclosureContext] =
   createContext<DisclosureContext>();
 
-const Trigger = defineComponent<{ focus: () => void }, TriggerProps>({
+const Trigger = defineComponent({
   name: "trigger",
+  props: propTypes<{ label: string }>(),
   setup(el: HTMLButtonElement, props) {
     const { isOpen, toggle } = useDisclosureContext();
 
-    el.textContent = props.label;
+    const label = props.label;
+    el.textContent = label;
     useEvent(el, "click", toggle);
 
     useWatch(isOpen, (open) => {

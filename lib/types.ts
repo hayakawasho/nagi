@@ -4,7 +4,7 @@ export type ComponentProps<Props> = Readonly<Props>;
 
 export type ComponentSetup<
   SetupResult = void | Record<string, unknown>,
-  Props = Record<string, unknown>,
+  Props extends Record<string, unknown> = Record<string, unknown>,
 > = {
   name: string;
   setup(el: RefElement, props: ComponentProps<Props>): SetupResult;
@@ -13,7 +13,7 @@ export type ComponentSetup<
 /** @deprecated Use `ComponentSetup` instead. */
 export type IComponent<
   SetupResult = void | Record<string, unknown>,
-  Props = Record<string, unknown>,
+  Props extends Record<string, unknown> = Record<string, unknown>,
 > = ComponentSetup<SetupResult, Props>;
 
 export type Cleanup = () => void;

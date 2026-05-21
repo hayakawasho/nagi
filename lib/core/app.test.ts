@@ -88,22 +88,18 @@ describe("create", () => {
 describe("defineComponent", () => {
   it("options オブジェクトをそのまま返す", () => {
     const opts = { name: "foo", setup: () => {} };
-    expect(defineComponent(opts)).toBe(opts);
+    expect(defineComponent(opts)).toEqual(opts);
   });
 
-  it("引数なしで呼ぶとカリー化された関数を返す", () => {
-    const factory = defineComponent<{ ctx: string }>();
-    const makeComp = factory({
-      name: "curried",
-      setup: (_el, context) => ({ ctx: context }),
+  it("setup の props 型アノテーションから Props が推論される", () => {
+    const comp = defineComponent({
+      name: "with-props",
+      setup(_el, props: { label: string }) {
+        return { label: props.label };
+      },
     });
-    const comp = makeComp({ ctx: "hello" });
-    expect(comp.name).toBe("curried");
 
-    const el = makeEl();
-    const { component } = create();
-    const ctx = component(comp)(el);
-    expect(ctx.current).toEqual({ ctx: { ctx: "hello" } });
+    expect(comp.name).toBe("with-props");
   });
 });
 

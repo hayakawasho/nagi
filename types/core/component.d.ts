@@ -1,4 +1,4 @@
-import type { ComponentSetup, RefElement } from "../types";
+import type { ComponentProps, ComponentSetup, RefElement } from "../types";
 export declare enum LifecycleHooks {
     MOUNTED = "Mounted",
     UNMOUNTED = "Unmounted"
@@ -21,8 +21,17 @@ export declare class ComponentContext<T = any> {
     removeChild: (child: ComponentContext) => void;
     get childElements(): RefElement[];
 }
-export declare function defineComponent<Context extends Record<string, unknown>>(): <SetupResult extends Record<string, unknown> | void>(opts: {
+export declare function defineComponent<SetupResult extends Record<string, unknown> | void, Props extends Record<string, unknown>>(opts: {
     name: string;
-    setup(el: RefElement, context: Context): SetupResult;
-}) => (context: Context) => ComponentSetup<SetupResult>;
-export declare function defineComponent<SetupResult extends Record<string, unknown> | void, Props extends Record<string, unknown>>(opts: ComponentSetup<SetupResult, Props>): ComponentSetup<SetupResult, Props>;
+    props: Props;
+    setup(el: RefElement, props: ComponentProps<Props>): SetupResult;
+}): ComponentSetup<SetupResult, Props>;
+export declare function defineComponent<SetupResult extends Record<string, unknown> | void, Props extends Record<string, unknown>>(opts: {
+    name: string;
+    setup(el: RefElement, props: ComponentProps<Props>): SetupResult;
+}): ComponentSetup<SetupResult, Props>;
+export declare function defineComponent<SetupResult extends Record<string, unknown> | void>(opts: {
+    name: string;
+    setup(el: RefElement): SetupResult;
+}): ComponentSetup<SetupResult, Record<string, never>>;
+export declare function defineComponent(opts: ComponentSetup): ComponentSetup;

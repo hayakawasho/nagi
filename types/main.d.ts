@@ -2,6 +2,7 @@ export { create } from "./core/app";
 export { defineComponent } from "./core/component";
 export { isLifecycleError, LifecycleError } from "./core/error";
 export { useMount, useUnmount } from "./core/lifecycle";
+export { propTypes } from "./props";
 export { readonly, signal, useComputed, useWatch } from "./core/reactivity";
 export { createContext, withContext } from "./hooks/createContext";
 export { useDomRef } from "./hooks/useDomRef";
