@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { create } from "../../core/app";
-import { createScheduler } from "../scheduler/index";
+import { schedulerAddon } from "../scheduler/index";
 
 import { idle, interaction, media, visible } from "./index";
 
@@ -287,9 +287,9 @@ describe("when + scheduler 連携", () => {
       },
     );
 
-    const { component } = create({
-      scheduler: createScheduler({ priority: "user-blocking" }),
-    });
+    const { component } = create().install(
+      schedulerAddon({ priority: "user-blocking" }),
+    );
 
     component({ name: "lazy", setup: setupFn }, { when: visible() })(el);
 
@@ -323,9 +323,9 @@ describe("when + scheduler 連携", () => {
       },
     );
 
-    const { component, unmount } = create({
-      scheduler: createScheduler({ priority: "user-blocking" }),
-    });
+    const { component, unmount } = create().install(
+      schedulerAddon({ priority: "user-blocking" }),
+    );
 
     component({ name: "lazy", setup: setupFn }, { when: visible() })(el);
 
@@ -372,9 +372,9 @@ describe("when + scheduler 連携", () => {
       },
     );
 
-    const { component } = create({
-      scheduler: createScheduler({ priority: "user-blocking" }),
-    });
+    const { component } = create().install(
+      schedulerAddon({ priority: "user-blocking" }),
+    );
 
     component({ name: "a", setup: setupA }, { when: visible() })(elA);
     component({ name: "b", setup: setupB }, { when: visible() })(elB);

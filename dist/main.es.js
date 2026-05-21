@@ -1,31 +1,36 @@
-//#region lib/utils/isAbortError.ts
-function e(e) {
-	return (e instanceof DOMException || e instanceof Error) && e.name === "AbortError";
-}
-//#endregion
-//#region lib/core/internal/pending.ts
-function t() {
-	let e = /* @__PURE__ */ new Map();
-	return {
-		add(t) {
-			let n = e.get(t);
-			n && n.abort();
-			let r = new AbortController();
-			return e.set(t, r), {
-				signal: r.signal,
-				complete() {
-					return e.get(t) !== r || r.signal.aborted ? !1 : (e.delete(t), !0);
-				},
-				abort() {
-					e.get(t) === r && (r.abort(), e.delete(t));
-				}
-			};
+//#region lib/core/addon.ts
+function e() {
+	let e = /* @__PURE__ */ new Set(), t = [], n = [], r = [], i = {
+		get installedAddons() {
+			return e;
 		},
-		abort(t) {
-			let n = e.get(t);
-			n && (n.abort(), e.delete(t));
+		addComponentMiddleware(e) {
+			t.push(e);
+		},
+		addMountMiddleware(e) {
+			n.push(e);
+		},
+		addUnmountMiddleware(e) {
+			r.push(e);
+		},
+		composeComponent(e) {
+			return t.reduce((e, t) => t(e), e);
+		},
+		composeMount(e, t, r) {
+			return n.reduce((e, n) => n(e, t, r), e);
+		},
+		composeUnmount(e) {
+			return r.reduce((e, t) => t(e), e);
+		},
+		install(t) {
+			if (e.has(t.name)) throw Error(`[nagi] addon "${t.name}" is already installed`);
+			t.install(i), e.add(t.name);
 		}
 	};
+	return i;
+}
+function t(e) {
+	return e;
 }
 //#endregion
 //#region lib/core/error.ts
@@ -118,12 +123,7 @@ var s = /* @__PURE__ */ function(e) {
 	}
 };
 function u(e) {
-	return e === void 0 ? (e) => (t) => ({
-		name: e.name,
-		setup(n) {
-			return e.setup(n, t);
-		}
-	}) : e;
+	return e;
 }
 //#endregion
 //#region lib/core/runtime.ts
@@ -132,7 +132,7 @@ function f(e) {
 	if (!d) throw Error(`"${e}" called outside setup() will never be run.`);
 	return d;
 }
-function p(e, t, n) {
+function p(e, t, n = {}) {
 	let a = new l(t, e.name), o = d;
 	d = a;
 	try {
@@ -144,41 +144,28 @@ function p(e, t, n) {
 }
 //#endregion
 //#region lib/core/app.ts
-function m(n = {}) {
-	let { scheduler: r } = n, i = t();
-	return {
-		component(t, { priority: n, when: a } = {}) {
-			return (s, c = {}) => {
-				function l() {
-					let e = p(t, s, c);
-					return o(s, e), e.onMount(), e;
-				}
-				if (!r) return l();
-				let u = i.add(s), d = () => {
-					r.schedule(() => {
-						u.complete() && l();
-					}, {
-						priority: n,
-						signal: u.signal
-					});
-				};
-				a ? a(s, u.signal).then(() => {
-					u.signal.aborted || d();
-				}, (t) => {
-					e(t) || (u.abort(), queueMicrotask(() => {
-						throw t;
-					}));
-				}) : d();
-			};
+function m() {
+	let t = e(), n = (e) => {
+		for (let t of e) {
+			let e = a.get(t);
+			e && (e.onUnmount(), a.delete(t));
+		}
+	}, r = {
+		install(...e) {
+			return e.forEach(t.install), r;
+		},
+		component(e, n = {}) {
+			let r = t.composeComponent(e), i = t.composeMount((e, t) => {
+				let n = p(r, e, t);
+				return o(e, n), n.onMount(), n;
+			}, r, n);
+			return (e, t = {}) => i(e, t);
 		},
 		unmount(e) {
-			for (let t of e) {
-				i.abort(t);
-				let e = a.get(t);
-				e && (e.onUnmount(), a.delete(t));
-			}
+			t.composeUnmount(n)(e);
 		}
 	};
+	return r;
 }
 //#endregion
 //#region lib/core/lifecycle.ts
@@ -350,7 +337,7 @@ function F(e, t) {
 function I() {
 	let e = f("useSlot");
 	return {
-		addChild(t, n, r = {}) {
+		addChild(t, n, r) {
 			let i = (t) => {
 				let i = p(n, t, r);
 				return e.addChild(i), i;
@@ -369,4 +356,7 @@ function I() {
 	};
 }
 //#endregion
-export { r as LifecycleError, m as create, D as createContext, u as defineComponent, i as isLifecycleError, C as readonly, x as signal, E as useComputed, M as useDomRef, N as useEvent, P as useIntersectionWatch, F as useMediaQuery, g as useMount, I as useSlot, _ as useUnmount, T as useWatch, O as withContext };
+//#region lib/props.ts
+function L() {}
+//#endregion
+export { r as LifecycleError, m as create, D as createContext, t as defineAddon, u as defineComponent, i as isLifecycleError, L as propTypes, C as readonly, x as signal, E as useComputed, M as useDomRef, N as useEvent, P as useIntersectionWatch, F as useMediaQuery, g as useMount, I as useSlot, _ as useUnmount, T as useWatch, O as withContext };

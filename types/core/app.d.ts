@@ -1,27 +1,10 @@
-import type { ComponentSetup, Cue, RefElement, SchedulePriority, Scheduler } from "../types";
+import type { ComponentSetup, RefElement } from "../types";
+import type { Addon, MountOptions } from "./addon";
 import type { ComponentContext } from "./component";
-type AppOptions = {
-    priority?: SchedulePriority;
-};
-type AsyncAppOptions = AppOptions & {
-    when?: Cue;
-};
-type SyncApp = {
-    component<S extends ComponentSetup>(wrap: S, opts?: AppOptions): (el: RefElement, props?: Record<string, any>) => ComponentContext<ReturnType<S["setup"]>>;
+type App = {
+    install(...addons: Addon[]): App;
+    component<S extends ComponentSetup>(component: S, opts?: MountOptions): (el: RefElement, props?: Record<string, any>) => ComponentContext<ReturnType<S["setup"]>> | void;
     unmount(targets: RefElement[]): void;
 };
-type AsyncApp = {
-    component<S extends ComponentSetup>(wrap: S, opts?: AsyncAppOptions): (el: RefElement, props?: Record<string, any>) => void;
-    unmount(targets: RefElement[]): void;
-};
-export declare function create(): SyncApp;
-export declare function create(config: {
-    scheduler?: undefined;
-}): SyncApp;
-export declare function create(config: {
-    scheduler: Scheduler;
-}): AsyncApp;
-export declare function create(config: {
-    scheduler?: Scheduler | undefined;
-}): SyncApp | AsyncApp;
+export declare function create(): App;
 export {};

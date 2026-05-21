@@ -1,17 +1,17 @@
 import type { RefElement } from "../../types";
 
-export type PendingMountTask = {
+export type PendingMount = {
   readonly signal: AbortSignal;
   complete(): boolean;
   abort(): void;
 };
 
-export type PendingMountTasks = {
-  add(el: RefElement): PendingMountTask;
+export type PendingMounts = {
+  add(el: RefElement): PendingMount;
   abort(el: RefElement): void;
 };
 
-export function createPendingMountTasks(): PendingMountTasks {
+export function createPendingMounts(): PendingMounts {
   const tasks = new Map<RefElement, AbortController>();
 
   return {

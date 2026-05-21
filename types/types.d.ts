@@ -1,11 +1,11 @@
 export type RefElement = HTMLElement | SVGElement;
 export type ComponentProps<Props> = Readonly<Props>;
-export type ComponentSetup<SetupResult = void | Record<string, unknown>, Props = Record<string, unknown>> = {
+export type ComponentSetup<SetupResult = void | Record<string, unknown>, Props extends Record<string, unknown> = Record<string, unknown>> = {
     name: string;
     setup(el: RefElement, props: ComponentProps<Props>): SetupResult;
 };
 /** @deprecated Use `ComponentSetup` instead. */
-export type IComponent<SetupResult = void | Record<string, unknown>, Props = Record<string, unknown>> = ComponentSetup<SetupResult, Props>;
+export type IComponent<SetupResult = void | Record<string, unknown>, Props extends Record<string, unknown> = Record<string, unknown>> = ComponentSetup<SetupResult, Props>;
 export type Cleanup = () => void;
 export type LifecycleHandler = () => void | Cleanup;
 export type SchedulePriority = "user-blocking" | "user-visible" | "background";

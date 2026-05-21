@@ -95,10 +95,10 @@ create().component(Greeting)(document.querySelector("#app")!);
 
 ```ts
 import { create } from "@usenagi/core";
-import { createScheduler } from "@usenagi/core/addons/scheduler";
+import { schedulerAddon } from "@usenagi/core/addons/scheduler";
 import { visible, idle } from "@usenagi/core/addons/cue";
 
-const app = create({ scheduler: createScheduler() });
+const app = create().install(schedulerAddon());
 
 // mount when the element enters the viewport
 app.component(HeavyWidget, { when: visible() })(el);
@@ -107,7 +107,7 @@ app.component(HeavyWidget, { when: visible() })(el);
 app.component(Analytics, { when: idle() })(el);
 ```
 
-`when` は `setup()` の前に待機する条件、`priority` は `setup()` を含む mount task の実行タイミングを決める。
+`schedulerAddon()` を使うと、`when` は `setup()` の前に待機する条件、`priority` は `setup()` を含む mount task の実行タイミングを決める。
 
 ### BYO mounter recipe
 
@@ -120,12 +120,12 @@ app.component(Analytics, { when: idle() })(el);
 
 ### Reactivity
 
-| API                    | 説明                                                                 |
-| ---------------------- | -------------------------------------------------------------------- |
-| `signal(value)`        | `.value` を持つリアクティブな値コンテナを作成する                      |
-| `readonly(signal)`     | 書き込み可能な `signal` の読み取り専用ラッパー                         |
-| `useComputed(fn)`      | `signal` の依存を自動追跡する派生値                                   |
-| `useWatch(target, cb)` | 値変更時に `cb` を呼ぶ。unmount 時に自動で購読解除する                 |
+| API                    | 説明                                                   |
+| ---------------------- | ------------------------------------------------------ |
+| `signal(value)`        | `.value` を持つリアクティブな値コンテナを作成する      |
+| `readonly(signal)`     | 書き込み可能な `signal` の読み取り専用ラッパー         |
+| `useComputed(fn)`      | `signal` の依存を自動追跡する派生値                    |
+| `useWatch(target, cb)` | 値変更時に `cb` を呼ぶ。unmount 時に自動で購読解除する |
 
 ```ts
 const width = signal(10);
@@ -139,10 +139,10 @@ useWatch(area, (v) => {
 
 ### Lifecycle
 
-| API              | 説明                                                   |
-| ---------------- | ------------------------------------------------------ |
-| `useMount(fn)`   | コンポーネントのマウント完了後に1回実行する            |
-| `useUnmount(fn)` | unmount 時に実行する。クリーンアップに使う             |
+| API              | 説明                                        |
+| ---------------- | ------------------------------------------- |
+| `useMount(fn)`   | コンポーネントのマウント完了後に1回実行する |
+| `useUnmount(fn)` | unmount 時に実行する。クリーンアップに使う  |
 
 ```ts
 import gsap from 'gsap';
@@ -157,11 +157,11 @@ setup(el) {
 
 ルート要素には **`setup(el)`** を、**`[data-ref]`** の子要素には **`useDomRef()`** を使う。
 
-| API                            | 説明                                                       |
-| ------------------------------ | ---------------------------------------------------------- |
-| `useDomRef<T>()`               | `[data-ref]` 要素への型付きアクセス                        |
-| `useEvent(el, event, handler)` | イベントリスナーを追加する。unmount 時に自動で除去する     |
-| `useSlot()`                    | 子コンポーネントをマウントする。親の unmount に連動する    |
+| API                            | 説明                                                    |
+| ------------------------------ | ------------------------------------------------------- |
+| `useDomRef<T>()`               | `[data-ref]` 要素への型付きアクセス                     |
+| `useEvent(el, event, handler)` | イベントリスナーを追加する。unmount 時に自動で除去する  |
+| `useSlot()`                    | 子コンポーネントをマウントする。親の unmount に連動する |
 
 ### Parent / child
 
@@ -171,39 +171,60 @@ setup(el) {
 
 ### Observers
 
-| API                               | 説明                                                              |
-| --------------------------------- | ----------------------------------------------------------------- |
-| `useIntersectionWatch(cb, opts?)` | IntersectionObserver のラッパー。unmount 時に自動で切断する         |
-| `useMediaQuery(query)`            | `matchMedia` の結果を `ReadonlySignal<boolean>` で返す            |
+| API                               | 説明                                                        |
+| --------------------------------- | ----------------------------------------------------------- |
+| `useIntersectionWatch(cb, opts?)` | IntersectionObserver のラッパー。unmount 時に自動で切断する |
+| `useMediaQuery(query)`            | `matchMedia` の結果を `ReadonlySignal<boolean>` で返す      |
 
 ### Addons
 
 ```ts
-import { createScheduler } from "@usenagi/core/addons/scheduler";
+import { create, defineAddon } from "@usenagi/core";
+import { schedulerAddon } from "@usenagi/core/addons/scheduler";
+
+const app = create().install(schedulerAddon(), myAddon());
+```
+
+| API | 説明 |
+| --- | --- |
+| `defineAddon({ name, install(ctx) })` | addon を定義する（`ctx` は `AddonContext`） |
+| `app.install(...addons)` | app に addon を登録する（複数可） |
+| `ctx.addMountMiddleware` / `addUnmountMiddleware` / `addComponentMiddleware` | mount / unmount / ComponentSetup の middleware を追加する |
+| `ctx.installedAddons` | この app に install 済みの addon 名 |
+
+`addMountMiddleware` / `addUnmountMiddleware` / `addComponentMiddleware` は **後から install した addon ほど外側**に適用される（`install(a, b)` なら実行順は `b → a → コア`）。
+
+遅延 mount には `schedulerAddon()` が必要。`when` や `priority` を使う場合も同様で、これらの mount option は scheduler addon が解釈する。addon の状態（scheduler / pending）は **各 app の `install` ごと**に作られる。
+
+#### Scheduler + cue
+
+```ts
+import { schedulerAddon } from "@usenagi/core/addons/scheduler";
 import { visible, idle, interaction, media } from "@usenagi/core/addons/cue";
 ```
 
-| API                      | 説明                                                                                  |
-| ------------------------ | ------------------------------------------------------------------------------------- |
-| `createScheduler(opts?)` | `schedule(task, { priority, signal })` を実装した Scheduler を返す                      |
-| `visible(opts?)`         | 要素が viewport に入ったときに解決する Cue                                            |
-| `idle(timeout?)`         | `requestIdleCallback` で解決する Cue                                                  |
-| `interaction(events?)`   | 最初のユーザー操作で解決する Cue                                                      |
-| `media(query)`           | media query が一致したときに解決する Cue                                              |
+| API | 説明 |
+| --- | --- |
+| `schedulerAddon(opts?)` | 遅延 mount 用 addon（内部で `createScheduler` を使用） |
+| `createScheduler(opts?)` | カスタム Scheduler 実装用の low-level API |
+| `visible(opts?)` | 要素が viewport に入ったときに解決する Cue |
+| `idle(timeout?)` | `requestIdleCallback` で解決する Cue |
+| `interaction(events?)` | 最初のユーザー操作で解決する Cue |
+| `media(query)` | media query が一致したときに解決する Cue |
 
 ---
 
 ## Comparison
 
-|                         | **nagi**    | Alpine.js | Stimulus | petite-vue |
-| ----------------------- | ----------- | --------- | -------- | ---------- |
-| Inline JS in HTML       | ✗           | ◯         | ✗        | ◯          |
-| Composition-style setup | ◯           | △         | ✗        | ◯          |
-| BYO mounter             | ◯           | △         | △        | △          |
-| Async mount cue         | ◯           | ✗         | ✗        | ✗          |
-| Lifecycle cleanup       | ◯           | △         | ◯        | △          |
-| `useComputed` (derived signals) | ◯           | ◯         | ✗        | ◯          |
-| Core gzip               | ~2.5 kB     | ~16 kB    | ~8 kB    | ~6 kB      |
+|                            | **nagi** | Alpine.js | Stimulus | petite-vue |
+| -------------------------- | -------- | --------- | -------- | ---------- |
+| Inline JS in HTML          | ✗        | ◯         | ✗        | ◯          |
+| Composition-style setup    | ◯        | △         | ✗        | ◯          |
+| BYO mounter                | ◯        | △         | △        | △          |
+| Async mount cue            | ◯        | ✗         | ✗        | ✗          |
+| Lifecycle cleanup          | ◯        | △         | ◯        | △          |
+| computed (derived signals) | ◯        | ◯         | ✗        | ◯          |
+| Core gzip                  | ~2.5 kB  | ~16 kB    | ~8 kB    | ~6 kB      |
 
 (◯ = 組み込み、△ = 利用側の実装・規約で対応可能、✗ = 主な機能ではない)
 
@@ -233,13 +254,13 @@ import { visible, idle, interaction, media } from "@usenagi/core/addons/cue";
 
 ## Examples
 
-| Example                                               | 説明                                                              |
-| ----------------------------------------------------- | ----------------------------------------------------------------- |
-| [basic-counter](./examples/basic-counter/)            | 最小の `signal` + `useWatch` 例                                   |
-| [computed](./examples/computed/)                      | `useComputed` による派生値（width × height = area）               |
-| [parent-child](./examples/parent-child/)              | `createContext` + `withContext` + `useSlot`                       |
-| [lenis-scroll-scene](./examples/lenis-scroll-scene/)  | Lenis + `useComputed` によるスクロール進捗連動                    |
-| [byo-mounter recipe](./examples/recipes/byo-mounter/) | `[data-component]` スキャン + manifest + cue                      |
+| Example                                               | 説明                                                |
+| ----------------------------------------------------- | --------------------------------------------------- |
+| [basic-counter](./examples/basic-counter/)            | 最小の `signal` + `useWatch` 例                     |
+| [computed](./examples/computed/)                      | `useComputed` による派生値（width × height = area） |
+| [parent-child](./examples/parent-child/)              | `createContext` + `withContext` + `useSlot`         |
+| [lenis-scroll-scene](./examples/lenis-scroll-scene/)  | Lenis + `useComputed` によるスクロール進捗連動      |
+| [byo-mounter recipe](./examples/recipes/byo-mounter/) | `[data-component]` スキャン + manifest + cue        |
 
 ---
 

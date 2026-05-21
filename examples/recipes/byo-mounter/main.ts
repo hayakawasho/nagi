@@ -19,7 +19,7 @@ import {
   useWatch,
   useMount,
 } from "../../../lib/main";
-import { createScheduler } from "../../../lib/addons/scheduler";
+import { schedulerAddon } from "../../../lib/addons/scheduler";
 import { idle, interaction, visible, media } from "../../../lib/addons/cue";
 
 import type { ComponentSetup, SchedulePriority } from "../../../lib/types";
@@ -128,8 +128,7 @@ function mountWhen(raw: string | undefined) {
 // mounter
 // -----------------------------------------------------------------
 
-const scheduler = createScheduler();
-const app = create({ scheduler });
+const app = create().install(schedulerAddon());
 
 document.querySelectorAll<HTMLElement>("[data-component]").forEach((el) => {
   const name = el.dataset.component ?? "";

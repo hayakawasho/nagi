@@ -3,9 +3,9 @@ import { isLifecycleError, LifecycleError } from "./error";
 
 import type { ComponentSetup, RefElement } from "../types";
 
-// owner は createComponent 呼び出し中のみ有効な「現在 setup 実行中のコンポーネント」を指す。
-// save/restore による復元が成立するのは setup() が同期実行である前提に依存する。
-// setup を非同期化する場合はこのモジュールの設計を見直すこと。
+// The "owner" refers to the component currently executing its setup, which is only valid during a createComponent call.
+// The restoration via save/restore relies on the assumption that setup() executes synchronously.
+// If setup is to be made asynchronous, the design of this module must be revisited.
 let owner: ComponentContext | undefined;
 
 export function getCurrentComponent(hookName: string): ComponentContext {
@@ -19,7 +19,7 @@ export function createComponent(
   wrap: ComponentSetup,
   root: RefElement,
   // biome-ignore lint/suspicious/noExplicitAny: internal props type
-  props: Record<string, any>,
+  props: Record<string, any> = {},
 ) {
   const component = new ComponentContext(root, wrap.name);
   const parent = owner;

@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { create } from "../core/app";
+import { defineComponent } from "../core/component";
 import { useMount, useUnmount } from "../core/lifecycle";
+import { propTypes } from "../props";
 
 import { useSlot } from "./useSlot";
 
@@ -25,7 +27,7 @@ describe("useSlot", () => {
       name: "parent",
       setup: () => {
         const { addChild } = useSlot();
-        children = addChild(childEl, child, {});
+        children = addChild(childEl, child);
       },
     })(root);
 
@@ -52,7 +54,7 @@ describe("useSlot", () => {
       name: "parent",
       setup: () => {
         const { addChild } = useSlot();
-        addChild(childEl, child, {});
+        addChild(childEl, child);
       },
     })(root);
 
@@ -81,12 +83,12 @@ describe("useSlot", () => {
       name: "parent",
       setup: () => {
         slotRef = useSlot();
-        childCtx = slotRef.addChild(childEl, child, {});
+        childCtx = slotRef.addChild(childEl, child);
       },
     })(root);
 
     expect(unmountFn).not.toHaveBeenCalled();
-    slotRef?.removeChild(childCtx);
+    slotRef!.removeChild(childCtx);
     expect(unmountFn).toHaveBeenCalledOnce();
   });
 
@@ -106,7 +108,7 @@ describe("useSlot", () => {
       name: "parent",
       setup: () => {
         const { addChild } = useSlot();
-        addChild([c1, c2], child, {});
+        addChild([c1, c2], child);
       },
     })(root);
 
@@ -132,7 +134,7 @@ describe("useSlot", () => {
       name: "parent",
       setup: () => {
         const { addChild } = useSlot();
-        addChild(childEl, child, {});
+        addChild(childEl, child);
       },
     })(root);
 
@@ -142,5 +144,32 @@ describe("useSlot", () => {
 
   it("setup 外で呼ぶと例外を投げる", () => {
     expect(() => useSlot()).toThrow();
+  });
+
+  it("addChild で props を子コンポーネントに渡せる", () => {
+    const root = document.createElement("div");
+    const childEl = document.createElement("button");
+    root.appendChild(childEl);
+    document.body.appendChild(root);
+
+    let capturedLabel = "";
+    const child = defineComponent({
+      name: "child",
+      props: propTypes<{ label: string }>(),
+      setup(_el, props) {
+        capturedLabel = props.label;
+      },
+    });
+
+    const { component } = create();
+    component({
+      name: "parent",
+      setup: () => {
+        const { addChild } = useSlot();
+        addChild(childEl, child, { label: "From parent" });
+      },
+    })(root);
+
+    expect(capturedLabel).toBe("From parent");
   });
 });
