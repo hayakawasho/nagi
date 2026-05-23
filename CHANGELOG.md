@@ -4,6 +4,41 @@ All notable changes to `@usenagi/core` are documented here. Release notes also a
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.0] - 2026-05-23
+
+### Added
+
+- GitHub Actions CI workflow (lint + test).
+
+### Changed
+
+- Reorganized core and scheduler internals under `_internal/` directories.
+- Moved `createContext`, `withContext`, and `propTypes` into clearer module layout.
+- `useIntersectionWatch` now uses mount lifecycle internally.
+
+### Breaking Changes
+
+- `createScheduler` removed from `@usenagi/core/addons/scheduler` — use `schedulerAddon()` instead.
+- Trimmed public type exports from `@usenagi/core`: `ComponentMiddleware`, `MountFn`, `MountMiddleware`, `UnmountFn`, `UnmountMiddleware`, `IComponent`, and `Scheduler` are no longer exported.
+- `ComponentContext` is now exported from `./types` instead of `./core/component` (no change when importing from `@usenagi/core`).
+
+### Migration
+
+```ts
+// Before (0.3.x)
+import { createScheduler, schedulerAddon } from "@usenagi/core/addons/scheduler";
+
+const custom = createScheduler({ priority: "high" });
+const app = create().install(schedulerAddon());
+
+// After (0.4.0)
+import { schedulerAddon } from "@usenagi/core/addons/scheduler";
+
+const app = create().install(schedulerAddon({ priority: "high" }));
+```
+
+Full change set: [#402](https://github.com/hayakawasho/nagi/pull/402).
+
 ## [0.3.0] - 2026-05-21
 
 ### Added
