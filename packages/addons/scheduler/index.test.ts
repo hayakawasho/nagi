@@ -1,12 +1,9 @@
+import { create, useSlot, useUnmount } from "@usenagi/core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
-import { create } from "../../core/app";
-import { useUnmount } from "../../core/lifecycle";
-import { useSlot } from "../../hooks/core/useSlot";
 
 import { schedulerAddon } from "./index";
 
-import type { SchedulePriority } from "../../types";
+import type { SchedulePriority } from "@usenagi/core";
 
 function createWithScheduler(opts?: { priority?: SchedulePriority }) {
   return create().install(schedulerAddon(opts));

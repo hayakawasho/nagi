@@ -8,7 +8,7 @@ import {
   useDomRef,
   useMount,
   useWatch,
-} from "../../lib/main";
+} from "../../packages/core/lib/main";
 
 const ScrollScene = defineComponent({
   name: "scrollScene",

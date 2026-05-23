@@ -10,9 +10,9 @@ import {
   useSlot,
   useWatch,
   withContext,
-} from "../../lib/main";
+} from "../../packages/core/lib/main";
 
-import type { ReadonlySignal } from "../../lib/main";
+import type { ReadonlySignal } from "../../packages/core/lib/main";
 
 type DisclosureContext = {
   isOpen: ReadonlySignal<boolean>;

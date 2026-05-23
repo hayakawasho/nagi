@@ -4,6 +4,12 @@ All notable changes to `@usenagi/core` are documented here. Release notes also a
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.1] - 2026-05-23
+
+### Changed
+
+- Internal: reorganized repository into an npm workspaces layout (`packages/core`, `packages/addons`). No user-facing API, import path, or install changes.
+
 ## [0.4.0] - 2026-05-23
 
 ### Added

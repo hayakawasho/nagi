@@ -4,7 +4,7 @@ import {
   signal,
   useDomRef,
   useUnmount,
-} from "../../lib/main";
+} from "../../packages/core/lib/main";
 
 const Counter = defineComponent({
   name: "counter",

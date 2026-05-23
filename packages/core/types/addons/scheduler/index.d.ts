@@ -1,5 +1,5 @@
-import type { Cue, SchedulePriority } from "../../types";
-declare module "../../core/addon" {
+import type { Cue, SchedulePriority } from "@usenagi/core";
+declare module "@usenagi/core" {
     interface MountOptions {
         priority?: SchedulePriority;
         when?: Cue;
@@ -7,4 +7,4 @@ declare module "../../core/addon" {
 }
 export declare function schedulerAddon(opts?: {
     priority?: SchedulePriority;
-}): import("../../main").Addon;
+}): import("@usenagi/core").Addon;
