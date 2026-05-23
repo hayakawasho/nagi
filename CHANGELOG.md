@@ -4,6 +4,13 @@ All notable changes to `@usenagi/core` are documented here. Release notes also a
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.3] - 2026-05-24
+
+### Changed
+
+- Internal: refactored addon registry and scheduler deferred mount tracking to class-based implementations.
+- Internal: moved mount middleware types from the public addon module to `_internal/addonRegistry`.
+
 ## [0.4.2] - 2026-05-24
 
 ### Fixed

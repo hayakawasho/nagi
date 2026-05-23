@@ -1,6 +1,6 @@
 {
   "name": "@usenagi/core",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Composition-API ergonomics for vanilla DOM. Bring your own mounter.",
   "main": "./dist/main.umd.js",
   "module": "./dist/main.es.js",
