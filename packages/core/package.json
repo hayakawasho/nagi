@@ -1,6 +1,6 @@
 {
   "name": "@usenagi/core",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Composition-API ergonomics for vanilla DOM. Bring your own mounter.",
   "main": "./dist/main.umd.js",
   "module": "./dist/main.es.js",
@@ -23,18 +23,22 @@
   },
   "files": [
     "dist",
-    "types"
+    "types",
+    "README.md",
+    "README.ja.md",
+    "LICENSE"
   ],
   "author": "hayakawasho",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hayakawasho/nagi.git"
+    "url": "git+https://github.com/hayakawasho/nagi.git",
+    "directory": "packages/core"
   },
   "bugs": {
     "url": "https://github.com/hayakawasho/nagi/issues"
   },
-  "homepage": "https://github.com/hayakawasho/nagi#readme",
+  "homepage": "https://github.com/hayakawasho/nagi/blob/main/packages/core/README.md",
   "keywords": [
     "dom",
     "component",

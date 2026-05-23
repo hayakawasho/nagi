@@ -4,6 +4,14 @@ All notable changes to `@usenagi/core` are documented here. Release notes also a
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.2] - 2026-05-24
+
+### Fixed
+
+- Moved package documentation (`README.md`, `README.ja.md`, `LICENSE`) into `packages/core` for npm. Root README now points to the package docs.
+- Added `repository.directory` so npm README links resolve to the correct monorepo paths.
+- Fixed example links in package READMEs to point at the repo-root `examples/` directory.
+
 ## [0.4.1] - 2026-05-23
 
 ### Changed
