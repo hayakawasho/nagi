@@ -1,6 +1,7 @@
 import { defineAddon } from "@usenagi/core";
 
-import { createPendingMounts } from "./_internal/pending";
+import { createDeferredMounts } from "./_internal/deferredMounts";
+import { isAbortError } from "./_internal/isAbortError";
 import { createScheduler } from "./_internal/schedule";
 
 import type { Cue, SchedulePriority } from "@usenagi/core";
@@ -12,27 +13,20 @@ declare module "@usenagi/core" {
   }
 }
 
-function isAbortError(error: unknown): boolean {
-  return (
-    (error instanceof DOMException || error instanceof Error) &&
-    error.name === "AbortError"
-  );
-}
-
 export function schedulerAddon(opts?: { priority?: SchedulePriority }) {
   return defineAddon({
     name: "@usenagi/scheduler",
     install(ctx) {
       const scheduler = createScheduler(opts);
-      const pendingMounts = createPendingMounts();
+      const deferredMounts = createDeferredMounts();
 
       ctx.addMountMiddleware((next, _setup, componentOpts) => (el, props) => {
-        const task = pendingMounts.add(el);
+        const deferredMount = deferredMounts.add(el);
 
         const dispatch = () => {
           scheduler.schedule(
             () => {
-              if (!task.complete()) {
+              if (!deferredMount.complete()) {
                 return;
               }
 
@@ -40,7 +34,7 @@ export function schedulerAddon(opts?: { priority?: SchedulePriority }) {
             },
             {
               priority: componentOpts.priority,
-              signal: task.signal,
+              signal: deferredMount.signal,
             },
           );
         };
@@ -48,9 +42,9 @@ export function schedulerAddon(opts?: { priority?: SchedulePriority }) {
         const { when } = componentOpts;
 
         if (when) {
-          when(el, task.signal).then(
+          when(el, deferredMount.signal).then(
             () => {
-              if (!task.signal.aborted) {
+              if (!deferredMount.signal.aborted) {
                 dispatch();
               }
             },
@@ -59,7 +53,7 @@ export function schedulerAddon(opts?: { priority?: SchedulePriority }) {
                 return;
               }
 
-              task.abort();
+              deferredMount.abort();
 
               queueMicrotask(() => {
                 throw reason;
@@ -74,7 +68,7 @@ export function schedulerAddon(opts?: { priority?: SchedulePriority }) {
       });
 
       ctx.addUnmountMiddleware((next) => (targets) => {
-        targets.forEach(pendingMounts.abort);
+        targets.forEach(deferredMounts.abort);
         next(targets);
       });
     },

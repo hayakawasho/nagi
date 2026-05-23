@@ -1,82 +1,79 @@
-import type { ComponentSetup } from "../../types";
-import type {
-  Addon,
-  AddonContext,
-  ComponentMiddleware,
-  MountFn,
-  MountMiddleware,
-  MountOptions,
-  UnmountFn,
-  UnmountMiddleware,
-} from "../addon";
+import type { ComponentSetup, RefElement } from "../../types";
+import type { Addon, AddonContext, MountOptions } from "../addon";
 
-type AddonRegistry = AddonContext & {
-  composeComponent<S extends ComponentSetup>(setup: S): S;
+// biome-ignore lint/suspicious/noExplicitAny: return type varies with addons
+type MountFn = (el: RefElement, props: Record<string, any>) => any;
+
+type UnmountFn = (targets: RefElement[]) => void;
+
+export type ComponentMiddleware = <S extends ComponentSetup>(comp: S) => S;
+
+export type MountMiddleware = (
+  next: MountFn,
+  setup: ComponentSetup,
+  opts: MountOptions,
+) => MountFn;
+
+export type UnmountMiddleware = (next: UnmountFn) => UnmountFn;
+
+class AddonRegistry implements AddonContext {
+  #installedAddonNames = new Set<string>();
+  #componentMiddlewares: ComponentMiddleware[] = [];
+  #mountMiddlewares: MountMiddleware[] = [];
+  #unmountMiddlewares: UnmountMiddleware[] = [];
+
+  get installedAddons(): ReadonlySet<string> {
+    return this.#installedAddonNames;
+  }
+
+  addComponentMiddleware(middleware: ComponentMiddleware): void {
+    this.#componentMiddlewares.push(middleware);
+  }
+
+  addMountMiddleware(middleware: MountMiddleware): void {
+    this.#mountMiddlewares.push(middleware);
+  }
+
+  addUnmountMiddleware(middleware: UnmountMiddleware): void {
+    this.#unmountMiddlewares.push(middleware);
+  }
+
+  composeComponent<S extends ComponentSetup>(setup: S): S {
+    return this.#componentMiddlewares.reduce(
+      (s, middleware) => middleware(s),
+      setup,
+    );
+  }
+
   composeMount(
     mountFn: MountFn,
     setup: ComponentSetup,
     opts: MountOptions,
-  ): MountFn;
-  composeUnmount(unmountFn: UnmountFn): UnmountFn;
-  install(addon: Addon): void;
-};
+  ): MountFn {
+    return this.#mountMiddlewares.reduce(
+      (mount, middleware) => middleware(mount, setup, opts),
+      mountFn,
+    );
+  }
 
-function createAddonRegistry(): AddonRegistry {
-  const installedAddons = new Set<string>();
-  const componentMiddlewares: ComponentMiddleware[] = [];
-  const mountMiddlewares: MountMiddleware[] = [];
-  const unmountMiddlewares: UnmountMiddleware[] = [];
+  composeUnmount(unmountFn: UnmountFn): UnmountFn {
+    return this.#unmountMiddlewares.reduce(
+      (unmount, middleware) => middleware(unmount),
+      unmountFn,
+    );
+  }
 
-  const addonRegistry = {
-    get installedAddons() {
-      return installedAddons;
-    },
+  install = (addon: Addon): void => {
+    if (this.#installedAddonNames.has(addon.name)) {
+      throw new Error(`[nagi] addon "${addon.name}" is already installed`);
+    }
 
-    addComponentMiddleware(middleware) {
-      componentMiddlewares.push(middleware);
-    },
-
-    addMountMiddleware(middleware) {
-      mountMiddlewares.push(middleware);
-    },
-
-    addUnmountMiddleware(middleware) {
-      unmountMiddlewares.push(middleware);
-    },
-
-    composeComponent(setup) {
-      return componentMiddlewares.reduce(
-        (s, middleware) => middleware(s),
-        setup,
-      );
-    },
-
-    composeMount(mountFn, setup, opts) {
-      return mountMiddlewares.reduce(
-        (mount, middleware) => middleware(mount, setup, opts),
-        mountFn,
-      );
-    },
-
-    composeUnmount(unmountFn) {
-      return unmountMiddlewares.reduce(
-        (unmount, middleware) => middleware(unmount),
-        unmountFn,
-      );
-    },
-
-    install(addon) {
-      if (installedAddons.has(addon.name)) {
-        throw new Error(`[nagi] addon "${addon.name}" is already installed`);
-      }
-
-      addon.install(addonRegistry);
-      installedAddons.add(addon.name);
-    },
-  } satisfies AddonRegistry;
-
-  return addonRegistry;
+    addon.install(this);
+    this.#installedAddonNames.add(addon.name);
+  };
 }
+
+const createAddonRegistry = () => new AddonRegistry();
 
 /** @internal */
 export { createAddonRegistry };

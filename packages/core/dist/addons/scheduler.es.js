@@ -3,52 +3,56 @@ function e(e) {
 	return e;
 }
 //#endregion
-//#region ../addons/scheduler/_internal/pending.ts
-function t() {
-	let e = /* @__PURE__ */ new Map();
-	return {
-		add(t) {
-			let n = e.get(t);
-			n && n.abort();
-			let r = new AbortController();
-			return e.set(t, r), {
-				signal: r.signal,
-				complete() {
-					return e.get(t) !== r || r.signal.aborted ? !1 : (e.delete(t), !0);
-				},
-				abort() {
-					e.get(t) === r && (r.abort(), e.delete(t));
-				}
-			};
-		},
-		abort(t) {
-			let n = e.get(t);
-			n && (n.abort(), e.delete(t));
-		}
+//#region ../addons/scheduler/_internal/deferredMounts.ts
+var t = class {
+	#e = /* @__PURE__ */ new Map();
+	add(e) {
+		this.#n(e, this.#e.get(e));
+		let t = new AbortController();
+		return this.#e.set(e, t), {
+			signal: t.signal,
+			complete: () => this.#t(e, t),
+			abort: () => this.#n(e, t)
+		};
+	}
+	abort = (e) => {
+		this.#n(e, this.#e.get(e));
 	};
+	#t(e, t) {
+		let n = this.#e.get(e) !== t, r = t.signal.aborted;
+		return n || r ? !1 : (this.#e.delete(e), !0);
+	}
+	#n(e, t) {
+		!t || this.#e.get(e) !== t || (t.abort(), this.#e.delete(e));
+	}
+};
+function n() {
+	return new t();
+}
+//#endregion
+//#region ../addons/scheduler/_internal/isAbortError.ts
+function r(e) {
+	return (e instanceof DOMException || e instanceof Error) && e.name === "AbortError";
 }
 //#endregion
 //#region ../addons/scheduler/_internal/schedule.ts
-function n(e) {
-	return (e instanceof DOMException || e instanceof Error) && e.name === "AbortError";
-}
-function r(e, t, r) {
-	if (r?.aborted) return;
-	let { scheduler: a } = globalThis;
-	if (typeof a?.postTask == "function") {
-		a.postTask(e, {
+function i(e, t, n) {
+	if (n?.aborted) return;
+	let { scheduler: i } = globalThis;
+	if (typeof i?.postTask == "function") {
+		i.postTask(e, {
 			priority: t,
-			signal: r
+			signal: n
 		}).catch((e) => {
-			n(e) || queueMicrotask(() => {
+			r(e) || queueMicrotask(() => {
 				throw e;
 			});
 		});
 		return;
 	}
-	i(e, t, r);
+	a(e, t, n);
 }
-function i(e, t, n) {
+function a(e, t, n) {
 	function r() {
 		n?.aborted || e();
 	}
@@ -68,26 +72,23 @@ function i(e, t, n) {
 			break;
 	}
 }
-function a(e = {}) {
+function o(e = {}) {
 	let t = e.priority ?? "user-visible";
 	return { schedule(e, n = {}) {
-		r(e, n.priority ?? t, n.signal);
+		i(e, n.priority ?? t, n.signal);
 	} };
 }
 //#endregion
 //#region ../addons/scheduler/index.ts
-function o(e) {
-	return (e instanceof DOMException || e instanceof Error) && e.name === "AbortError";
-}
-function s(n) {
+function s(t) {
 	return e({
 		name: "@usenagi/scheduler",
 		install(e) {
-			let r = a(n), i = t();
-			e.addMountMiddleware((e, t, n) => (t, a) => {
-				let s = i.add(t), c = () => {
-					r.schedule(() => {
-						s.complete() && e(t, a);
+			let i = o(t), a = n();
+			e.addMountMiddleware((e, t, n) => (t, o) => {
+				let s = a.add(t), c = () => {
+					i.schedule(() => {
+						s.complete() && e(t, o);
 					}, {
 						priority: n.priority,
 						signal: s.signal
@@ -96,12 +97,12 @@ function s(n) {
 				l ? l(t, s.signal).then(() => {
 					s.signal.aborted || c();
 				}, (e) => {
-					o(e) || (s.abort(), queueMicrotask(() => {
+					r(e) || (s.abort(), queueMicrotask(() => {
 						throw e;
 					}));
 				}) : c();
 			}), e.addUnmountMiddleware((e) => (t) => {
-				t.forEach(i.abort), e(t);
+				t.forEach(a.abort), e(t);
 			});
 		}
 	});
