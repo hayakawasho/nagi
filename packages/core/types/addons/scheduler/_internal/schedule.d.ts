@@ -1,4 +1,4 @@
-import type { SchedulePriority } from "../../../types";
+import type { SchedulePriority } from "@usenagi/core";
 type Scheduler = {
     schedule(task: () => void, options?: {
         priority?: SchedulePriority;

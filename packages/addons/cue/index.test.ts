@@ -1,6 +1,6 @@
+import { create } from "@usenagi/core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { create } from "../../core/app";
 import { schedulerAddon } from "../scheduler/index";
 
 import { idle, interaction, media, visible } from "./index";

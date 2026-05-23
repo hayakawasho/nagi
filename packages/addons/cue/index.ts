@@ -1,4 +1,4 @@
-import type { Cue } from "../../types";
+import type { Cue } from "@usenagi/core";
 
 function abortError(): DOMException {
   return new DOMException("aborted", "AbortError");

@@ -1,4 +1,4 @@
-import type { Cue } from "../../types";
+import type { Cue } from "@usenagi/core";
 export declare function visible(opts?: IntersectionObserverInit): Cue;
 export declare function idle(timeout?: number): Cue;
 export declare function media(query: string): Cue;

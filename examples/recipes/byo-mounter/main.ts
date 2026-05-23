@@ -18,11 +18,11 @@ import {
   useDomRef,
   useWatch,
   useMount,
-} from "../../../lib/main";
-import { schedulerAddon } from "../../../lib/addons/scheduler";
-import { idle, interaction, visible, media } from "../../../lib/addons/cue";
+} from "../../../packages/core/lib/main";
+import { schedulerAddon } from "../../../packages/addons/scheduler";
+import { idle, interaction, visible, media } from "../../../packages/addons/cue";
 
-import type { ComponentSetup, SchedulePriority } from "../../../lib/types";
+import type { ComponentSetup, SchedulePriority } from "../../../packages/core/lib/types";
 
 // -----------------------------------------------------------------
 // コンポーネント定義

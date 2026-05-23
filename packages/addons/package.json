@@ -1,0 +1,10 @@
+{
+  "name": "@usenagi/internal-addons",
+  "private": true,
+  "version": "0.4.1",
+  "description": "Private source workspace for official addons bundled into @usenagi/core/addons/* (not a published npm package).",
+  "type": "module",
+  "devDependencies": {
+    "@usenagi/core": "*"
+  }
+}

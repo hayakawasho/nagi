@@ -2,18 +2,15 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "lib": ["ESNext", "DOM"],
+    "lib": ["ESNext"],
     "moduleResolution": "Bundler",
     "strict": true,
-    "rootDir": "./lib",
-    "emitDeclarationOnly": true,
-    "declaration": true,
-    "declarationDir": "./types",
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "stripInternal": true
+    "skipLibCheck": true,
+    "noEmit": true
   },
-  "include": ["lib"],
-  "exclude": ["lib/**/*.test.ts"]
+  "include": [
+    "packages/core/vite.config.ts",
+    "packages/core/vite.addons.config.ts",
+    "vitest.config.ts"
+  ]
 }

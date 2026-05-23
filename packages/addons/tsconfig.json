@@ -1,0 +1,21 @@
+{
+  // @usenagi/core/addons/* subpath export 用の declaration を出力する（standalone package 用ではない）。
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "lib": ["ESNext", "DOM"],
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "rootDir": ".",
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "declarationDir": "../core/types/addons",
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "stripInternal": true,
+    "skipLibCheck": true
+  },
+  "include": ["scheduler", "cue"],
+  "exclude": ["**/*.test.ts"]
+}

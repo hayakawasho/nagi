@@ -1,11 +1,11 @@
-import { defineAddon } from "../../core/addon";
+import { defineAddon } from "@usenagi/core";
 
 import { createPendingMounts } from "./_internal/pending";
 import { createScheduler } from "./_internal/schedule";
 
-import type { Cue, SchedulePriority } from "../../types";
+import type { Cue, SchedulePriority } from "@usenagi/core";
 
-declare module "../../core/addon" {
+declare module "@usenagi/core" {
   interface MountOptions {
     priority?: SchedulePriority;
     when?: Cue;

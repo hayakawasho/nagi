@@ -1,4 +1,4 @@
-import type { RefElement } from "../../../types";
+import type { RefElement } from "@usenagi/core";
 type PendingMounts = {
     add(el: RefElement): {
         readonly signal: AbortSignal;
