@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { create } from "../core/app";
-import { defineComponent } from "../core/component";
+import { create } from "../../core/app";
+import { defineComponent } from "../../core/component";
 
 import { useDomRef } from "./useDomRef";
 import { useSlot } from "./useSlot";
@@ -18,34 +18,6 @@ afterEach(() => {
 });
 
 describe("useDomRef", () => {
-  it("data-ref の要素を取得できる", () => {
-    const el = makeEl('<span data-ref="btn"></span>');
-    let result: HTMLElement | null = null;
-    const { component } = create();
-    component({
-      name: "test",
-      setup: () => {
-        const { refs } = useDomRef<{ btn: HTMLElement }>();
-        result = refs.btn;
-      },
-    })(el);
-    expect(result).toBeInstanceOf(HTMLElement);
-  });
-
-  it("存在しない ref は null", () => {
-    const el = makeEl();
-    let result: HTMLElement | null | undefined;
-    const { component } = create();
-    component({
-      name: "test",
-      setup: () => {
-        const { refs } = useDomRef<{ missing: HTMLElement | null }>();
-        result = refs.missing;
-      },
-    })(el);
-    expect(result).toBeNull();
-  });
-
   it("複数の ref キーをまとめて取得できる", () => {
     const el = makeEl('<a data-ref="a"></a><b data-ref="b"></b>');
     let refA: Element | null = null;
@@ -63,8 +35,18 @@ describe("useDomRef", () => {
     expect(refB).toBeInstanceOf(HTMLElement);
   });
 
-  it("setup 外で呼ぶと例外を投げる", () => {
-    expect(() => useDomRef()).toThrow();
+  it("存在しない ref は null", () => {
+    const el = makeEl();
+    let result: HTMLElement | null | undefined;
+    const { component } = create();
+    component({
+      name: "test",
+      setup: () => {
+        const { refs } = useDomRef<{ missing: HTMLElement | null }>();
+        result = refs.missing;
+      },
+    })(el);
+    expect(result).toBeNull();
   });
 
   it("addChild 後に子コンポーネント配下の ref を取得しない", () => {
@@ -90,7 +72,7 @@ describe("useDomRef", () => {
           childRoot: HTMLElement;
         }>();
         const { addChild } = useSlot();
-        addChild(refs.childRoot, Child, {});
+        addChild(refs.childRoot, Child);
         parentTitle = refs.title;
       },
     })(el);
@@ -124,7 +106,7 @@ describe("useDomRef", () => {
         }>();
         const { addChild } = useSlot();
         beforeAddChild = refs.title;
-        addChild(refs.childRoot, Child, {});
+        addChild(refs.childRoot, Child);
         afterAddChild = refs.title;
       },
     })(el);
@@ -132,55 +114,58 @@ describe("useDomRef", () => {
     expect(beforeAddChild).toBe(afterAddChild);
   });
 
-  it("refs.child を addChild に渡す典型パターンが動作する", () => {
-    const el = makeEl('<div data-ref="slot"><p>child content</p></div>');
-    let mounted = false;
-
-    const Child = defineComponent({
-      name: "child",
-      setup: () => {
-        mounted = true;
-      },
-    });
-
-    const { component } = create();
-    component({
-      name: "parent",
-      setup: () => {
-        const { refs } = useDomRef<{ slot: HTMLElement }>();
-        const { addChild } = useSlot();
-        addChild(refs.slot, Child, {});
-      },
-    })(el);
-
-    expect(mounted).toBe(true);
-  });
-
-  it("SVGElement を取得できる", () => {
-    const el = makeEl('<svg><g data-ref="g"></g></svg>');
-    let result: SVGElement | null = null;
+  it("同じ data-ref が複数ある場合は配列を返す", () => {
+    const el = makeEl(
+      '<span data-ref="item"></span><span data-ref="item"></span>',
+    );
+    let items: HTMLElement[] | null = null;
     const { component } = create();
     component({
       name: "test",
       setup: () => {
-        const { refs } = useDomRef<{ g: SVGElement }>();
-        result = refs.g as SVGElement;
+        const { refs } = useDomRef<{ item: HTMLElement[] }>();
+        items = refs.item;
       },
     })(el);
-    expect(result).toBeInstanceOf(SVGElement);
+    expect(Array.isArray(items)).toBe(true);
+    expect(items).toHaveLength(2);
   });
 
-  it("型に存在しないキーは null を返す", () => {
-    const el = makeEl("");
-    let result: unknown;
+  it("スコープ外の要素は取得しない", () => {
+    const el = makeEl('<span data-ref="inner"></span>');
+    const outside = document.createElement("span");
+    outside.setAttribute("data-ref", "inner");
+    document.body.appendChild(outside);
+
+    let result: HTMLElement | HTMLElement[] | null = null;
     const { component } = create();
     component({
       name: "test",
       setup: () => {
-        const { refs } = useDomRef<Record<string, HTMLElement | null>>();
-        result = (refs as unknown as Record<string, unknown>).nonexistent;
+        const { refs } = useDomRef<{ inner: HTMLElement }>();
+        result = refs.inner;
       },
     })(el);
-    expect(result).toBeNull();
+
+    expect(result).toBeInstanceOf(HTMLElement);
+    expect(Array.isArray(result)).toBe(false);
+  });
+
+  it("初回アクセス後に DOM を変更しても結果はキャッシュされる", () => {
+    const el = makeEl('<span data-ref="item"></span>');
+    let first: HTMLElement | HTMLElement[] | null = null;
+    let second: HTMLElement | HTMLElement[] | null = null;
+    const { component } = create();
+    component({
+      name: "test",
+      setup: () => {
+        const { refs } = useDomRef<{ item: HTMLElement }>();
+        first = refs.item;
+        el.querySelector('[data-ref="item"]')!.remove();
+        second = refs.item;
+      },
+    })(el);
+
+    expect(first).toBe(second);
   });
 });

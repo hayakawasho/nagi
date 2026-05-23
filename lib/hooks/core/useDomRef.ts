@@ -1,4 +1,6 @@
-import type { RefElement } from "../types";
+import { getCurrentComponent } from "../../core/runtime";
+
+import type { RefElement } from "../../types";
 
 function isStrictDescendantOfAny(
   node: RefElement,
@@ -28,9 +30,10 @@ function findRef(
   return nodes;
 }
 
-export function domRefs<
-  T extends Record<string, RefElement | RefElement[] | null>,
->(scope: RefElement, getBoundaries: () => RefElement[]): T {
+function domRefs<T extends Record<string, RefElement | RefElement[] | null>>(
+  scope: RefElement,
+  getBoundaries: () => RefElement[],
+): T {
   const cache = new Map<string, RefElement | RefElement[] | null>();
 
   return new Proxy({} as T, {
@@ -64,4 +67,16 @@ export function domRefs<
       return false;
     },
   });
+}
+
+export function useDomRef<
+  T extends Record<string, RefElement | RefElement[] | null>,
+>(): {
+  refs: T;
+} {
+  const context = getCurrentComponent("useDomRef");
+
+  return {
+    refs: domRefs<T>(context.element, () => context.childElements),
+  };
 }

@@ -3,13 +3,8 @@ function e(e) {
 	return e;
 }
 //#endregion
-//#region lib/utils/isAbortError.ts
-function t(e) {
-	return (e instanceof DOMException || e instanceof Error) && e.name === "AbortError";
-}
-//#endregion
-//#region lib/addons/scheduler/pending.ts
-function n() {
+//#region lib/addons/scheduler/_internal/pending.ts
+function t() {
 	let e = /* @__PURE__ */ new Map();
 	return {
 		add(t) {
@@ -33,22 +28,25 @@ function n() {
 	};
 }
 //#endregion
-//#region lib/addons/scheduler/task.ts
-function r(e, n, r) {
+//#region lib/addons/scheduler/_internal/schedule.ts
+function n(e) {
+	return (e instanceof DOMException || e instanceof Error) && e.name === "AbortError";
+}
+function r(e, t, r) {
 	if (r?.aborted) return;
 	let { scheduler: a } = globalThis;
 	if (typeof a?.postTask == "function") {
 		a.postTask(e, {
-			priority: n,
+			priority: t,
 			signal: r
 		}).catch((e) => {
-			t(e) || queueMicrotask(() => {
+			n(e) || queueMicrotask(() => {
 				throw e;
 			});
 		});
 		return;
 	}
-	i(e, n, r);
+	i(e, t, r);
 }
 function i(e, t, n) {
 	function r() {
@@ -70,8 +68,6 @@ function i(e, t, n) {
 			break;
 	}
 }
-//#endregion
-//#region lib/addons/scheduler/scheduler.ts
 function a(e = {}) {
 	let t = e.priority ?? "user-visible";
 	return { schedule(e, n = {}) {
@@ -79,33 +75,36 @@ function a(e = {}) {
 	} };
 }
 //#endregion
-//#region lib/addons/scheduler/addon.ts
-function o(r) {
+//#region lib/addons/scheduler/index.ts
+function o(e) {
+	return (e instanceof DOMException || e instanceof Error) && e.name === "AbortError";
+}
+function s(n) {
 	return e({
 		name: "@usenagi/scheduler",
 		install(e) {
-			let i = a(r), o = n();
-			e.addMountMiddleware((e, n, r) => (n, a) => {
-				let s = o.add(n), c = () => {
-					i.schedule(() => {
-						s.complete() && e(n, a);
+			let r = a(n), i = t();
+			e.addMountMiddleware((e, t, n) => (t, a) => {
+				let s = i.add(t), c = () => {
+					r.schedule(() => {
+						s.complete() && e(t, a);
 					}, {
-						priority: r.priority,
+						priority: n.priority,
 						signal: s.signal
 					});
-				}, { when: l } = r;
-				l ? l(n, s.signal).then(() => {
+				}, { when: l } = n;
+				l ? l(t, s.signal).then(() => {
 					s.signal.aborted || c();
 				}, (e) => {
-					t(e) || (s.abort(), queueMicrotask(() => {
+					o(e) || (s.abort(), queueMicrotask(() => {
 						throw e;
 					}));
 				}) : c();
 			}), e.addUnmountMiddleware((e) => (t) => {
-				t.forEach(o.abort), e(t);
+				t.forEach(i.abort), e(t);
 			});
 		}
 	});
 }
 //#endregion
-export { a as createScheduler, o as schedulerAddon };
+export { s as schedulerAddon };

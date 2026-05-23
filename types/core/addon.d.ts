@@ -20,13 +20,6 @@ export type AddonContext = {
     addMountMiddleware(middleware: MountMiddleware): void;
     addUnmountMiddleware(middleware: UnmountMiddleware): void;
 };
-type AddonRegistry = AddonContext & {
-    composeComponent<S extends ComponentSetup>(setup: S): S;
-    composeMount(mountFn: MountFn, setup: ComponentSetup, opts: MountOptions): MountFn;
-    composeUnmount(unmountFn: UnmountFn): UnmountFn;
-    install(addon: Addon): void;
-};
-export declare function createAddonRegistry(): AddonRegistry;
 /**
  * Identity helper for type inference only — no runtime effect.
  */

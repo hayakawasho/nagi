@@ -182,7 +182,7 @@ You can mount child components with `useSlot()`. You can pass values from parent
 | API                               | Description                                                         |
 | --------------------------------- | ------------------------------------------------------------------- |
 | `useIntersectionWatch(cb, opts?)` | IntersectionObserver wrapper; automatically disconnected on unmount |
-| `useMediaQuery(query)`            | Returns `matchMedia` result as a `ReadonlySignal<boolean>`          |
+| `useMediaQuery(query, cb)` | Runs `callback` when the query matches; returns `matchesQuery` as `ReadonlySignal<boolean>` |
 
 ### Addons
 
@@ -213,8 +213,7 @@ import { visible, idle, interaction, media } from "@usenagi/core/addons/cue";
 
 | API | Description |
 | --- | --- |
-| `schedulerAddon(opts?)` | Addon for deferred mount (uses `createScheduler` internally) |
-| `createScheduler(opts?)` | Low-level API for custom Scheduler implementations |
+| `schedulerAddon(opts?)` | Addon for deferred mount |
 | `visible(opts?)` | A Cue that resolves when the element enters the viewport |
 | `idle(timeout?)` | A Cue that resolves via `requestIdleCallback` |
 | `interaction(events?)` | A Cue that resolves on the first user interaction |

@@ -1,13 +1,17 @@
-import { createAddonRegistry } from "./addon";
+import { createAddonRegistry } from "./_internal/addonRegistry";
 import {
   bindDOMNodeToComponent,
   DOM_COMPONENT_INSTANCE,
-} from "./internal/registry";
+} from "./_internal/registry";
 import { createComponent } from "./runtime";
 
-import type { ComponentSetup, RefElement } from "../types";
+import type {
+  ComponentContext,
+  ComponentSetup,
+  ExposedSetup,
+  RefElement,
+} from "../types";
 import type { Addon, MountOptions } from "./addon";
-import type { ComponentContext } from "./component";
 
 type App = {
   install(...addons: Addon[]): App;
@@ -18,7 +22,7 @@ type App = {
     el: RefElement,
     // biome-ignore lint/suspicious/noExplicitAny: internal props type
     props?: Record<string, any>,
-  ) => ComponentContext<ReturnType<S["setup"]>> | void;
+  ) => ComponentContext<ExposedSetup<ReturnType<S["setup"]>>> | void;
   unmount(targets: RefElement[]): void;
 };
 

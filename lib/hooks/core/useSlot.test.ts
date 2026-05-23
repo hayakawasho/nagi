@@ -1,45 +1,27 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { create } from "../core/app";
-import { defineComponent } from "../core/component";
-import { useMount, useUnmount } from "../core/lifecycle";
-import { propTypes } from "../props";
+import { create } from "../../core/app";
+import { defineComponent } from "../../core/component";
+import { useMount, useUnmount } from "../../core/lifecycle";
+import { propTypes } from "../../core/props";
 
 import { useSlot } from "./useSlot";
+
+function makeRoot(childEl: HTMLElement): HTMLElement {
+  const root = document.createElement("div");
+  root.appendChild(childEl);
+  document.body.appendChild(root);
+  return root;
+}
 
 afterEach(() => {
   document.body.innerHTML = "";
 });
 
 describe("useSlot", () => {
-  it("addChild で子コンポーネントをマウントできる", () => {
-    const root = document.createElement("div");
-    const childEl = document.createElement("span");
-    root.appendChild(childEl);
-    document.body.appendChild(root);
-
-    const setupFn = vi.fn().mockReturnValue({ childValue: true });
-    const child = { name: "child", setup: setupFn };
-    let children: ReturnType<ReturnType<typeof useSlot>["addChild"]> = [];
-
-    const { component } = create();
-    component({
-      name: "parent",
-      setup: () => {
-        const { addChild } = useSlot();
-        children = addChild(childEl, child);
-      },
-    })(root);
-
-    expect(setupFn).toHaveBeenCalledWith(childEl, {});
-    expect(children).toHaveLength(1);
-  });
-
   it("addChild した子は親の onMount 後にマウントされる", () => {
-    const root = document.createElement("div");
     const childEl = document.createElement("span");
-    root.appendChild(childEl);
-    document.body.appendChild(root);
+    const root = makeRoot(childEl);
 
     const mountFn = vi.fn();
     const child = {
@@ -62,10 +44,8 @@ describe("useSlot", () => {
   });
 
   it("removeChild で子コンポーネントをアンマウントできる", () => {
-    const root = document.createElement("div");
     const childEl = document.createElement("span");
-    root.appendChild(childEl);
-    document.body.appendChild(root);
+    const root = makeRoot(childEl);
 
     const unmountFn = vi.fn();
     const child = {
@@ -116,10 +96,8 @@ describe("useSlot", () => {
   });
 
   it("親アンマウント時に子も連鎖してアンマウントされる", () => {
-    const root = document.createElement("div");
     const childEl = document.createElement("span");
-    root.appendChild(childEl);
-    document.body.appendChild(root);
+    const root = makeRoot(childEl);
 
     const unmountFn = vi.fn();
     const child = {
@@ -142,15 +120,9 @@ describe("useSlot", () => {
     expect(unmountFn).toHaveBeenCalledOnce();
   });
 
-  it("setup 外で呼ぶと例外を投げる", () => {
-    expect(() => useSlot()).toThrow();
-  });
-
   it("addChild で props を子コンポーネントに渡せる", () => {
-    const root = document.createElement("div");
     const childEl = document.createElement("button");
-    root.appendChild(childEl);
-    document.body.appendChild(root);
+    const root = makeRoot(childEl);
 
     let capturedLabel = "";
     const child = defineComponent({

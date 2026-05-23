@@ -1,4 +1,4 @@
-import { LifecycleHooks } from "./component";
+import { LifecycleHooks } from "./_internal/component";
 import { getCurrentComponent } from "./runtime";
 
 import type { LifecycleHandler } from "../types";

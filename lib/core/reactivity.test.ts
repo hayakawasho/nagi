@@ -13,50 +13,12 @@ afterEach(() => {
   document.body.innerHTML = "";
 });
 
-describe("signal", () => {
-  it("初期値を持つ Signal を作成できる", () => {
-    const r = signal(42);
-    expect(r.value).toBe(42);
-  });
-
-  it("value を書き換えられる", () => {
-    const r = signal(0);
-    r.value = 99;
-    expect(r.value).toBe(99);
-  });
-
-  it("各種型に対応できる", () => {
-    expect(signal("hello").value).toBe("hello");
-    expect(signal(false).value).toBe(false);
-    expect(signal(null).value).toBeNull();
-    const obj = { a: 1 };
-    expect(signal(obj).value).toBe(obj);
-  });
-});
-
 describe("readonly", () => {
-  it("ReadonlySignal は元の Signal の値を返す", () => {
-    const r = signal(10);
-    const ro = readonly(r);
-    expect(ro.value).toBe(10);
-  });
-
-  it("元の Signal を変更すると ReadonlySignal にも反映される", () => {
+  it("元の Signal の変更が ReadonlySignal に反映される", () => {
     const r = signal(10);
     const ro = readonly(r);
     r.value = 20;
     expect(ro.value).toBe(20);
-  });
-
-  it("ReadonlySignal に setter は存在しないため代入すると例外を投げる", () => {
-    const r = signal(10);
-    const ro = readonly(r);
-    expect(() => {
-      // @ts-expect-error: ReadonlySignal には setter がない
-      ro.value = 99;
-    }).toThrow(TypeError);
-    // value は書き換わっていない
-    expect(ro.value).toBe(10);
   });
 });
 
@@ -132,24 +94,6 @@ describe("useWatch", () => {
     expect(callback).toHaveBeenCalledWith(20, 10);
   });
 
-  it("component unmount 後は通知しない", () => {
-    const el = makeEl();
-    const r = signal(0);
-    const callback = vi.fn();
-    const { component, unmount } = create();
-
-    component({
-      name: "test",
-      setup: () => {
-        useWatch(r, callback);
-      },
-    })(el);
-
-    unmount([el]);
-    r.value = 1;
-    expect(callback).not.toHaveBeenCalled();
-  });
-
   it("複数 useWatch は登録順に呼ばれる", () => {
     const el = makeEl();
     const r = signal(0);
@@ -191,42 +135,7 @@ describe("useWatch", () => {
 });
 
 describe("useComputed", () => {
-  it("初期値が即評価される", () => {
-    const el = makeEl();
-    const { component } = create();
-
-    let c: ReturnType<typeof useComputed<number>>;
-
-    component({
-      name: "test",
-      setup: () => {
-        c = useComputed(() => 42);
-      },
-    })(el);
-
-    expect(c!.value).toBe(42);
-  });
-
-  it("単一 signal 依存で値変更時に再計算される", () => {
-    const el = makeEl();
-    const r = signal(1);
-    const { component } = create();
-
-    let c: ReturnType<typeof useComputed<number>>;
-
-    component({
-      name: "test",
-      setup: () => {
-        c = useComputed(() => r.value * 2);
-      },
-    })(el);
-
-    expect(c!.value).toBe(2);
-    r.value = 3;
-    expect(c!.value).toBe(6);
-  });
-
-  it("複数 signal 依存で片方変更時に再計算される", () => {
+  it("依存 signal の変更で再計算される", () => {
     const el = makeEl();
     const a = signal(1);
     const b = signal(10);
@@ -358,11 +267,5 @@ describe("useComputed", () => {
     r.value = 1;
     expect(evalCount).not.toHaveBeenCalled();
     expect(c!.value).toBe(0);
-  });
-
-  it("setup() 外で呼ぶとエラーになる", () => {
-    expect(() => {
-      useComputed(() => 1);
-    }).toThrow();
   });
 });

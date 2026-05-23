@@ -1,16 +1,13 @@
 import { LifecycleError } from "../error";
 
 import type { RefElement } from "../../types";
-import type { ComponentContext } from "../component";
+import type { ComponentContextImpl } from "./component";
 
-export const DOM_COMPONENT_INSTANCE = new WeakMap<
-  RefElement,
-  ComponentContext
->();
+const DOM_COMPONENT_INSTANCE = new WeakMap<RefElement, ComponentContextImpl>();
 
-export function bindDOMNodeToComponent(
+function bindDOMNodeToComponent(
   el: RefElement,
-  component: ComponentContext,
+  component: ComponentContextImpl,
 ) {
   const existing = DOM_COMPONENT_INSTANCE.get(el);
 
@@ -27,3 +24,6 @@ export function bindDOMNodeToComponent(
 
   DOM_COMPONENT_INSTANCE.set(el, component);
 }
+
+/** @internal */
+export { bindDOMNodeToComponent, DOM_COMPONENT_INSTANCE };

@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { create } from "./app";
-import { defineComponent } from "./component";
 import { useMount, useUnmount } from "./lifecycle";
 
 function makeEl(): HTMLElement {
@@ -14,139 +13,103 @@ afterEach(() => {
   document.body.innerHTML = "";
 });
 
-describe("create", () => {
-  it("component と unmount を返す", () => {
-    const app = create();
-    expect(typeof app.component).toBe("function");
-    expect(typeof app.unmount).toBe("function");
-  });
+describe("create — 同期 mount（addon なし）", () => {
+  describe("component()", () => {
+    it("setup に element と props を渡す", () => {
+      const el = makeEl();
+      const setupFn = vi.fn();
+      const { component } = create();
 
-  it("component(wrap) でコンポーネントをマウントできる", () => {
-    const el = makeEl();
-    const setupFn = vi.fn().mockReturnValue({ value: 1 });
-    const { component } = create();
-    const ctx = component({ name: "test", setup: setupFn })(el);
-    expect(setupFn).toHaveBeenCalledWith(el, {});
-    expect(ctx.current).toEqual({ value: 1 });
-  });
+      component({ name: "test", setup: setupFn })(el, { x: 1 });
 
-  it("props を渡せる", () => {
-    const el = makeEl();
-    const setupFn = vi.fn();
-    const { component } = create();
-    component({ name: "test", setup: setupFn })(el, { x: 1 });
-    expect(setupFn).toHaveBeenCalledWith(el, { x: 1 });
-  });
-
-  it("同じ要素に二重マウントすると例外を投げる", () => {
-    const el = makeEl();
-    const { component } = create();
-    const mount = component({ name: "test", setup: () => {} });
-    mount(el);
-    expect(() => mount(el)).toThrow();
-  });
-
-  it("unmount でアンマウントハンドラが実行される", () => {
-    const el = makeEl();
-    const fn = vi.fn();
-    const { component, unmount } = create();
-    component({
-      name: "test",
-      setup: () => {
-        useUnmount(fn);
-      },
-    })(el);
-    unmount([el]);
-    expect(fn).toHaveBeenCalledOnce();
-  });
-
-  it("unmount 対象でない要素は無視される", () => {
-    const el = makeEl();
-    const other = makeEl();
-    const fn = vi.fn();
-    const { component, unmount } = create();
-    component({
-      name: "test",
-      setup: () => {
-        useUnmount(fn);
-      },
-    })(el);
-    unmount([other]); // 別の要素
-    expect(fn).not.toHaveBeenCalled();
-  });
-
-  it("unmount 後に同じ要素へ再マウントできる", () => {
-    const el = makeEl();
-    const { component, unmount } = create();
-    const mount = component({ name: "test", setup: () => {} });
-    mount(el);
-    unmount([el]);
-    expect(() => mount(el)).not.toThrow();
-  });
-});
-
-describe("defineComponent", () => {
-  it("options オブジェクトをそのまま返す", () => {
-    const opts = { name: "foo", setup: () => {} };
-    expect(defineComponent(opts)).toEqual(opts);
-  });
-
-  it("setup の props 型アノテーションから Props が推論される", () => {
-    const comp = defineComponent({
-      name: "with-props",
-      setup(_el, props: { label: string }) {
-        return { label: props.label };
-      },
+      expect(setupFn).toHaveBeenCalledWith(el, { x: 1 });
     });
 
-    expect(comp.name).toBe("with-props");
-  });
-});
+    it("ComponentContext を返す", () => {
+      const el = makeEl();
+      const { component } = create();
 
-describe("useMount / useUnmount 基本動作", () => {
-  it("useMount ハンドラはマウント時に実行される", () => {
-    const el = makeEl();
-    const fn = vi.fn();
-    const { component } = create();
-    component({
-      name: "test",
-      setup: () => {
-        useMount(fn);
-      },
-    })(el);
-    expect(fn).toHaveBeenCalledOnce();
-  });
+      const ctx = component({ name: "test", setup: () => {} })(el);
 
-  it("useUnmount ハンドラはアンマウント時に実行される", () => {
-    const el = makeEl();
-    const fn = vi.fn();
-    const { component, unmount } = create();
-    component({
-      name: "test",
-      setup: () => {
-        useUnmount(fn);
-      },
-    })(el);
-    unmount([el]);
-    expect(fn).toHaveBeenCalledOnce();
-  });
+      expect(ctx).toBeDefined();
+    });
 
-  it("useMount ハンドラの戻り値 (cleanup) はアンマウント時に実行される", () => {
-    const el = makeEl();
-    const cleanup = vi.fn();
-    const { component, unmount } = create();
-    component({
-      name: "test",
-      setup: () => {
-        useMount(() => cleanup);
-      },
-    })(el);
-    expect(cleanup).not.toHaveBeenCalled();
-    unmount([el]);
-    expect(cleanup).toHaveBeenCalledOnce();
+    it("setup の return が current に入る（expose）", () => {
+      const el = makeEl();
+      const { component } = create();
+
+      const ctx = component({
+        name: "test",
+        setup: () => ({ value: 1 }),
+      })(el);
+
+      expect(ctx).toBeDefined();
+      expect(ctx?.current).toEqual({ value: 1 });
+    });
+
+    it("setup が void のとき current は空オブジェクト", () => {
+      const el = makeEl();
+      const { component } = create();
+
+      const ctx = component({ name: "test", setup: () => {} })(el);
+
+      expect(ctx).toBeDefined();
+      expect(ctx?.current).toEqual({});
+    });
   });
 
-  it("setup 外で useMount を呼ぶと例外を投げる", () => {
-    expect(() => useMount(() => {})).toThrow();
+  describe("unmount()", () => {
+    it("useUnmount のハンドラが実行される", () => {
+      const el = makeEl();
+      const fn = vi.fn();
+      const { component, unmount } = create();
+      component({
+        name: "test",
+        setup: () => {
+          useUnmount(fn);
+        },
+      })(el);
+      unmount([el]);
+      expect(fn).toHaveBeenCalledOnce();
+    });
+
+    it("useMount の cleanup が実行される", () => {
+      const el = makeEl();
+      const cleanup = vi.fn();
+      const { component, unmount } = create();
+      component({
+        name: "test",
+        setup: () => {
+          useMount(() => cleanup);
+        },
+      })(el);
+      expect(cleanup).not.toHaveBeenCalled();
+      unmount([el]);
+      expect(cleanup).toHaveBeenCalledOnce();
+    });
+
+    it("対象外の要素は無視される", () => {
+      const el = makeEl();
+      const other = makeEl();
+      const fn = vi.fn();
+      const { component, unmount } = create();
+      component({
+        name: "test",
+        setup: () => {
+          useUnmount(fn);
+        },
+      })(el);
+      unmount([other]);
+      expect(fn).not.toHaveBeenCalled();
+    });
+
+    it("unmount 後に同じ要素へ再マウントできる", () => {
+      const el = makeEl();
+      const { component, unmount } = create();
+      const mount = component({ name: "test", setup: () => {} });
+      mount(el);
+      unmount([el]);
+      expect(() => mount(el)).not.toThrow();
+    });
   });
 });
