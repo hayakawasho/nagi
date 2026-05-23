@@ -1,6 +1,21 @@
-import { isAbortError } from "../../utils/isAbortError";
+import type { SchedulePriority } from "../../../types";
 
-import type { SchedulePriority } from "../../types";
+type Scheduler = {
+  schedule(
+    task: () => void,
+    options?: {
+      priority?: SchedulePriority;
+      signal?: AbortSignal;
+    },
+  ): void;
+};
+
+function isAbortError(error: unknown): boolean {
+  return (
+    (error instanceof DOMException || error instanceof Error) &&
+    error.name === "AbortError"
+  );
+}
 
 type NativeScheduler = {
   postTask(
@@ -9,7 +24,7 @@ type NativeScheduler = {
   ): Promise<void>;
 };
 
-export function scheduleTask(
+function scheduleTask(
   task: () => void,
   priority: SchedulePriority,
   signal?: AbortSignal,
@@ -77,3 +92,18 @@ function schedulePolyfill(
       break;
   }
 }
+
+function createScheduler(
+  opts: { priority?: SchedulePriority } = {},
+): Scheduler {
+  const fallback: SchedulePriority = opts.priority ?? "user-visible";
+
+  return {
+    schedule(task, options = {}) {
+      scheduleTask(task, options.priority ?? fallback, options.signal);
+    },
+  };
+}
+
+/** @internal */
+export { createScheduler };

@@ -1,27 +1,30 @@
-import { ComponentContext } from "./component";
+import { ComponentContextImpl } from "./_internal/component";
 import { isLifecycleError, LifecycleError } from "./error";
 
-import type { ComponentSetup, RefElement } from "../types";
+import type { ComponentSetup, ExposedSetup, RefElement } from "../types";
 
 // The "owner" refers to the component currently executing its setup, which is only valid during a createComponent call.
 // The restoration via save/restore relies on the assumption that setup() executes synchronously.
 // If setup is to be made asynchronous, the design of this module must be revisited.
-let owner: ComponentContext | undefined;
+let owner: ComponentContextImpl | undefined;
 
-export function getCurrentComponent(hookName: string): ComponentContext {
+function getCurrentComponent(hookName: string): ComponentContextImpl {
   if (!owner) {
     throw new Error(`"${hookName}" called outside setup() will never be run.`);
   }
   return owner;
 }
 
-export function createComponent(
-  wrap: ComponentSetup,
+function createComponent<S extends ComponentSetup>(
+  wrap: S,
   root: RefElement,
   // biome-ignore lint/suspicious/noExplicitAny: internal props type
   props: Record<string, any> = {},
-) {
-  const component = new ComponentContext(root, wrap.name);
+): ComponentContextImpl<ReturnType<S["setup"]>> {
+  const component = new ComponentContextImpl<ReturnType<S["setup"]>>(
+    root,
+    wrap.name,
+  );
   const parent = owner;
   owner = component;
 
@@ -33,7 +36,9 @@ export function createComponent(
     component.props = props;
 
     const provides = wrap.setup(root, props);
-    component.current = provides || {};
+    component.current = (provides || {}) as ExposedSetup<
+      ReturnType<S["setup"]>
+    >;
   } catch (cause) {
     owner = parent;
 
@@ -49,3 +54,6 @@ export function createComponent(
   owner = parent;
   return component;
 }
+
+/** @internal */
+export { createComponent, getCurrentComponent };

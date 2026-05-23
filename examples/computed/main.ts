@@ -1,5 +1,5 @@
 import { create, signal, useComputed, useMount, useWatch } from "../../lib/main";
-import { useDomRef } from "../../lib/hooks/useDomRef";
+import { useDomRef } from "../../lib/hooks/core/useDomRef";
 
 type Refs = {
   width: HTMLInputElement;

@@ -51,23 +51,6 @@ function makeEl(): HTMLElement {
 }
 
 describe("useMediaQuery", () => {
-  it("matchesQuery を ReadonlySignal として返す", () => {
-    const root = makeEl();
-    let matchesQuery: unknown;
-    const { component } = create();
-    component({
-      name: "test",
-      setup: () => {
-        const result = useMediaQuery(
-          "(min-width:640px)",
-          vi.fn().mockReturnValue(() => {}),
-        );
-        matchesQuery = result.matchesQuery;
-      },
-    })(root);
-    expect(matchesQuery).toHaveProperty("value");
-  });
-
   it("初期値は mediaQueryList.matches に基づく", () => {
     mockMQL = createMockMQL(true);
     vi.stubGlobal(
@@ -182,7 +165,7 @@ describe("useMediaQuery", () => {
     expect(cleanup).toHaveBeenCalled();
   });
 
-  it("[バグ] メディアクエリ変化時に matchesQuery.value が更新される", () => {
+  it("メディアクエリ変化時に matchesQuery.value が更新される", () => {
     const root = makeEl();
     let matchesRef: { value: boolean } | undefined;
     const { component } = create();

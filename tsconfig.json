@@ -11,7 +11,8 @@
     "declarationDir": "./types",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noImplicitReturns": true
+    "noImplicitReturns": true,
+    "stripInternal": true
   },
   "include": ["lib"],
   "exclude": ["lib/**/*.test.ts"]

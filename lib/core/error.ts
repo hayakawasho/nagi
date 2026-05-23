@@ -1,5 +1,5 @@
 import type { RefElement } from "../types";
-import type { ComponentContext } from "./component";
+import type { ComponentContextImpl } from "./_internal/component";
 
 export type LifecycleErrorDetails = {
   phase: "setup" | "mount" | "unmount" | "removeChild";
@@ -13,9 +13,9 @@ export type LifecycleErrorDetails = {
   cause: unknown;
 };
 
-export function traceComponentTree(context: ComponentContext): string {
+function traceComponentTree(context: ComponentContextImpl): string {
   const parts: string[] = [];
-  let current: ComponentContext | null = context;
+  let current: ComponentContextImpl | null = context;
 
   while (current) {
     parts.unshift(current.name);
@@ -40,9 +40,9 @@ export class LifecycleError extends Error {
 
   static create(
     phase: LifecycleErrorDetails["phase"],
-    target: ComponentContext,
+    target: ComponentContextImpl,
     cause: unknown,
-    parent: ComponentContext | null | undefined = target.parent,
+    parent: ComponentContextImpl | null | undefined = target.parent,
     extra?: Partial<LifecycleErrorDetails>,
   ): LifecycleError {
     return new LifecycleError({

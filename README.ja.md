@@ -182,7 +182,7 @@ setup(el) {
 | API                               | 説明                                                        |
 | --------------------------------- | ----------------------------------------------------------- |
 | `useIntersectionWatch(cb, opts?)` | IntersectionObserver のラッパー。unmount 時に自動で切断する |
-| `useMediaQuery(query)`            | `matchMedia` の結果を `ReadonlySignal<boolean>` で返す      |
+| `useMediaQuery(query, cb)` | query 一致時に callback を実行し、`matchesQuery` を `ReadonlySignal<boolean>` で返す |
 
 ### Addons
 
@@ -213,8 +213,7 @@ import { visible, idle, interaction, media } from "@usenagi/core/addons/cue";
 
 | API | 説明 |
 | --- | --- |
-| `schedulerAddon(opts?)` | 遅延 mount 用 addon（内部で `createScheduler` を使用） |
-| `createScheduler(opts?)` | カスタム Scheduler 実装用の low-level API |
+| `schedulerAddon(opts?)` | 遅延 mount 用 addon |
 | `visible(opts?)` | 要素が viewport に入ったときに解決する Cue |
 | `idle(timeout?)` | `requestIdleCallback` で解決する Cue |
 | `interaction(events?)` | 最初のユーザー操作で解決する Cue |

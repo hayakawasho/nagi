@@ -7,12 +7,12 @@ export function useMediaQuery(
   query: string,
   callbackWhenMatches: () => Cleanup,
 ) {
-  const mediaQueryList = window.matchMedia(query);
-  const matchesQuery = signal(mediaQueryList.matches);
+  const mql = window.matchMedia(query);
+  const matchesQuery = signal(mql.matches);
 
   let cleanup: Cleanup | null = null;
 
-  function onChangeMediaQueryList(evt: MediaQueryListEvent) {
+  function onChange(evt: MediaQueryListEvent) {
     matchesQuery.value = evt.matches;
     if (evt.matches) {
       cleanup = callbackWhenMatches();
@@ -23,15 +23,15 @@ export function useMediaQuery(
   }
 
   useMount(() => {
-    mediaQueryList.addEventListener("change", onChangeMediaQueryList);
+    mql.addEventListener("change", onChange);
 
-    if (mediaQueryList.matches) {
+    if (mql.matches) {
       cleanup = callbackWhenMatches();
     }
 
     return () => {
       cleanup?.();
-      mediaQueryList.removeEventListener("change", onChangeMediaQueryList);
+      mql.removeEventListener("change", onChange);
     };
   });
 

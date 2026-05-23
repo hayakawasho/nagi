@@ -8,7 +8,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, 'lib/main.ts'),
-      name: 'Lake',
+      name: 'Nagi',
       fileName: format => `main.${format}.js`,
     },
   },

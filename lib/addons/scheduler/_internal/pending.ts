@@ -1,17 +1,15 @@
-import type { RefElement } from "../../types";
+import type { RefElement } from "../../../types";
 
-export type PendingMount = {
-  readonly signal: AbortSignal;
-  complete(): boolean;
-  abort(): void;
-};
-
-export type PendingMounts = {
-  add(el: RefElement): PendingMount;
+type PendingMounts = {
+  add(el: RefElement): {
+    readonly signal: AbortSignal;
+    complete(): boolean;
+    abort(): void;
+  };
   abort(el: RefElement): void;
 };
 
-export function createPendingMounts(): PendingMounts {
+function createPendingMounts(): PendingMounts {
   const tasks = new Map<RefElement, AbortController>();
 
   return {
@@ -60,3 +58,6 @@ export function createPendingMounts(): PendingMounts {
     },
   };
 }
+
+/** @internal */
+export { createPendingMounts };

@@ -1,8 +1,13 @@
-import { LifecycleError } from "../core/error";
-import { createComponent, getCurrentComponent } from "../core/runtime";
+import { LifecycleError } from "../../core/error";
+import { createComponent, getCurrentComponent } from "../../core/runtime";
 
-import type { ComponentContext } from "../core/component";
-import type { ComponentSetup, RefElement } from "../types";
+import type { ComponentContextImpl } from "../../core/_internal/component";
+import type {
+  ComponentContext,
+  ComponentSetup,
+  ExposedSetup,
+  RefElement,
+} from "../../types";
 
 export function useSlot() {
   const context = getCurrentComponent("useSlot");
@@ -12,7 +17,7 @@ export function useSlot() {
       targetOrTargets: RefElement | RefElement[],
       child: Child,
       props?: Partial<Parameters<Child["setup"]>[1]>,
-    ): ComponentContext<ReturnType<Child["setup"]>>[] {
+    ): ComponentContext<ExposedSetup<ReturnType<Child["setup"]>>>[] {
       const create = (el: RefElement) => {
         const component = createComponent(child, el, props);
         context.addChild(component);
@@ -28,11 +33,16 @@ export function useSlot() {
     removeChild(children: ComponentContext[]) {
       children.forEach((child) => {
         try {
-          context.removeChild(child);
+          context.removeChild(child as unknown as ComponentContextImpl);
         } catch (cause) {
           console.error(
             "[nagi] removeChild failed",
-            LifecycleError.create("removeChild", child, cause, context),
+            LifecycleError.create(
+              "removeChild",
+              child as unknown as ComponentContextImpl,
+              cause,
+              context,
+            ),
           );
         }
       });

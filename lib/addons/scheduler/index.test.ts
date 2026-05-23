@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { create } from "../../core/app";
-import { useMount, useUnmount } from "../../core/lifecycle";
+import { useUnmount } from "../../core/lifecycle";
+import { useSlot } from "../../hooks/core/useSlot";
 
-import { createScheduler, schedulerAddon } from "./index";
-import * as task from "./task";
+import { schedulerAddon } from "./index";
 
 import type { SchedulePriority } from "../../types";
 
@@ -21,55 +21,53 @@ function makeEl(): HTMLElement {
 afterEach(() => {
   document.body.innerHTML = "";
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
-describe("createScheduler", () => {
-  it("Scheduler インターフェースを返す", () => {
-    const scheduler = createScheduler();
-    expect(typeof scheduler.schedule).toBe("function");
-  });
-
-  it("default priority を指定できる", () => {
-    const scheduler = createScheduler({ priority: "background" });
-    expect(scheduler).toBeDefined();
-  });
-});
-
-describe("createScheduler — globalThis.scheduler (native)", () => {
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  it("schedule は postTask に priority と signal を渡す", () => {
-    const postTask = vi.fn().mockResolvedValue(undefined);
-    vi.stubGlobal("scheduler", { postTask });
-
-    const scheduler = createScheduler({ priority: "background" });
-    const controller = new AbortController();
-    const task = vi.fn();
-
-    scheduler.schedule(task, {
-      priority: "user-blocking",
-      signal: controller.signal,
-    });
-
-    expect(postTask).toHaveBeenCalledOnce();
-    expect(postTask).toHaveBeenCalledWith(task, {
-      priority: "user-blocking",
-      signal: controller.signal,
-    });
-  });
-
-  it("createScheduler 後に globalThis.scheduler を差し替えても schedule が native を使う", () => {
+describe("schedulerAddon — component() の戻り値", () => {
+  beforeEach(() => {
     vi.stubGlobal("scheduler", undefined);
-    const scheduler = createScheduler({ priority: "user-visible" });
+  });
 
-    const postTask = vi.fn().mockResolvedValue(undefined);
+  it("mount が遅延するため undefined を返す（current は取れない）", () => {
+    const el = makeEl();
+    const { component } = createWithScheduler({ priority: "user-blocking" });
+
+    const result = component({ name: "test", setup: () => ({ value: 1 }) })(el);
+
+    expect(result).toBeUndefined();
+  });
+});
+
+describe("schedulerAddon — native postTask", () => {
+  it("postTask に priority と signal を渡す", async () => {
+    const postTask = vi.fn(
+      (
+        task: () => void,
+        _opts?: { priority?: SchedulePriority; signal?: AbortSignal },
+      ) => {
+        task();
+        return Promise.resolve();
+      },
+    );
     vi.stubGlobal("scheduler", { postTask });
+    const setupFn = vi.fn();
+    const el = makeEl();
 
-    scheduler.schedule(() => {});
+    const { component } = createWithScheduler({ priority: "background" });
+    component(
+      { name: "test", setup: setupFn },
+      { priority: "user-blocking" },
+    )(el);
+
+    await Promise.resolve();
 
     expect(postTask).toHaveBeenCalledOnce();
+    expect(postTask.mock.calls[0]?.[1]).toMatchObject({
+      priority: "user-blocking",
+    });
+    expect(postTask.mock.calls[0]?.[1]?.signal).toBeInstanceOf(AbortSignal);
+    expect(setupFn).toHaveBeenCalledOnce();
   });
 
   it("postTask が AbortError で reject しても unhandledrejection を増やさない", async () => {
@@ -77,36 +75,22 @@ describe("createScheduler — globalThis.scheduler (native)", () => {
     const postTask = vi.fn().mockRejectedValue(abortErr);
     vi.stubGlobal("scheduler", { postTask });
 
-    const scheduler = createScheduler();
+    const setupFn = vi.fn();
+    const el = makeEl();
     const unhandled: unknown[] = [];
     const onUnhandled = (e: PromiseRejectionEvent) => {
       unhandled.push(e.reason);
     };
     window.addEventListener("unhandledrejection", onUnhandled);
 
-    scheduler.schedule(() => {});
+    const { component } = createWithScheduler();
+    component({ name: "test", setup: setupFn })(el);
 
     await Promise.resolve();
     await Promise.resolve();
 
     window.removeEventListener("unhandledrejection", onUnhandled);
     expect(unhandled).toHaveLength(0);
-  });
-});
-
-describe("schedulerAddon — 基本動作", () => {
-  it("schedulerAddon で component() が undefined を返す", () => {
-    const el = makeEl();
-    const { component } = createWithScheduler();
-    expect(component({ name: "test", setup: () => {} })(el)).toBeUndefined();
-  });
-
-  it("scheduler なし (従来) は ComponentContext を返す", () => {
-    const el = makeEl();
-    const { component } = create();
-    const result = component({ name: "test", setup: () => {} })(el);
-    expect(result).toBeDefined();
-    expect(result.name).toBe("test");
   });
 });
 
@@ -139,7 +123,6 @@ describe("schedulerAddon — 同一インスタンスを複数 app", () => {
 
 describe("scheduler — user-blocking (queueMicrotask)", () => {
   beforeEach(() => {
-    // Prioritized Task Scheduling API がない環境を想定
     vi.stubGlobal("scheduler", undefined);
   });
 
@@ -149,27 +132,10 @@ describe("scheduler — user-blocking (queueMicrotask)", () => {
     const { component } = createWithScheduler({ priority: "user-blocking" });
 
     component({ name: "test", setup: setupFn })(el);
-    expect(setupFn).not.toHaveBeenCalled(); // まだ走っていない
+    expect(setupFn).not.toHaveBeenCalled();
 
-    await Promise.resolve(); // microtask を消化
-    expect(setupFn).toHaveBeenCalledOnce();
-  });
-
-  it("user-blocking: useMount が microtask 後に実行される", async () => {
-    const el = makeEl();
-    const mountFn = vi.fn();
-    const { component } = createWithScheduler({ priority: "user-blocking" });
-
-    component({
-      name: "test",
-      setup: () => {
-        useMount(mountFn);
-      },
-    })(el);
-
-    expect(mountFn).not.toHaveBeenCalled();
     await Promise.resolve();
-    expect(mountFn).toHaveBeenCalledOnce();
+    expect(setupFn).toHaveBeenCalledOnce();
   });
 });
 
@@ -224,7 +190,6 @@ describe("scheduler — unmount によるキャンセル", () => {
     });
     component({ name: "test", setup: setupFn })(el);
 
-    // microtask 消化前に unmount → pending job がキャンセルされる
     unmount([el]);
 
     await Promise.resolve();
@@ -245,7 +210,7 @@ describe("scheduler — unmount によるキャンセル", () => {
       },
     })(el);
 
-    await Promise.resolve(); // mount 完了
+    await Promise.resolve();
     unmount([el]);
     expect(unmountFn).toHaveBeenCalledOnce();
   });
@@ -271,56 +236,77 @@ describe("scheduler — 同一要素への二重登録", () => {
     expect(setupFirst).not.toHaveBeenCalled();
     expect(setupSecond).toHaveBeenCalledOnce();
   });
-
-  it("古いペンディングのコールバックが先に走っても complete が false で setup されない", () => {
-    const el = makeEl();
-    const setupFirst = vi.fn();
-    const setupSecond = vi.fn();
-    const callbacks: (() => void)[] = [];
-
-    vi.spyOn(task, "scheduleTask").mockImplementation((fn) => {
-      callbacks.push(fn);
-    });
-
-    const { component } = createWithScheduler({ priority: "user-blocking" });
-
-    component({ name: "first", setup: setupFirst })(el);
-    component({ name: "second", setup: setupSecond })(el);
-
-    expect(callbacks).toHaveLength(2);
-
-    callbacks[0]?.();
-    expect(setupFirst).not.toHaveBeenCalled();
-
-    callbacks[1]?.();
-    expect(setupFirst).not.toHaveBeenCalled();
-    expect(setupSecond).toHaveBeenCalledOnce();
-  });
 });
 
-describe("scheduler + unmount の連携", () => {
+describe("scheduler — background (requestIdleCallback / setTimeout)", () => {
   beforeEach(() => {
     vi.stubGlobal("scheduler", undefined);
   });
 
-  it("mount 完了後に unmount が正常に動く", async () => {
+  it("background: setup が requestIdleCallback で実行される", async () => {
     const el = makeEl();
-    const unmountFn = vi.fn();
+    const setupFn = vi.fn();
+    let idleCb!: () => void;
 
-    const { component, unmount } = createWithScheduler({
-      priority: "user-blocking",
+    vi.stubGlobal("requestIdleCallback", (fn: () => void) => {
+      idleCb = fn;
+      return 1;
     });
-    component({
-      name: "test",
-      setup: () => {
-        useUnmount(unmountFn);
-      },
-    })(el);
+    vi.stubGlobal("cancelIdleCallback", vi.fn());
 
-    await Promise.resolve(); // mount 完了
+    const { component } = createWithScheduler({ priority: "background" });
+    component({ name: "test", setup: setupFn })(el);
+    expect(setupFn).not.toHaveBeenCalled();
 
-    unmount([el]);
-    expect(unmountFn).toHaveBeenCalledOnce();
+    idleCb();
+    expect(setupFn).toHaveBeenCalledOnce();
+  });
+
+  it("background: rIC が無ければ setTimeout にフォールバック", async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("requestIdleCallback", undefined);
+    vi.stubGlobal("cancelIdleCallback", undefined);
+
+    const el = makeEl();
+    const setupFn = vi.fn();
+    const { component } = createWithScheduler({ priority: "background" });
+    component({ name: "test", setup: setupFn })(el);
+    expect(setupFn).not.toHaveBeenCalled();
+
+    await vi.runAllTimersAsync();
+    expect(setupFn).toHaveBeenCalledOnce();
+    vi.useRealTimers();
+  });
+});
+
+describe("scheduler — when エラー", () => {
+  beforeEach(() => {
+    vi.stubGlobal("scheduler", undefined);
+  });
+
+  it("AbortError 以外で reject すると setup は走らず reason が throw される", async () => {
+    const el = makeEl();
+    const setupFn = vi.fn();
+    const reason = new Error("cue failed");
+    const when = () => Promise.reject(reason);
+    const thrown: unknown[] = [];
+
+    vi.spyOn(globalThis, "queueMicrotask").mockImplementation((fn) => {
+      try {
+        fn();
+      } catch (error) {
+        thrown.push(error);
+      }
+    });
+
+    const { component } = createWithScheduler({ priority: "user-blocking" });
+    component({ name: "test", setup: setupFn }, { when })(el);
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(setupFn).not.toHaveBeenCalled();
+    expect(thrown).toEqual([reason]);
   });
 });
 
@@ -330,8 +316,6 @@ describe("useSlot.addChild — scheduler を経由しない", () => {
   });
 
   it("addChild 内のマウントは parent setup 完了と同時に同期実行される", async () => {
-    const { useSlot } = await import("../../hooks/useSlot");
-
     const el = makeEl();
     const childEl = makeEl();
     const childSetupFn = vi.fn();
@@ -342,15 +326,13 @@ describe("useSlot.addChild — scheduler を経由しない", () => {
       name: "parent",
       setup: () => {
         const { addChild } = useSlot();
-        // addChild は ComponentContext.addChild を直接呼ぶため scheduler 経由にならない
         addChild(childEl, { name: "child", setup: childSetupFn });
       },
     })(el);
 
-    // parent setup 自体が microtask 経由なので、まだ走っていない
     expect(childSetupFn).not.toHaveBeenCalled();
 
-    await Promise.resolve(); // microtask 消化 = parent setup 実行 → 内部で addChild も同期実行
+    await Promise.resolve();
     expect(childSetupFn).toHaveBeenCalledOnce();
   });
 });

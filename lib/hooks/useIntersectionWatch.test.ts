@@ -8,12 +8,14 @@ const mockObserve = vi.fn();
 const mockUnobserve = vi.fn();
 const mockDisconnect = vi.fn();
 let capturedOptions: IntersectionObserverInit | undefined;
+let observerCallback: IntersectionObserverCallback | undefined;
 
 class MockIntersectionObserver {
   constructor(
-    _cb: IntersectionObserverCallback,
+    cb: IntersectionObserverCallback,
     opts?: IntersectionObserverInit,
   ) {
+    observerCallback = cb;
     capturedOptions = opts;
   }
   observe = mockObserve;
@@ -31,6 +33,7 @@ afterEach(() => {
   mockUnobserve.mockClear();
   mockDisconnect.mockClear();
   capturedOptions = undefined;
+  observerCallback = undefined;
   document.body.innerHTML = "";
 });
 
@@ -99,17 +102,40 @@ describe("useIntersectionWatch", () => {
   it("unwatch で個別要素の observe を解除できる", () => {
     const root = makeEl();
     const target = makeEl();
-    let unwatchFn: ((el: HTMLElement) => void) | null = null;
+    const slot = {
+      unwatch: (_el: HTMLElement) => {},
+    };
     const { component } = create();
     component({
       name: "test",
       setup: () => {
-        const { unwatch } = useIntersectionWatch(target, vi.fn());
-        unwatchFn = unwatch;
+        slot.unwatch = useIntersectionWatch(target, vi.fn()).unwatch;
       },
     })(root);
-    unwatchFn?.(target);
+    slot.unwatch(target);
     expect(mockUnobserve).toHaveBeenCalledWith(target);
+  });
+
+  it("IntersectionObserver の callback 発火時に listener が呼ばれる", () => {
+    const root = makeEl();
+    const target = makeEl();
+    const callback = vi.fn();
+    const { component } = create();
+    component({
+      name: "test",
+      setup: () => {
+        useIntersectionWatch(target, callback);
+      },
+    })(root);
+
+    const entry = {
+      isIntersecting: true,
+      target,
+    } as unknown as IntersectionObserverEntry;
+    observerCallback?.([entry], {} as IntersectionObserver);
+
+    expect(callback).toHaveBeenCalledOnce();
+    expect(callback).toHaveBeenCalledWith([entry], {} as IntersectionObserver);
   });
 
   it("アンマウント時に disconnect が呼ばれる", () => {

@@ -3,6 +3,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { defineAddon } from "./addon";
 import { create } from "./app";
 
+import type { ComponentSetup } from "../types";
+
 function makeEl(): HTMLElement {
   const el = document.createElement("div");
   document.body.appendChild(el);
@@ -26,13 +28,16 @@ describe("defineAddon / install", () => {
     const addon = defineAddon({
       name: "wrap-test",
       install(ctx) {
-        ctx.addComponentMiddleware((comp) => ({
-          name: comp.name,
-          setup(el, props) {
-            wrapFn();
-            return comp.setup(el, props);
-          },
-        }));
+        ctx.addComponentMiddleware(
+          <S extends ComponentSetup>(comp: S) =>
+            ({
+              name: comp.name,
+              setup(el, props) {
+                wrapFn();
+                return comp.setup(el, props);
+              },
+            }) as S,
+        );
       },
     });
 

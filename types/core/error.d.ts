@@ -1,5 +1,5 @@
 import type { RefElement } from "../types";
-import type { ComponentContext } from "./component";
+import type { ComponentContextImpl } from "./_internal/component";
 export type LifecycleErrorDetails = {
     phase: "setup" | "mount" | "unmount" | "removeChild";
     name: string;
@@ -11,10 +11,9 @@ export type LifecycleErrorDetails = {
     props?: unknown;
     cause: unknown;
 };
-export declare function traceComponentTree(context: ComponentContext): string;
 export declare class LifecycleError extends Error {
     readonly details: LifecycleErrorDetails;
     constructor(details: LifecycleErrorDetails);
-    static create(phase: LifecycleErrorDetails["phase"], target: ComponentContext, cause: unknown, parent?: ComponentContext | null | undefined, extra?: Partial<LifecycleErrorDetails>): LifecycleError;
+    static create(phase: LifecycleErrorDetails["phase"], target: ComponentContextImpl, cause: unknown, parent?: ComponentContextImpl | null | undefined, extra?: Partial<LifecycleErrorDetails>): LifecycleError;
 }
 export declare function isLifecycleError(error: unknown): error is LifecycleError;

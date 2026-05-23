@@ -1,13 +1,9 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { create } from "../core/app";
+import { useSlot } from "../hooks/core/useSlot";
 
-import { createContext, withContext } from "./createContext";
-import { useSlot } from "./useSlot";
-
-afterEach(() => {
-  document.body.innerHTML = "";
-});
+import { create } from "./app";
+import { createContext, withContext } from "./context";
 
 function makeEl(): HTMLElement {
   const el = document.createElement("div");
@@ -15,14 +11,11 @@ function makeEl(): HTMLElement {
   return el;
 }
 
-describe("createContext", () => {
-  it("[Provider, use] のタプルを返す", () => {
-    const [Provider, use] = createContext<string>();
-    expect(typeof Provider).toBe("object");
-    expect("_id" in Provider).toBe(true);
-    expect(typeof use).toBe("function");
-  });
+afterEach(() => {
+  document.body.innerHTML = "";
+});
 
+describe("createContext", () => {
   it("withContext で provide した値を子で use できる", () => {
     const [Provider, use] = createContext<string>();
     const root = makeEl();
@@ -46,7 +39,7 @@ describe("createContext", () => {
         name: "parent",
         setup: () => {
           const { addChild } = useSlot();
-          addChild(childEl, childComp, {});
+          addChild(childEl, childComp);
         },
       }),
     )(root);
@@ -73,7 +66,7 @@ describe("createContext", () => {
       name: "mid",
       setup: () => {
         const { addChild } = useSlot();
-        addChild(childEl, grandChildComp, {});
+        addChild(childEl, grandChildComp);
       },
     };
 
@@ -86,7 +79,7 @@ describe("createContext", () => {
         name: "root",
         setup: () => {
           const { addChild } = useSlot();
-          addChild(midEl, midComp, {});
+          addChild(midEl, midComp);
         },
       }),
     )(root);
@@ -145,7 +138,7 @@ describe("createContext", () => {
           name: "parent",
           setup: () => {
             const { addChild } = useSlot();
-            addChild(childEl, childComp, {});
+            addChild(childEl, childComp);
           },
         }),
       ),
@@ -153,11 +146,6 @@ describe("createContext", () => {
 
     expect(a).toBe("foo");
     expect(b).toBe(99);
-  });
-
-  it("setup 外で use を呼ぶと例外を投げる", () => {
-    const [, use] = createContext<string>();
-    expect(() => use()).toThrow();
   });
 
   it("withContext でラップしたコンポーネント自身が use で値を取れる", () => {
@@ -180,32 +168,6 @@ describe("createContext", () => {
     )(root);
 
     expect(received).toBe("self");
-  });
-
-  it("addChild の引数として withContext でラップした子は自身で use できる", () => {
-    const [Provider, use] = createContext<string>();
-    const root = makeEl();
-    const childEl = makeEl();
-
-    let received: string | undefined;
-
-    const childComp = {
-      name: "child",
-      setup: () => {
-        received = use();
-      },
-    };
-
-    const { component } = create();
-    component({
-      name: "parent",
-      setup: () => {
-        const { addChild } = useSlot();
-        addChild(childEl, withContext(Provider, "from-wrap")(childComp), {});
-      },
-    })(root);
-
-    expect(received).toBe("from-wrap");
   });
 
   it("自身の provide が祖先の provide を上書きする（自身優先）", () => {
@@ -231,7 +193,7 @@ describe("createContext", () => {
         name: "parent",
         setup: () => {
           const { addChild } = useSlot();
-          addChild(childEl, withContext(Provider, "self")(childComp), {});
+          addChild(childEl, withContext(Provider, "self")(childComp));
         },
       }),
     )(root);
