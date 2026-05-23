@@ -61,10 +61,10 @@
   "devDependencies": {
     "@biomejs/biome": "^2.4.13",
     "happy-dom": "^20.9.0",
-    "oxlint": "^1.61.0",
+    "oxlint": "^1.66.0",
     "typescript": "^6.0.3",
-    "vite": "^8.0.10",
-    "vitest": "^4.1.5"
+    "vite": "^8.0.14",
+    "vitest": "^4.1.7"
   },
   "type": "module",
   "sideEffects": false
