@@ -1,4 +1,4 @@
-import { useUnmount } from "../core/lifecycle";
+import { useMount } from "../core/lifecycle";
 
 export function useIntersectionWatch<T extends Element>(
   targetOrTargets: T | T[],
@@ -20,10 +20,12 @@ export function useIntersectionWatch<T extends Element>(
     }
   }
 
-  watch(targetOrTargets);
+  useMount(() => {
+    watch(targetOrTargets);
 
-  useUnmount(() => {
-    io.disconnect();
+    return () => {
+      io.disconnect();
+    };
   });
 
   function unwatch(el: T) {
