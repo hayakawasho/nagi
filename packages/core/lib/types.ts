@@ -33,7 +33,11 @@ export type ComponentContext<
 
 export type Cleanup = () => void;
 
-export type LifecycleHandler = () => void | Cleanup;
+export type UseMountCallback = () => void | Cleanup;
+
+export type UseDeferredUnmountCallback = () => void | Promise<void>;
+
+export type UseUnmountCallback = () => void;
 
 export type SchedulePriority = "user-blocking" | "user-visible" | "background";
 

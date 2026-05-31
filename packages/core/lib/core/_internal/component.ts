@@ -1,17 +1,20 @@
-import { LifecycleError } from "../error";
+import { errorReport } from "./errorReporter";
 
 import type {
   Cleanup,
   ComponentContext,
   ComponentSetup,
   ExposedSetup,
-  LifecycleHandler,
   RefElement,
+  UseDeferredUnmountCallback,
+  UseMountCallback,
+  UseUnmountCallback,
 } from "../../types";
 
 enum LifecycleHooks {
-  MOUNTED = "Mounted",
-  UNMOUNTED = "Unmounted",
+  MOUNTED = "mount",
+  UNMOUNTED = "unmount",
+  DEFERRED_UNMOUNT = "deferredUnmount",
 }
 
 let uid = 0;
@@ -20,11 +23,14 @@ let uid = 0;
 class ComponentContextImpl<T = any>
   implements ComponentContext<ExposedSetup<T>>
 {
-  private [LifecycleHooks.MOUNTED]: LifecycleHandler[] = [];
-  private [LifecycleHooks.UNMOUNTED]: LifecycleHandler[] = [];
+  private [LifecycleHooks.MOUNTED]: UseMountCallback[] = [];
+  private [LifecycleHooks.UNMOUNTED]: UseUnmountCallback[] = [];
+  private [LifecycleHooks.DEFERRED_UNMOUNT]: UseDeferredUnmountCallback[] = [];
 
   parent: ComponentContextImpl | null = null;
   #children: ComponentContextImpl[] = [];
+
+  #deferredUnmountPromise: Promise<void> | null = null;
 
   readonly uid: string;
   readonly name: ComponentContext["name"];
@@ -50,14 +56,32 @@ class ComponentContextImpl<T = any>
           unmounts.push(cleanup as Cleanup);
         }
       } catch (cause) {
-        console.error(
-          "[nagi] onMount hook failed",
-          LifecycleError.create("mount", this, cause),
-        );
+        errorReport("mount", this, cause);
       }
     }
 
     this[LifecycleHooks.UNMOUNTED].push(...unmounts);
+  };
+
+  onDeferredUnmount = (): Promise<void> => {
+    if (this.#deferredUnmountPromise) {
+      return this.#deferredUnmountPromise;
+    }
+
+    this.#deferredUnmountPromise = Promise.all([
+      ...this[LifecycleHooks.DEFERRED_UNMOUNT].map(async (fn) => {
+        try {
+          await fn();
+        } catch (cause) {
+          errorReport("deferredUnmount", this, cause);
+        }
+      }),
+      ...this.#children.map((c) => c.onDeferredUnmount()),
+    ]).then(() => {
+      //
+    });
+
+    return this.#deferredUnmountPromise;
   };
 
   onUnmount = () => {
@@ -65,10 +89,7 @@ class ComponentContextImpl<T = any>
       try {
         unmount();
       } catch (cause) {
-        console.error(
-          "[nagi] onUnmount cleanup failed",
-          LifecycleError.create("unmount", this, cause),
-        );
+        errorReport("unmount", this, cause);
       }
     }
 
@@ -95,16 +116,17 @@ class ComponentContextImpl<T = any>
     }
   };
 
-  removeChild = (child: ComponentContextImpl) => {
+  removeChild = async (child: ComponentContextImpl): Promise<void> => {
     const index = this.#children.indexOf(child);
 
     if (index === -1) {
       return;
     }
 
+    await child.onDeferredUnmount();
+
     this.#children.splice(index, 1);
     child.parent = null;
-
     child.onUnmount();
   };
 

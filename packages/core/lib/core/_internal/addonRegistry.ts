@@ -4,7 +4,7 @@ import type { Addon, AddonContext, MountOptions } from "../addon";
 // biome-ignore lint/suspicious/noExplicitAny: return type varies with addons
 type MountFn = (el: RefElement, props: Record<string, any>) => any;
 
-type UnmountFn = (targets: RefElement[]) => void;
+type UnmountFn = (targets: RefElement[]) => void | Promise<void>;
 
 export type ComponentMiddleware = <S extends ComponentSetup>(comp: S) => S;
 
