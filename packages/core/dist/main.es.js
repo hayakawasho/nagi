@@ -73,14 +73,28 @@ function s(e, t) {
 	o.set(e, t);
 }
 //#endregion
+//#region lib/core/_internal/errorReporter.ts
+var c = {
+	setup: "[nagi] setup failed",
+	mount: "[nagi] onMount hook failed",
+	deferredUnmount: "[nagi] useDeferredUnmount hook failed",
+	unmount: "[nagi] onUnmount cleanup failed",
+	removeChild: "[nagi] removeChild failed"
+};
+function l(e, t, n, r) {
+	console.error(c[e], i.create(e, t, n, r));
+}
+//#endregion
 //#region lib/core/_internal/component.ts
-var c = /* @__PURE__ */ function(e) {
-	return e.MOUNTED = "Mounted", e.UNMOUNTED = "Unmounted", e;
-}(c || {}), l = 0, u = class {
-	Mounted = [];
-	Unmounted = [];
+var u = /* @__PURE__ */ function(e) {
+	return e.MOUNTED = "mount", e.UNMOUNTED = "unmount", e.DEFERRED_UNMOUNT = "deferredUnmount", e;
+}(u || {}), d = 0, f = class {
+	mount = [];
+	unmount = [];
+	deferredUnmount = [];
 	parent = null;
 	#e = [];
+	#t = null;
 	uid;
 	name;
 	current = {};
@@ -88,23 +102,30 @@ var c = /* @__PURE__ */ function(e) {
 	element;
 	provides = /* @__PURE__ */ new Map();
 	constructor(e, t) {
-		this.uid = `${t}.${l++}`, this.name = t, this.element = e;
+		this.uid = `${t}.${d++}`, this.name = t, this.element = e;
 	}
 	onMount = () => {
 		let e = [];
-		for (let t of this.Mounted) try {
+		for (let t of this.mount) try {
 			let n = t();
 			typeof n == "function" && e.push(n);
 		} catch (e) {
-			console.error("[nagi] onMount hook failed", i.create("mount", this, e));
+			l("mount", this, e);
 		}
-		this.Unmounted.push(...e);
+		this.unmount.push(...e);
 	};
+	onDeferredUnmount = () => (this.#t ||= Promise.all([...this.deferredUnmount.map(async (e) => {
+		try {
+			await e();
+		} catch (e) {
+			l("deferredUnmount", this, e);
+		}
+	}), ...this.#e.map((e) => e.onDeferredUnmount())]).then(() => {}), this.#t);
 	onUnmount = () => {
-		for (let e of this.Unmounted) try {
+		for (let e of this.unmount) try {
 			e();
 		} catch (e) {
-			console.error("[nagi] onUnmount cleanup failed", i.create("unmount", this, e));
+			l("unmount", this, e);
 		}
 		for (let e of this.#e) e.onUnmount();
 	};
@@ -117,64 +138,64 @@ var c = /* @__PURE__ */ function(e) {
 			throw n !== -1 && this.#e.splice(n, 1), e.parent = null, t;
 		}
 	};
-	removeChild = (e) => {
+	removeChild = async (e) => {
 		let t = this.#e.indexOf(e);
-		t !== -1 && (this.#e.splice(t, 1), e.parent = null, e.onUnmount());
+		t !== -1 && (await e.onDeferredUnmount(), this.#e.splice(t, 1), e.parent = null, e.onUnmount());
 	};
 	get childElements() {
 		return this.#e.map((e) => e.element);
 	}
-}, d;
-function f(e) {
-	if (!d) throw Error(`"${e}" called outside setup() will never be run.`);
-	return d;
+}, p;
+function m(e) {
+	if (!p) throw Error(`"${e}" called outside setup() will never be run.`);
+	return p;
 }
-function p(e, t, n = {}) {
-	let r = new u(t, e.name), o = d;
-	d = r;
+function h(e, t, n = {}) {
+	let r = new f(t, e.name), o = p;
+	p = r;
 	try {
 		o && (r.parent = o), r.props = n, r.current = e.setup(t, n) || {};
 	} catch (e) {
-		throw d = o, a(e) ? e : i.create("setup", r, e, o, { props: r.props });
+		throw p = o, a(e) ? e : i.create("setup", r, e, o, { props: r.props });
 	}
-	return d = o, r;
+	return p = o, r;
 }
 //#endregion
 //#region lib/core/app.ts
-function m() {
-	let e = n(), t = (e) => {
-		for (let t of e) {
-			let e = o.get(t);
-			e && (e.onUnmount(), o.delete(t));
-		}
-	}, r = {
-		install(...t) {
-			return t.forEach(e.install), r;
-		},
-		component(t, n = {}) {
-			let r = e.composeComponent(t), i = e.composeMount((e, t) => {
-				let n = p(r, e, t);
-				return s(e, n), n.onMount(), n;
-			}, r, n);
-			return (e, t = {}) => i(e, t);
-		},
-		unmount(n) {
-			e.composeUnmount(t)(n);
-		}
+var g = class {
+	#e = n();
+	install = (...e) => (e.forEach(this.#e.install), this);
+	component = (e, t = {}) => {
+		let n = this.#e.composeComponent(e), r = this.#e.composeMount((e, t) => {
+			let r = h(n, e, t);
+			return s(e, r), r.onMount(), r;
+		}, n, t);
+		return (e, t = {}) => r(e, t);
 	};
-	return r;
+	unmount = (e) => Promise.resolve(this.#e.composeUnmount((e) => this.#t(e))(e));
+	async #t(e) {
+		let t = e.map((e) => {
+			let t = o.get(e);
+			return t && o.delete(e), t;
+		}).filter((e) => e !== void 0);
+		await Promise.all(t.map((e) => e.onDeferredUnmount()));
+		for (let e of t) e.onUnmount();
+	}
+};
+function _() {
+	return new g();
 }
 //#endregion
 //#region lib/core/component.ts
-function h(e) {
+function v(e) {
 	return e;
 }
 //#endregion
 //#region lib/core/context.ts
-function g() {
+function y() {
 	let e = Symbol();
 	return [{ _id: e }, () => {
-		let t = f("createContext.use");
+		let t = m("createContext.use");
 		for (; t !== null;) {
 			if (t.provides.has(e)) return t.provides.get(e);
 			t = t.parent;
@@ -182,35 +203,36 @@ function g() {
 		throw Error("createContext.use: no provider found");
 	}];
 }
-function _(e, t) {
+function b(e, t) {
 	return (n) => ({
 		name: n.name,
 		setup(r, i) {
-			return f(`withContext.${n.name}`).provides.set(e._id, t), n.setup(r, i);
+			return m(`withContext.${n.name}`).provides.set(e._id, t), n.setup(r, i);
 		}
 	});
 }
 //#endregion
 //#region lib/core/lifecycle.ts
-function v(e) {
-	return (t) => {
-		f(e)[e].push(t);
-	};
-}
-var y = v(c.MOUNTED), b = v(c.UNMOUNTED);
+var x = (e) => {
+	m(u.MOUNTED)[u.MOUNTED].push(e);
+}, S = (e) => {
+	m(u.UNMOUNTED)[u.UNMOUNTED].push(e);
+}, C = (e) => {
+	m(u.DEFERRED_UNMOUNT)[u.DEFERRED_UNMOUNT].push(e);
+};
 //#endregion
 //#region lib/core/props.ts
-function x() {}
+function w() {}
 //#endregion
 //#region lib/core/reactivity.ts
-var S = Symbol("watch"), C = null, w = class {
+var T = Symbol("watch"), E = null, D = class {
 	#e;
 	#t = /* @__PURE__ */ new Set();
 	constructor(e) {
 		this.#e = e;
 	}
 	get value() {
-		return C !== null && C.add(this), this.#e;
+		return E !== null && E.add(this), this.#e;
 	}
 	set value(e) {
 		if (Object.is(e, this.#e)) return;
@@ -218,12 +240,12 @@ var S = Symbol("watch"), C = null, w = class {
 		this.#e = e;
 		for (let n of Array.from(this.#t)) n(e, t);
 	}
-	[S](e) {
+	[T](e) {
 		return this.#t.add(e), () => {
 			this.#t.delete(e);
 		};
 	}
-}, T = (e) => new w(e), E = class {
+}, O = (e) => new D(e), k = class {
 	#e;
 	constructor(e) {
 		this.#e = e;
@@ -231,54 +253,54 @@ var S = Symbol("watch"), C = null, w = class {
 	get value() {
 		return this.#e.value;
 	}
-	[S](e) {
-		return this.#e[S](e);
+	[T](e) {
+		return this.#e[T](e);
 	}
-}, D = (e) => new E(e);
-function O(e, t) {
-	return e[S](t);
+}, A = (e) => new k(e);
+function j(e, t) {
+	return e[T](t);
 }
-function k(e, t) {
-	b(O(e, t));
+function M(e, t) {
+	S(j(e, t));
 }
-function A(e) {
-	let t = T(void 0), n = [], r = () => {
+function N(e) {
+	let t = O(void 0), n = [], r = () => {
 		n.forEach((e) => {
 			e();
 		}), n = [];
 	}, i = () => {
 		r();
-		let a = C, o = /* @__PURE__ */ new Set();
-		C = o;
+		let a = E, o = /* @__PURE__ */ new Set();
+		E = o;
 		let s;
 		try {
 			s = e();
 		} finally {
-			C = a;
+			E = a;
 		}
 		t.value = s;
-		for (let e of o) n.push(e[S](() => {
+		for (let e of o) n.push(e[T](() => {
 			i();
 		}));
 	};
-	return i(), b(r), D(t);
+	return i(), S(r), A(t);
 }
 //#endregion
 //#region lib/hooks/core/useDomRef.ts
-function j(e, t) {
+function P(e, t) {
 	return t.some((t) => t !== e && t.contains(e));
 }
-function M(e, t, n) {
-	let r = `[data-ref="${CSS.escape(e)}"]`, i = Array.from(t.querySelectorAll(r)).filter((e) => !j(e, n));
+function F(e, t, n) {
+	let r = `[data-ref="${CSS.escape(e)}"]`, i = Array.from(t.querySelectorAll(r)).filter((e) => !P(e, n));
 	return i.length === 0 ? null : i.length === 1 ? i[0] : i;
 }
-function N(e, t) {
+function I(e, t) {
 	let n = /* @__PURE__ */ new Map();
 	return new Proxy({}, {
 		get(r, i) {
 			if (typeof i == "symbol" || i === "then") return;
 			if (n.has(i)) return n.get(i);
-			let a = M(i, e, t());
+			let a = F(i, e, t());
 			return n.set(i, a), a;
 		},
 		has(e, t) {
@@ -296,43 +318,39 @@ function N(e, t) {
 		}
 	});
 }
-function P() {
-	let e = f("useDomRef");
-	return { refs: N(e.element, () => e.childElements) };
+function L() {
+	let e = m("useDomRef");
+	return { refs: I(e.element, () => e.childElements) };
 }
 //#endregion
 //#region lib/hooks/core/useSlot.ts
-function F() {
-	let e = f("useSlot");
+function R() {
+	let e = m("useSlot");
 	return {
 		addChild(t, n, r) {
 			let i = (t) => {
-				let i = p(n, t, r);
+				let i = h(n, t, r);
 				return e.addChild(i), i;
 			};
 			return Array.isArray(t) ? t.map((e) => i(e)) : [i(t)];
 		},
-		removeChild(t) {
-			t.forEach((t) => {
-				try {
-					e.removeChild(t);
-				} catch (n) {
-					console.error("[nagi] removeChild failed", i.create("removeChild", t, n, e));
-				}
-			});
+		async removeChild(t) {
+			await Promise.all(t.map((t) => e.removeChild(t).catch((n) => {
+				l("removeChild", t, n, e);
+			})));
 		}
 	};
 }
 //#endregion
 //#region lib/hooks/useEvent.ts
-function I(e, t, n, r) {
-	y(() => (e.addEventListener(t, n, r), () => {
+function z(e, t, n, r) {
+	x(() => (e.addEventListener(t, n, r), () => {
 		e.removeEventListener(t, n, r);
 	}));
 }
 //#endregion
 //#region lib/hooks/useIntersectionWatch.ts
-function L(e, t, n = {
+function B(e, t, n = {
 	rootMargin: "0px",
 	threshold: .1
 }) {
@@ -342,7 +360,7 @@ function L(e, t, n = {
 			r.observe(e);
 		}) : r.observe(e);
 	}
-	y(() => (i(e), () => {
+	x(() => (i(e), () => {
 		r.disconnect();
 	}));
 	function a(e) {
@@ -352,14 +370,14 @@ function L(e, t, n = {
 }
 //#endregion
 //#region lib/hooks/useMediaQuery.ts
-function R(e, t) {
-	let n = window.matchMedia(e), r = T(n.matches), i = null;
+function V(e, t) {
+	let n = window.matchMedia(e), r = O(n.matches), i = null;
 	function a(e) {
 		r.value = e.matches, e.matches ? i = t() : (i?.(), i = null);
 	}
-	return y(() => (n.addEventListener("change", a), n.matches && (i = t()), () => {
+	return x(() => (n.addEventListener("change", a), n.matches && (i = t()), () => {
 		i?.(), n.removeEventListener("change", a);
-	})), { matchesQuery: D(r) };
+	})), { matchesQuery: A(r) };
 }
 //#endregion
-export { i as LifecycleError, m as create, g as createContext, e as defineAddon, h as defineComponent, a as isLifecycleError, x as propTypes, D as readonly, T as signal, A as useComputed, P as useDomRef, I as useEvent, L as useIntersectionWatch, R as useMediaQuery, y as useMount, F as useSlot, b as useUnmount, k as useWatch, _ as withContext };
+export { i as LifecycleError, _ as create, y as createContext, e as defineAddon, v as defineComponent, a as isLifecycleError, w as propTypes, A as readonly, O as signal, N as useComputed, C as useDeferredUnmount, L as useDomRef, z as useEvent, B as useIntersectionWatch, V as useMediaQuery, x as useMount, R as useSlot, S as useUnmount, M as useWatch, b as withContext };

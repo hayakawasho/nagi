@@ -14,7 +14,9 @@ export type ComponentContext<Exposed extends Record<string, unknown> = Record<st
     readonly name: string;
 };
 export type Cleanup = () => void;
-export type LifecycleHandler = () => void | Cleanup;
+export type UseMountCallback = () => void | Cleanup;
+export type UseDeferredUnmountCallback = () => void | Promise<void>;
+export type UseUnmountCallback = () => void;
 export type SchedulePriority = "user-blocking" | "user-visible" | "background";
 export type Cue = (el: RefElement, signal: AbortSignal) => Promise<void>;
 export {};
