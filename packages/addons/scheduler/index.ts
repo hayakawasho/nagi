@@ -69,7 +69,7 @@ export function schedulerAddon(opts?: { priority?: SchedulePriority }) {
 
       ctx.addUnmountMiddleware((next) => (targets) => {
         targets.forEach(deferredMounts.abort);
-        next(targets);
+        return next(targets);
       });
     },
   });
