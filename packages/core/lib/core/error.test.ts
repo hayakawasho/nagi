@@ -161,7 +161,7 @@ describe("onMount: フック失敗時", () => {
 });
 
 describe("onUnmount: cleanup 失敗時", () => {
-  it("1つ目の cleanup が失敗しても2つ目の cleanup が実行される", () => {
+  it("1つ目の cleanup が失敗しても2つ目の cleanup が実行される", async () => {
     const el = makeEl();
     const second = vi.fn();
     vi.spyOn(console, "error").mockImplementation(() => {});
@@ -177,11 +177,11 @@ describe("onUnmount: cleanup 失敗時", () => {
       },
     })(el);
 
-    unmount([el]);
+    await unmount([el]);
     expect(second).toHaveBeenCalledOnce();
   });
 
-  it("子コンポーネントの unmount 失敗で親の cleanup が止まらない", () => {
+  it("子コンポーネントの unmount 失敗で親の cleanup が止まらない", async () => {
     const root = makeEl();
     const childEl = makeEl();
     const parentCleanup = vi.fn();
@@ -204,7 +204,7 @@ describe("onUnmount: cleanup 失敗時", () => {
       },
     })(root);
 
-    unmount([root]);
+    await unmount([root]);
     expect(parentCleanup).toHaveBeenCalledOnce();
   });
 });

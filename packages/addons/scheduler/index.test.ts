@@ -208,7 +208,7 @@ describe("scheduler — unmount によるキャンセル", () => {
     })(el);
 
     await Promise.resolve();
-    unmount([el]);
+    await unmount([el]);
     expect(unmountFn).toHaveBeenCalledOnce();
   });
 });

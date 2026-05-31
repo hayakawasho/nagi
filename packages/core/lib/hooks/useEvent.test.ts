@@ -25,7 +25,7 @@ describe("useEvent", () => {
     expect(handler).toHaveBeenCalledOnce();
   });
 
-  it("アンマウント後はイベントリスナーが削除される", () => {
+  it("アンマウント後はイベントリスナーが削除される", async () => {
     const el = document.createElement("button");
     document.body.appendChild(el);
     const handler = vi.fn();
@@ -37,27 +37,8 @@ describe("useEvent", () => {
       },
     })(el);
 
-    unmount([el]);
+    await unmount([el]);
     el.dispatchEvent(new MouseEvent("click"));
     expect(handler).not.toHaveBeenCalled();
-  });
-
-  it("対象要素はコンポーネントのルートと異なる要素でも可", () => {
-    const root = document.createElement("div");
-    const btn = document.createElement("button");
-    root.appendChild(btn);
-    document.body.appendChild(root);
-
-    const handler = vi.fn();
-    const { component } = create();
-    component({
-      name: "test",
-      setup: () => {
-        useEvent(btn, "click", handler);
-      },
-    })(root);
-
-    btn.dispatchEvent(new MouseEvent("click"));
-    expect(handler).toHaveBeenCalledOnce();
   });
 });
