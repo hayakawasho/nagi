@@ -31,6 +31,7 @@ class ComponentContextImpl<T = any>
   #children: ComponentContextImpl[] = [];
 
   #deferredUnmountPromise: Promise<void> | null = null;
+  #unmountDone = false;
 
   readonly uid: string;
   readonly name: ComponentContext["name"];
@@ -85,6 +86,12 @@ class ComponentContextImpl<T = any>
   };
 
   onUnmount = () => {
+    if (this.#unmountDone) {
+      return;
+    };
+
+    this.#unmountDone = true;
+
     for (const unmount of this[LifecycleHooks.UNMOUNTED]) {
       try {
         unmount();
@@ -117,13 +124,20 @@ class ComponentContextImpl<T = any>
   };
 
   removeChild = async (child: ComponentContextImpl): Promise<void> => {
-    const index = this.#children.indexOf(child);
+    const isChild = this.#children.indexOf(child) !== -1;
 
-    if (index === -1) {
+    if (!isChild) {
       return;
     }
 
     await child.onDeferredUnmount();
+
+    const index = this.#children.indexOf(child);
+    const wasConcurrentlyRemoved = index === -1;
+
+    if (wasConcurrentlyRemoved) {
+      return;
+    }
 
     this.#children.splice(index, 1);
     child.parent = null;
