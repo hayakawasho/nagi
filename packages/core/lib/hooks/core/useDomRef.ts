@@ -30,26 +30,42 @@ function findRef(
   return nodes;
 }
 
+class DomRefCache {
+  #cache = new Map<string, RefElement | RefElement[] | null>();
+
+  constructor(
+    private scope: RefElement,
+    private getBoundaries: () => RefElement[],
+  ) {}
+
+  get(key: string): RefElement | RefElement[] | null {
+    if (this.#cache.has(key)) {
+      return this.#cache.get(key) ?? null;
+    }
+
+    const result = findRef(key, this.scope, this.getBoundaries());
+    this.#cache.set(key, result);
+
+    return result;
+  }
+}
+
 function domRefs<T extends Record<string, RefElement | RefElement[] | null>>(
   scope: RefElement,
   getBoundaries: () => RefElement[],
 ): T {
-  const cache = new Map<string, RefElement | RefElement[] | null>();
+  const cache = new DomRefCache(scope, getBoundaries);
 
+  // All traps below are required to ensure consistent behavior as a virtual object.
+  // The JS runtime automatically invokes traps other than get as well.
   return new Proxy({} as T, {
     get(_t, prop) {
+      // Avoid treating refs as a thenable when it crosses Promise-like code.
       if (typeof prop === "symbol" || prop === "then") {
         return undefined;
       }
 
-      if (cache.has(prop)) {
-        return cache.get(prop);
-      }
-
-      const result = findRef(prop, scope, getBoundaries());
-      cache.set(prop, result);
-
-      return result;
+      return cache.get(prop);
     },
     has(_t, prop) {
       return typeof prop === "string";
