@@ -1,4 +1,4 @@
-import { errorReport } from "../../core/_internal/errorReporter";
+import { errorReport } from "../../core/_internal/errorReport";
 import { createComponent, getCurrentComponent } from "../../core/runtime";
 
 import type { ComponentContextImpl } from "../../core/_internal/component";
@@ -30,7 +30,9 @@ export function useSlot() {
         : [create(targetOrTargets)];
     },
 
-    async removeChild(children: ComponentContext[]): Promise<void> {
+    async removeChild(
+      children: ComponentContext<Record<string, unknown>>[],
+    ): Promise<void> {
       await Promise.all(
         children.map((child) =>
           context
