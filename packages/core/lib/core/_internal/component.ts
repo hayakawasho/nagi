@@ -1,4 +1,4 @@
-import { errorReport } from "./errorReporter";
+import { errorReport } from "./errorReport";
 
 import type {
   Cleanup,
@@ -88,7 +88,7 @@ class ComponentContextImpl<T = any>
   onUnmount = () => {
     if (this.#unmountDone) {
       return;
-    };
+    }
 
     this.#unmountDone = true;
 

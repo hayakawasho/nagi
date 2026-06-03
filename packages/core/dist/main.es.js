@@ -73,7 +73,7 @@ function s(e, t) {
 	o.set(e, t);
 }
 //#endregion
-//#region lib/core/_internal/errorReporter.ts
+//#region lib/core/_internal/errorReport.ts
 var c = {
 	setup: "[nagi] setup failed",
 	mount: "[nagi] onMount hook failed",
@@ -95,6 +95,7 @@ var u = /* @__PURE__ */ function(e) {
 	parent = null;
 	#e = [];
 	#t = null;
+	#n = !1;
 	uid;
 	name;
 	current = {};
@@ -122,12 +123,15 @@ var u = /* @__PURE__ */ function(e) {
 		}
 	}), ...this.#e.map((e) => e.onDeferredUnmount())]).then(() => {}), this.#t);
 	onUnmount = () => {
-		for (let e of this.unmount) try {
-			e();
-		} catch (e) {
-			l("unmount", this, e);
+		if (!this.#n) {
+			this.#n = !0;
+			for (let e of this.unmount) try {
+				e();
+			} catch (e) {
+				l("unmount", this, e);
+			}
+			for (let e of this.#e) e.onUnmount();
 		}
-		for (let e of this.#e) e.onUnmount();
 	};
 	addChild = (e) => {
 		this.#e.push(e), e.parent = this;
@@ -139,8 +143,10 @@ var u = /* @__PURE__ */ function(e) {
 		}
 	};
 	removeChild = async (e) => {
+		if (this.#e.indexOf(e) === -1) return;
+		await e.onDeferredUnmount();
 		let t = this.#e.indexOf(e);
-		t !== -1 && (await e.onDeferredUnmount(), this.#e.splice(t, 1), e.parent = null, e.onUnmount());
+		t !== -1 && (this.#e.splice(t, 1), e.parent = null, e.onUnmount());
 	};
 	get childElements() {
 		return this.#e.map((e) => e.element);
@@ -294,14 +300,24 @@ function F(e, t, n) {
 	let r = `[data-ref="${CSS.escape(e)}"]`, i = Array.from(t.querySelectorAll(r)).filter((e) => !P(e, n));
 	return i.length === 0 ? null : i.length === 1 ? i[0] : i;
 }
-function I(e, t) {
-	let n = /* @__PURE__ */ new Map();
+var I = class {
+	scope;
+	getBoundaries;
+	#e = /* @__PURE__ */ new Map();
+	constructor(e, t) {
+		this.scope = e, this.getBoundaries = t;
+	}
+	get(e) {
+		if (this.#e.has(e)) return this.#e.get(e) ?? null;
+		let t = F(e, this.scope, this.getBoundaries());
+		return this.#e.set(e, t), t;
+	}
+};
+function L(e, t) {
+	let n = new I(e, t);
 	return new Proxy({}, {
-		get(r, i) {
-			if (typeof i == "symbol" || i === "then") return;
-			if (n.has(i)) return n.get(i);
-			let a = F(i, e, t());
-			return n.set(i, a), a;
+		get(e, t) {
+			if (!(typeof t == "symbol" || t === "then")) return n.get(t);
 		},
 		has(e, t) {
 			return typeof t == "string";
@@ -318,13 +334,13 @@ function I(e, t) {
 		}
 	});
 }
-function L() {
+function R() {
 	let e = m("useDomRef");
-	return { refs: I(e.element, () => e.childElements) };
+	return { refs: L(e.element, () => e.childElements) };
 }
 //#endregion
 //#region lib/hooks/core/useSlot.ts
-function R() {
+function z() {
 	let e = m("useSlot");
 	return {
 		addChild(t, n, r) {
@@ -343,14 +359,14 @@ function R() {
 }
 //#endregion
 //#region lib/hooks/useEvent.ts
-function z(e, t, n, r) {
+function B(e, t, n, r) {
 	x(() => (e.addEventListener(t, n, r), () => {
 		e.removeEventListener(t, n, r);
 	}));
 }
 //#endregion
 //#region lib/hooks/useIntersectionWatch.ts
-function B(e, t, n = {
+function V(e, t, n = {
 	rootMargin: "0px",
 	threshold: .1
 }) {
@@ -370,7 +386,7 @@ function B(e, t, n = {
 }
 //#endregion
 //#region lib/hooks/useMediaQuery.ts
-function V(e, t) {
+function H(e, t) {
 	let n = window.matchMedia(e), r = O(n.matches), i = null;
 	function a(e) {
 		r.value = e.matches, e.matches ? i = t() : (i?.(), i = null);
@@ -380,4 +396,4 @@ function V(e, t) {
 	})), { matchesQuery: A(r) };
 }
 //#endregion
-export { i as LifecycleError, _ as create, y as createContext, e as defineAddon, v as defineComponent, a as isLifecycleError, w as propTypes, A as readonly, O as signal, N as useComputed, C as useDeferredUnmount, L as useDomRef, z as useEvent, B as useIntersectionWatch, V as useMediaQuery, x as useMount, R as useSlot, S as useUnmount, M as useWatch, b as withContext };
+export { i as LifecycleError, _ as create, y as createContext, e as defineAddon, v as defineComponent, a as isLifecycleError, w as propTypes, A as readonly, O as signal, N as useComputed, C as useDeferredUnmount, R as useDomRef, B as useEvent, V as useIntersectionWatch, H as useMediaQuery, x as useMount, z as useSlot, S as useUnmount, M as useWatch, b as withContext };

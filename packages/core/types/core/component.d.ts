@@ -1,12 +1,12 @@
-import type { ComponentProps, ComponentSetup, RefElement } from "../types";
+import type { ComponentSetup, RefElement } from "../types";
 export declare function defineComponent<SetupResult extends Record<string, unknown> | void, Props extends Record<string, unknown>>(opts: {
     name: string;
     props: Props;
-    setup(el: RefElement, props: ComponentProps<Props>): SetupResult;
+    setup(el: RefElement, props: Readonly<Props>): SetupResult;
 }): ComponentSetup<SetupResult, Props>;
 export declare function defineComponent<SetupResult extends Record<string, unknown> | void, Props extends Record<string, unknown>>(opts: {
     name: string;
-    setup(el: RefElement, props: ComponentProps<Props>): SetupResult;
+    setup(el: RefElement, props: Readonly<Props>): SetupResult;
 }): ComponentSetup<SetupResult, Props>;
 export declare function defineComponent<SetupResult extends Record<string, unknown> | void>(opts: {
     name: string;
