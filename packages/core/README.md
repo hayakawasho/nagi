@@ -18,7 +18,8 @@ You can add `setup()`, lifecycle, and reactivity to WordPress, CMS, Webflow, sta
 
 **Compatible with animation**
 
-You can initialize GSAP, Lenis, IntersectionObserver, etc., in `setup()` and clean them up with `useUnmount()`.
+You can initialize libraries such as GSAP, Lenis, and IntersectionObserver in `setup()`, and perform cleanup using `useUnmount()`.
+You can also use `useDeferredUnmount()` to run async work, such as exit animations, before the unmount occurs.
 
 **Does not restrict mounting strategies**
 
@@ -147,10 +148,11 @@ useWatch(area, (v) => {
 
 ### Lifecycle
 
-| API              | Description                          |
-| ---------------- | ------------------------------------ |
-| `useMount(fn)`   | Runs once after the component mounts |
-| `useUnmount(fn)` | Runs on unmount; use for cleanup     |
+| API                        | Description                                                                 |
+| -------------------------- | --------------------------------------------------------------------------- |
+| `useMount(fn)`             | Runs once after the component mounts                                        |
+| `useUnmount(fn)`           | Runs on unmount; use for cleanup                                            |
+| `useDeferredUnmount(fn)`   | Async callback that runs before unmount; use for exit animations            |
 
 ```ts
 import gsap from 'gsap';
@@ -160,6 +162,21 @@ setup(el) {
   useUnmount(() => tween.kill());
 }
 ```
+
+When a parent calls `removeChild`, it executes in the order of `useDeferredUnmount` followed by `useUnmount`. This allows you to encapsulate the flow within the component, such as waiting for an exit animation to complete before removing event listeners or the DOM.
+
+```ts
+setup(el) {
+  useDeferredUnmount(async () => {
+    el.classList.remove("is-open");
+    await waitForTransition(el);
+  });
+
+  useUnmount(() => el.remove());
+}
+```
+
+→ [examples/deferred-unmount](../../examples/deferred-unmount/main.ts)
 
 ### DOM helpers
 
@@ -266,6 +283,7 @@ import { visible, idle, interaction, media } from "@usenagi/core/addons/cue";
 | [basic-counter](../../examples/basic-counter/)            | Minimal `signal` + `useWatch` example                    |
 | [computed](../../examples/computed/)                      | Derived value with `useComputed` (width × height = area) |
 | [parent-child](../../examples/parent-child/)              | `createContext` + `withContext` + `useSlot`              |
+| [deferred-unmount](../../examples/deferred-unmount/)          | Exit animation with `useDeferredUnmount`                  |
 | [lenis-scroll-scene](../../examples/lenis-scroll-scene/)  | Scroll-progress animation with Lenis + `useComputed`     |
 | [byo-mounter recipe](../../examples/recipes/byo-mounter/) | `[data-component]` scanning + manifest + cue             |
 

@@ -18,7 +18,7 @@ WordPress、CMS、Webflow、静的サイトなどに、仮想 DOM やテンプ�
 
 **アニメーションと相性が良い**
 
-GSAP、Lenis、IntersectionObserver などを `setup()` で初期化し、`useUnmount()` でクリーンアップできる。
+GSAP、Lenis、IntersectionObserver などを `setup()` で初期化し、`useUnmount()` でクリーンアップできる。`useDeferredUnmount()` で退場アニメーションなどの非同期処理を unmount の前に挟むこともできる。
 
 **マウント戦略を縛らない**
 
@@ -147,10 +147,11 @@ useWatch(area, (v) => {
 
 ### Lifecycle
 
-| API              | 説明                                        |
-| ---------------- | ------------------------------------------- |
-| `useMount(fn)`   | コンポーネントのマウント完了後に1回実行する |
-| `useUnmount(fn)` | unmount 時に実行する。クリーンアップに使う  |
+| API                        | 説明                                                              |
+| -------------------------- | ----------------------------------------------------------------- |
+| `useMount(fn)`             | コンポーネントのマウント完了後に1回実行する                       |
+| `useUnmount(fn)`           | unmount 時に実行する。クリーンアップに使う                        |
+| `useDeferredUnmount(fn)`   | unmount の前に実行される非同期コールバック。退場アニメーションに使う |
 
 ```ts
 import gsap from 'gsap';
@@ -160,6 +161,21 @@ setup(el) {
   useUnmount(() => tween.kill());
 }
 ```
+
+親が `removeChild` を呼ぶと `useDeferredUnmount` → `useUnmount` の順で実行される。退場アニメーションの完了を待ってからイベントリスナーの解除や DOM の除去を行う、といったフローをコンポーネント内に閉じて書ける。
+
+```ts
+setup(el) {
+  useDeferredUnmount(async () => {
+    el.classList.remove("is-open");
+    await waitForTransition(el);
+  });
+
+  useUnmount(() => el.remove());
+}
+```
+
+→ [examples/deferred-unmount](../../examples/deferred-unmount/main.ts)
 
 ### DOM helpers
 
@@ -266,6 +282,7 @@ import { visible, idle, interaction, media } from "@usenagi/core/addons/cue";
 | [basic-counter](../../examples/basic-counter/)            | 最小の `signal` + `useWatch` 例                     |
 | [computed](../../examples/computed/)                      | `useComputed` による派生値（width × height = area） |
 | [parent-child](../../examples/parent-child/)              | `createContext` + `withContext` + `useSlot`         |
+| [deferred-unmount](../../examples/deferred-unmount/)          | `useDeferredUnmount` による退場アニメーション       |
 | [lenis-scroll-scene](../../examples/lenis-scroll-scene/)  | Lenis + `useComputed` によるスクロール進捗連動      |
 | [byo-mounter recipe](../../examples/recipes/byo-mounter/) | `[data-component]` スキャン + manifest + cue        |
 
