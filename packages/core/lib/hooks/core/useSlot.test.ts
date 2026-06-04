@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { create } from "../../core/app";
 import { defineComponent } from "../../core/component";
-import { useMount, useUnmount } from "../../core/lifecycle";
+import { useDeferredUnmount, useMount, useUnmount } from "../../core/lifecycle";
 import { propTypes } from "../../core/props";
 
 import { useSlot } from "./useSlot";
@@ -43,7 +43,7 @@ describe("useSlot", () => {
     expect(mountFn).toHaveBeenCalledOnce();
   });
 
-  it("removeChild で子コンポーネントをアンマウントできる", () => {
+  it("removeChild で子コンポーネントをアンマウントできる", async () => {
     const childEl = document.createElement("span");
     const root = makeRoot(childEl);
 
@@ -68,7 +68,7 @@ describe("useSlot", () => {
     })(root);
 
     expect(unmountFn).not.toHaveBeenCalled();
-    slotRef!.removeChild(childCtx);
+    await slotRef!.removeChild(childCtx);
     expect(unmountFn).toHaveBeenCalledOnce();
   });
 
@@ -95,7 +95,7 @@ describe("useSlot", () => {
     expect(setupFn).toHaveBeenCalledTimes(2);
   });
 
-  it("親アンマウント時に子も連鎖してアンマウントされる", () => {
+  it("親アンマウント時に子も連鎖してアンマウントされる", async () => {
     const childEl = document.createElement("span");
     const root = makeRoot(childEl);
 
@@ -116,8 +116,42 @@ describe("useSlot", () => {
       },
     })(root);
 
-    unmount([root]);
+    await unmount([root]);
     expect(unmountFn).toHaveBeenCalledOnce();
+  });
+
+  it("await removeChild が子の deferred unmount 完了後に resolve する", async () => {
+    const childEl = document.createElement("span");
+    const root = makeRoot(childEl);
+
+    const order: string[] = [];
+    const child = {
+      name: "child",
+      setup: () => {
+        useDeferredUnmount(async () => {
+          await Promise.resolve();
+          order.push("deferred");
+        });
+        useUnmount(() => {
+          order.push("unmount");
+        });
+      },
+    };
+
+    let slotRef: ReturnType<typeof useSlot> | null = null;
+    let childCtx: ReturnType<ReturnType<typeof useSlot>["addChild"]> = [];
+
+    const { component } = create();
+    component({
+      name: "parent",
+      setup: () => {
+        slotRef = useSlot();
+        childCtx = slotRef.addChild(childEl, child);
+      },
+    })(root);
+
+    await slotRef!.removeChild(childCtx);
+    expect(order).toEqual(["deferred", "unmount"]);
   });
 
   it("addChild で props を子コンポーネントに渡せる", () => {

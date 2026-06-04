@@ -101,9 +101,7 @@ function s(t) {
 						throw e;
 					}));
 				}) : c();
-			}), e.addUnmountMiddleware((e) => (t) => {
-				t.forEach(a.abort), e(t);
-			});
+			}), e.addUnmountMiddleware((e) => (t) => (t.forEach(a.abort), e(t)));
 		}
 	});
 }

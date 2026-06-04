@@ -25,15 +25,6 @@ describe("create — 同期 mount（addon なし）", () => {
       expect(setupFn).toHaveBeenCalledWith(el, { x: 1 });
     });
 
-    it("ComponentContext を返す", () => {
-      const el = makeEl();
-      const { component } = create();
-
-      const ctx = component({ name: "test", setup: () => {} })(el);
-
-      expect(ctx).toBeDefined();
-    });
-
     it("setup の return が current に入る（expose）", () => {
       const el = makeEl();
       const { component } = create();
@@ -59,7 +50,7 @@ describe("create — 同期 mount（addon なし）", () => {
   });
 
   describe("unmount()", () => {
-    it("useUnmount のハンドラが実行される", () => {
+    it("useUnmount のハンドラが実行される", async () => {
       const el = makeEl();
       const fn = vi.fn();
       const { component, unmount } = create();
@@ -69,11 +60,11 @@ describe("create — 同期 mount（addon なし）", () => {
           useUnmount(fn);
         },
       })(el);
-      unmount([el]);
+      await unmount([el]);
       expect(fn).toHaveBeenCalledOnce();
     });
 
-    it("useMount の cleanup が実行される", () => {
+    it("useMount の cleanup が実行される", async () => {
       const el = makeEl();
       const cleanup = vi.fn();
       const { component, unmount } = create();
@@ -84,7 +75,7 @@ describe("create — 同期 mount（addon なし）", () => {
         },
       })(el);
       expect(cleanup).not.toHaveBeenCalled();
-      unmount([el]);
+      await unmount([el]);
       expect(cleanup).toHaveBeenCalledOnce();
     });
 

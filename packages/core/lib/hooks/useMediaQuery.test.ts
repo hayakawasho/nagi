@@ -143,7 +143,7 @@ describe("useMediaQuery", () => {
     expect(cleanup).toHaveBeenCalledOnce();
   });
 
-  it("アンマウント時に removeEventListener と cleanup が呼ばれる", () => {
+  it("アンマウント時に removeEventListener と cleanup が呼ばれる", async () => {
     mockMQL = createMockMQL(true);
     vi.stubGlobal(
       "matchMedia",
@@ -160,7 +160,7 @@ describe("useMediaQuery", () => {
       },
     })(root);
 
-    unmount([root]);
+    await unmount([root]);
     expect(mockMQL.removeEventListener).toHaveBeenCalled();
     expect(cleanup).toHaveBeenCalled();
   });

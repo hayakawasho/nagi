@@ -13,59 +13,75 @@ import type {
 } from "../types";
 import type { Addon, MountOptions } from "./addon";
 
-type App = {
-  install(...addons: Addon[]): App;
-  component<S extends ComponentSetup>(
-    component: S,
+class App {
+  #addonRegistry = createAddonRegistry();
+
+  install = (...addons: Addon[]): this => {
+    addons.forEach(this.#addonRegistry.install);
+    return this;
+  };
+
+  component: <S extends ComponentSetup>(
+    rawComponent: S,
     opts?: MountOptions,
-  ): (
+  ) => (
     el: RefElement,
     // biome-ignore lint/suspicious/noExplicitAny: internal props type
     props?: Record<string, any>,
-  ) => ComponentContext<ExposedSetup<ReturnType<S["setup"]>>> | void;
-  unmount(targets: RefElement[]): void;
-};
+  ) => ComponentContext<ExposedSetup<ReturnType<S["setup"]>>> | void = (
+    rawComponent,
+    opts = {},
+  ) => {
+    const componentSetup = this.#addonRegistry.composeComponent(rawComponent);
+
+    const baseMount = (el: RefElement, props: Record<string, unknown>) => {
+      const component = createComponent(componentSetup, el, props);
+      bindDOMNodeToComponent(el, component);
+      component.onMount();
+
+      return component;
+    };
+
+    const mount = this.#addonRegistry.composeMount(
+      baseMount,
+      componentSetup,
+      opts,
+    );
+
+    return (el, props = {}) => mount(el, props);
+  };
+
+  unmount = (targets: RefElement[]): Promise<void> => {
+    return Promise.resolve(
+      this.#addonRegistry.composeUnmount((targets) =>
+        this.#baseUnmount(targets),
+      )(targets),
+    );
+  };
+
+  async #baseUnmount(targets: RefElement[]): Promise<void> {
+    const snapshots = targets
+      .map((el) => {
+        const c = DOM_COMPONENT_INSTANCE.get(el);
+
+        if (c) {
+          DOM_COMPONENT_INSTANCE.delete(el);
+        }
+
+        return c;
+      })
+      .filter((component) => component !== undefined);
+
+    await Promise.all(
+      snapshots.map((component) => component.onDeferredUnmount()),
+    );
+
+    for (const c of snapshots) {
+      c.onUnmount();
+    }
+  }
+}
 
 export function create(): App {
-  const addonRegistry = createAddonRegistry();
-
-  const baseUnmount = (targets: RefElement[]) => {
-    for (const el of targets) {
-      const component = DOM_COMPONENT_INSTANCE.get(el);
-
-      if (component) {
-        component.onUnmount();
-        DOM_COMPONENT_INSTANCE.delete(el);
-      }
-    }
-  };
-
-  const app: App = {
-    install(...addons) {
-      addons.forEach(addonRegistry.install);
-      return app;
-    },
-
-    component(rawComponent, opts = {}) {
-      const componentSetup = addonRegistry.composeComponent(rawComponent);
-
-      const baseMount = (el: RefElement, props: Record<string, unknown>) => {
-        const component = createComponent(componentSetup, el, props);
-        bindDOMNodeToComponent(el, component);
-        component.onMount();
-
-        return component;
-      };
-
-      const mount = addonRegistry.composeMount(baseMount, componentSetup, opts);
-
-      return (el, props = {}) => mount(el, props);
-    },
-
-    unmount(targets) {
-      addonRegistry.composeUnmount(baseUnmount)(targets);
-    },
-  };
-
-  return app;
+  return new App();
 }

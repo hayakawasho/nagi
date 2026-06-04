@@ -1,7 +1,5 @@
 export type RefElement = HTMLElement | SVGElement;
 
-export type ComponentProps<Props> = Readonly<Props>;
-
 type IsAny<T> = 0 extends 1 & T ? true : false;
 
 /** Normalize the return value of setup to the type stored in `current` (void / undefined → empty object). */
@@ -19,7 +17,7 @@ export type ComponentSetup<
   Props extends Record<string, unknown> = Record<string, unknown>,
 > = {
   name: string;
-  setup(el: RefElement, props: ComponentProps<Props>): SetupResult;
+  setup(el: RefElement, props: Readonly<Props>): SetupResult;
 };
 
 /** Mounted component instance exposed to app / hook callers. */
@@ -33,7 +31,11 @@ export type ComponentContext<
 
 export type Cleanup = () => void;
 
-export type LifecycleHandler = () => void | Cleanup;
+export type UseMountCallback = () => void | Cleanup;
+
+export type UseDeferredUnmountCallback = () => void | Promise<void>;
+
+export type UseUnmountCallback = () => void;
 
 export type SchedulePriority = "user-blocking" | "user-visible" | "background";
 

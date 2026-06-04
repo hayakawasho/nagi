@@ -112,7 +112,7 @@ describe("useWatch", () => {
     expect(calls).toEqual(["first", "second"]);
   });
 
-  it("component unmount 時に unsubscribe する", () => {
+  it("component unmount 時に unsubscribe する", async () => {
     const el = makeEl();
     const r = signal(0);
     const callback = vi.fn();
@@ -126,7 +126,7 @@ describe("useWatch", () => {
     })(el);
 
     r.value = 1;
-    unmount([el]);
+    await unmount([el]);
     r.value = 2;
 
     expect(callback).toHaveBeenCalledOnce();
@@ -244,7 +244,7 @@ describe("useComputed", () => {
     expect(c!.value).toBe(12);
   });
 
-  it("component unmount 後は再計算されない", () => {
+  it("component unmount 後は再計算されない", async () => {
     const el = makeEl();
     const r = signal(0);
     const evalCount = vi.fn();
@@ -263,7 +263,7 @@ describe("useComputed", () => {
     })(el);
 
     evalCount.mockClear();
-    unmount([el]);
+    await unmount([el]);
     r.value = 1;
     expect(evalCount).not.toHaveBeenCalled();
     expect(c!.value).toBe(0);

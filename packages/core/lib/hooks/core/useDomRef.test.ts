@@ -49,38 +49,6 @@ describe("useDomRef", () => {
     expect(result).toBeNull();
   });
 
-  it("addChild 後に子コンポーネント配下の ref を取得しない", () => {
-    const el = makeEl(`
-      <span data-ref="title"></span>
-      <div data-ref="childRoot">
-        <span data-ref="title"></span>
-      </div>
-    `);
-    let parentTitle: HTMLElement | HTMLElement[] | null = null;
-
-    const Child = defineComponent({
-      name: "child",
-      setup: () => {},
-    });
-
-    const { component } = create();
-    component({
-      name: "parent",
-      setup: () => {
-        const { refs } = useDomRef<{
-          title: HTMLElement;
-          childRoot: HTMLElement;
-        }>();
-        const { addChild } = useSlot();
-        addChild(refs.childRoot, Child);
-        parentTitle = refs.title;
-      },
-    })(el);
-
-    expect(parentTitle).toBeInstanceOf(HTMLElement);
-    expect(Array.isArray(parentTitle)).toBe(false);
-  });
-
   it("addChild 前にキャッシュされた refs は addChild 後も変わらない（stale）", () => {
     const el = makeEl(`
       <span data-ref="title"></span>

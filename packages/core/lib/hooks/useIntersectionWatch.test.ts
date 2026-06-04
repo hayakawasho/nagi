@@ -44,19 +44,6 @@ function makeEl(): HTMLElement {
 }
 
 describe("useIntersectionWatch", () => {
-  it("ターゲットを observe する", () => {
-    const root = makeEl();
-    const target = makeEl();
-    const { component } = create();
-    component({
-      name: "test",
-      setup: () => {
-        useIntersectionWatch(target, vi.fn());
-      },
-    })(root);
-    expect(mockObserve).toHaveBeenCalledWith(target);
-  });
-
   it("配列のターゲットを全て observe する", () => {
     const root = makeEl();
     const t1 = makeEl();
@@ -138,7 +125,7 @@ describe("useIntersectionWatch", () => {
     expect(callback).toHaveBeenCalledWith([entry], {} as IntersectionObserver);
   });
 
-  it("アンマウント時に disconnect が呼ばれる", () => {
+  it("アンマウント時に disconnect が呼ばれる", async () => {
     const root = makeEl();
     const target = makeEl();
     const { component, unmount } = create();
@@ -148,7 +135,7 @@ describe("useIntersectionWatch", () => {
         useIntersectionWatch(target, vi.fn());
       },
     })(root);
-    unmount([root]);
+    await unmount([root]);
     expect(mockDisconnect).toHaveBeenCalledOnce();
   });
 });

@@ -3,7 +3,7 @@ export { create } from "./core/app";
 export { defineComponent } from "./core/component";
 export { createContext, withContext } from "./core/context";
 export { isLifecycleError, LifecycleError } from "./core/error";
-export { useMount, useUnmount } from "./core/lifecycle";
+export { useDeferredUnmount, useMount, useUnmount } from "./core/lifecycle";
 export { propTypes } from "./core/props";
 export { readonly, signal, useComputed, useWatch } from "./core/reactivity";
 export { useDomRef } from "./hooks/core/useDomRef";
@@ -23,4 +23,5 @@ export type {
   Cue,
   RefElement,
   SchedulePriority,
+  UseDeferredUnmountCallback,
 } from "./types";

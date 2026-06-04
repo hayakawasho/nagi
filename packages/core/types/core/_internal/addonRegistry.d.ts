@@ -1,7 +1,7 @@
 import type { ComponentSetup, RefElement } from "../../types";
 import type { Addon, AddonContext, MountOptions } from "../addon";
 type MountFn = (el: RefElement, props: Record<string, any>) => any;
-type UnmountFn = (targets: RefElement[]) => void;
+type UnmountFn = (targets: RefElement[]) => Promise<void>;
 export type ComponentMiddleware = <S extends ComponentSetup>(comp: S) => S;
 export type MountMiddleware = (next: MountFn, setup: ComponentSetup, opts: MountOptions) => MountFn;
 export type UnmountMiddleware = (next: UnmountFn) => UnmountFn;

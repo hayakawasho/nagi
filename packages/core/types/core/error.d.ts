@@ -1,7 +1,7 @@
 import type { RefElement } from "../types";
 import type { ComponentContextImpl } from "./_internal/component";
 export type LifecycleErrorDetails = {
-    phase: "setup" | "mount" | "unmount" | "removeChild";
+    phase: "setup" | "mount" | "unmount" | "deferredUnmount" | "removeChild";
     name: string;
     uid?: string;
     path?: string;

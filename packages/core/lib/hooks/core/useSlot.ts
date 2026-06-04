@@ -1,4 +1,4 @@
-import { LifecycleError } from "../../core/error";
+import { errorReport } from "../../core/_internal/errorReport";
 import { createComponent, getCurrentComponent } from "../../core/runtime";
 
 import type { ComponentContextImpl } from "../../core/_internal/component";
@@ -30,22 +30,23 @@ export function useSlot() {
         : [create(targetOrTargets)];
     },
 
-    removeChild(children: ComponentContext[]) {
-      children.forEach((child) => {
-        try {
-          context.removeChild(child as unknown as ComponentContextImpl);
-        } catch (cause) {
-          console.error(
-            "[nagi] removeChild failed",
-            LifecycleError.create(
-              "removeChild",
-              child as unknown as ComponentContextImpl,
-              cause,
-              context,
-            ),
-          );
-        }
-      });
+    async removeChild(
+      children: ComponentContext<Record<string, unknown>>[],
+    ): Promise<void> {
+      await Promise.all(
+        children.map((child) =>
+          context
+            .removeChild(child as unknown as ComponentContextImpl)
+            .catch((cause) => {
+              errorReport(
+                "removeChild",
+                child as unknown as ComponentContextImpl,
+                cause,
+                context,
+              );
+            }),
+        ),
+      );
     },
   };
 }
