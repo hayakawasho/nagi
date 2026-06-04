@@ -4,6 +4,27 @@ All notable changes to `@usenagi/core` are documented here. Release notes also a
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.0] - 2026-06-05
+
+### Added
+
+- `useDeferredUnmount(callback)` lifecycle hook — run async work (e.g. exit animations) before a component is removed from the DOM. The callback runs before `useUnmount`, so cleanup hooks execute only after the deferred work completes.
+- `useSlot().removeChild()` now awaits deferred unmount callbacks before running cleanup, enabling parent-driven async teardown of dynamic children.
+- `errorReport` utility for structured lifecycle error reporting.
+
+### Changed
+
+- Child unmount ordering: `removeChild` now runs deferred unmount → splice → synchronous unmount in a safe sequence that handles concurrent removals.
+- Guard against multiple unmount executions on the same component instance.
+- `DomRefCache` refactored for clarity.
+
+### Fixed
+
+- `removeChild` type definition corrected to accept `ComponentContext`.
+- Scheduler addon unmount middleware now returns the `next()` result.
+
+Full change set: [#418](https://github.com/hayakawasho/nagi/pull/418).
+
 ## [0.4.3] - 2026-05-24
 
 ### Changed
