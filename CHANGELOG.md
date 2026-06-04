@@ -4,6 +4,12 @@ All notable changes to `@usenagi/core` are documented here. Release notes also a
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.1] - 2026-06-05
+
+### Changed
+
+- Added `useDeferredUnmount` documentation to README (EN/JA).
+
 ## [0.5.0] - 2026-06-05
 
 ### Added
