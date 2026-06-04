@@ -140,8 +140,8 @@ class ComponentContextImpl<T = any>
     }
 
     this.#children.splice(index, 1);
-    child.parent = null;
     child.onUnmount();
+    child.parent = null;
   };
 
   get childElements(): RefElement[] {

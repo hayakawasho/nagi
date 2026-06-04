@@ -146,7 +146,7 @@ var u = /* @__PURE__ */ function(e) {
 		if (this.#e.indexOf(e) === -1) return;
 		await e.onDeferredUnmount();
 		let t = this.#e.indexOf(e);
-		t !== -1 && (this.#e.splice(t, 1), e.parent = null, e.onUnmount());
+		t !== -1 && (this.#e.splice(t, 1), e.onUnmount(), e.parent = null);
 	};
 	get childElements() {
 		return this.#e.map((e) => e.element);
