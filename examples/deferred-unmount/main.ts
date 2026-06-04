@@ -5,6 +5,7 @@ import {
   useDeferredUnmount,
   useEvent,
   useMount,
+  useUnmount,
   useSlot,
   useDomRef,
 } from "../../packages/core/lib/main";
@@ -67,6 +68,10 @@ const Modal = defineComponent({
       el.classList.remove("is-open");
       await waitForTransition(el);
     });
+
+    useUnmount(() => {
+      el.remove();
+    });
   },
 });
 
@@ -86,15 +91,13 @@ const App = defineComponent({
 
     const closeModal = async () => {
       if (!modalCtx) return;
+
       const ctx = modalCtx;
-      const el = modalEl!;
       modalCtx = null;
       modalEl = null;
       refs.openBtn.disabled = false;
 
-      // アニメーション完了まで待ってから DOM を消す
       await removeChild([ctx]);
-      el.remove();
     };
 
     const openModal = () => {
