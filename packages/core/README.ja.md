@@ -23,9 +23,9 @@ app.component({
   setup(el) {
     gsap.from(el, { opacity: 0, y: 20, duration: 0.4 });
 
-    useDeferredUnmount(() =>
-      gsap.to(el, { opacity: 0, y: -20, duration: 0.3 }),
-    );
+    useDeferredUnmount(async () => {
+      await gsap.to(el, { opacity: 0, y: -20, duration: 0.3 });
+    });
 
     useUnmount(() => el.remove());
   },
