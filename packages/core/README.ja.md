@@ -2,7 +2,7 @@
 
 # nagi
 
-**Composition-style ergonomics for vanilla DOM. Bring your own mounter.**
+**既存 HTML にライフサイクルとリアクティビティを足す。**
 
 [![npm](https://img.shields.io/npm/v/@usenagi/core)](https://www.npmjs.com/package/@usenagi/core)
 [![bundle size](https://img.shields.io/bundlephobia/minzip/@usenagi/core)](https://bundlephobia.com/package/@usenagi/core)
@@ -10,55 +10,45 @@
 
 ---
 
-## Why nagi?
-
-**既存 HTML に小さく足せる**
-
-WordPress、CMS、Webflow、静的サイトなどに、仮想 DOM やテンプレートを持ち込まず、`setup()` / lifecycle / reactivity を追加できる。
-
-**アニメーションと相性が良い**
-
-GSAP、Lenis、IntersectionObserver などを `setup()` で初期化し、`useUnmount()` でクリーンアップできる。`useDeferredUnmount()` で退場アニメーションなどの非同期処理を unmount の前に挟むこともできる。
-
-**マウント戦略を縛らない**
-
-`[data-component]` スキャン、manifest、lazy import、MutationObserver などは、利用側で自由に組み立てられる。
-
----
-
 ## 30-second example
 
 ```ts
-// counter.ts
-import { create, signal, useWatch, useDomRef } from "@usenagi/core";
+import { create, useDeferredUnmount, useUnmount } from "@usenagi/core";
+import gsap from "gsap";
 
 const app = create();
 
 app.component({
-  name: "counter",
-  setup() {
-    const { refs } = useDomRef<{
-      count: HTMLSpanElement;
-      btn: HTMLButtonElement;
-    }>();
+  name: "modal",
+  setup(el) {
+    gsap.from(el, { opacity: 0, y: 20, duration: 0.4 });
 
-    const n = signal(0);
-    useWatch(n, (v) => {
-      refs.count.textContent = String(v);
-    });
-    refs.btn.addEventListener("click", () => {
-      n.value++;
-    });
+    useDeferredUnmount(() =>
+      gsap.to(el, { opacity: 0, y: -20, duration: 0.3 }),
+    );
+
+    useUnmount(() => el.remove());
   },
-})(document.querySelector("#counter")!);
+})(document.querySelector(".modal")!);
 ```
 
-```html
-<div id="counter">
-  <span data-ref="count">0</span>
-  <button data-ref="btn">+</button>
-</div>
-```
+mount 時に登場アニメーション、unmount 前に退場アニメーション、unmount 時にクリーンアップ。すべて1つの `setup()` に収まる。
+
+---
+
+## Why nagi?
+
+**既存 HTML にライフサイクルを足せる**
+
+WordPress、CMS、Webflow、静的サイトなどに、仮想 DOM やテンプレートを持ち込まず `setup()` / lifecycle / reactivity を追加できる。
+
+**後始末が確実にできる**
+
+GSAP、Lenis、IntersectionObserver を `setup()` で初期化し、`useUnmount()` でクリーンアップ。`useDeferredUnmount()` で退場アニメーションを待ってから除去。
+
+**マウント戦略を縛らない**
+
+`[data-component]` スキャン、manifest、lazy import、MutationObserver — マウント戦略は利用側で自由に組み立てられる。
 
 ---
 
