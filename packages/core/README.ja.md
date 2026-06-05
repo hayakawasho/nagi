@@ -44,9 +44,9 @@ mount 時に登場アニメーション、unmount 前に退場アニメーショ
 
 WordPress、CMS、Webflow、静的サイトなどに、仮想 DOM やテンプレートを持ち込まず `setup()` / lifecycle / reactivity を追加できる。
 
-**後始末が確実にできる**
+**アニメーションと相性が良い**
 
-GSAP、Lenis、IntersectionObserver を `setup()` で初期化し、`useUnmount()` でクリーンアップ。`useDeferredUnmount()` で退場アニメーションを待ってから除去。
+GSAP、Lenis、IntersectionObserver などを `setup()` で初期化し、`useUnmount()` でクリーンアップできる。`useDeferredUnmount()` で退場アニメーションなどの非同期処理を unmount の前に挟むこともできる。
 
 **マウント戦略を縛らない**
 

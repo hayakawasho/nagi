@@ -44,9 +44,10 @@ Enter animation on mount, exit animation before unmount, cleanup on unmount — 
 
 Add `setup()`, lifecycle hooks, and reactivity to WordPress, CMS, Webflow, static sites, etc. — no virtual DOM, no templates.
 
-**Clean up after yourself**
+**Compatible with animation**
 
-Initialize GSAP, Lenis, IntersectionObserver in `setup()`. Clean up with `useUnmount()`. Run exit animations before removal with `useDeferredUnmount()`.
+You can initialize libraries such as GSAP, Lenis, and IntersectionObserver in `setup()`, and perform cleanup using `useUnmount()`.
+You can also use `useDeferredUnmount()` to run async work, such as exit animations, before the unmount occurs.
 
 **Bring your own mounter**
 
