@@ -23,8 +23,10 @@ app.component({
   setup(el) {
     gsap.from(el, { opacity: 0, y: 20, duration: 0.4 });
 
-    useDeferredUnmount(async () => {
-      await gsap.to(el, { opacity: 0, y: -20, duration: 0.3 });
+    useDeferredUnmount(() => {
+      return new Promise((resolve) => {
+        gsap.to(el, { opacity: 0, y: -20, duration: 0.3, onComplete: resolve });
+      });
     });
 
     useUnmount(() => el.remove());
