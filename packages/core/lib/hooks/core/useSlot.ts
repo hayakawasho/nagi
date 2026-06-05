@@ -1,5 +1,10 @@
 import { errorReport } from "../../core/_internal/errorReport";
-import { createComponent, getCurrentComponent } from "../../core/runtime";
+import {
+  createComponent,
+  getCurrentAddonPipeline,
+  getCurrentComponent,
+  withAddonPipeline,
+} from "../../core/runtime";
 
 import type { ComponentContextImpl } from "../../core/_internal/component";
 import type {
@@ -11,6 +16,7 @@ import type {
 
 export function useSlot() {
   const context = getCurrentComponent("useSlot");
+  const addonPipeline = getCurrentAddonPipeline();
 
   return {
     addChild<Child extends ComponentSetup>(
@@ -18,8 +24,14 @@ export function useSlot() {
       child: Child,
       props?: Partial<Parameters<Child["setup"]>[1]>,
     ): ComponentContext<ExposedSetup<ReturnType<Child["setup"]>>>[] {
+      const composedChild = addonPipeline
+        ? addonPipeline.composeComponent(child)
+        : child;
+
       const create = (el: RefElement) => {
-        const component = createComponent(child, el, props);
+        const component = withAddonPipeline(addonPipeline, () =>
+          createComponent(composedChild, el, props),
+        );
         context.addChild(component);
 
         return component;
@@ -33,20 +45,30 @@ export function useSlot() {
     async removeChild(
       children: ComponentContext<Record<string, unknown>>[],
     ): Promise<void> {
-      await Promise.all(
-        children.map((child) =>
-          context
-            .removeChild(child as unknown as ComponentContextImpl)
-            .catch((cause) => {
-              errorReport(
-                "removeChild",
-                child as unknown as ComponentContextImpl,
-                cause,
-                context,
-              );
-            }),
-        ),
-      );
+      const baseUnmount = async (_targets: RefElement[]) => {
+        await Promise.all(
+          children.map((child) =>
+            context
+              .removeChild(child as unknown as ComponentContextImpl)
+              .catch((cause) => {
+                errorReport(
+                  "removeChild",
+                  child as unknown as ComponentContextImpl,
+                  cause,
+                  context,
+                );
+              }),
+          ),
+        );
+      };
+
+      const targets = children.map((c) => c.element);
+
+      const unmount = addonPipeline
+        ? addonPipeline.composeUnmount(baseUnmount)
+        : baseUnmount;
+
+      await unmount(targets);
     },
   };
 }
