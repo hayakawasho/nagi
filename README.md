@@ -2,7 +2,7 @@
 
 # nagi
 
-Monorepo for [@usenagi/core](https://www.npmjs.com/package/@usenagi/core) — lifecycle hooks and reactivity for existing HTML.
+Monorepo for [@usenagi/core](https://www.npmjs.com/package/@usenagi/core) — lightweight lifecycle hooks and reactivity for existing HTML.
 
 ## Documentation
 

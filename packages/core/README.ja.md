@@ -2,7 +2,7 @@
 
 # nagi
 
-**Lifecycle hooks and reactivity for existing HTML.**
+**Lightweight lifecycle hooks and reactivity for existing HTML.**
 
 [![npm](https://img.shields.io/npm/v/@usenagi/core)](https://www.npmjs.com/package/@usenagi/core)
 [![bundle size](https://img.shields.io/bundlephobia/minzip/@usenagi/core)](https://bundlephobia.com/package/@usenagi/core)
