@@ -1,5 +1,8 @@
+import { setDebugReporter } from "./debugEvents";
+
 import type { ComponentSetup, RefElement } from "../../types";
 import type { Addon, AddonContext, MountOptions } from "../addon";
+import type { DebugReporter } from "../debugEvent";
 
 // biome-ignore lint/suspicious/noExplicitAny: return type varies with addons
 type MountFn = (el: RefElement, props: Record<string, any>) => any;
@@ -36,6 +39,10 @@ class AddonRegistry implements AddonContext {
 
   addUnmountMiddleware(middleware: UnmountMiddleware): void {
     this.#unmountMiddlewares.push(middleware);
+  }
+
+  setDebugReporter(reporter: DebugReporter): void {
+    setDebugReporter(reporter);
   }
 
   composeComponent<S extends ComponentSetup>(setup: S): S {

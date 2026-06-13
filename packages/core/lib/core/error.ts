@@ -13,7 +13,7 @@ export type LifecycleErrorDetails = {
   cause: unknown;
 };
 
-function traceComponentTree(context: ComponentContextImpl): string {
+export function traceComponentTree(context: ComponentContextImpl): string {
   const parts: string[] = [];
   let current: ComponentContextImpl | null = context;
 

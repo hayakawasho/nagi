@@ -1,5 +1,6 @@
 import { ComponentContextImpl } from "./_internal/component";
-import { isLifecycleError, LifecycleError } from "./error";
+import { reportLifecycleError } from "./_internal/debugEvents";
+import { isLifecycleError } from "./error";
 
 import type { ComponentSetup, ExposedSetup, RefElement } from "../types";
 
@@ -46,7 +47,7 @@ function createComponent<S extends ComponentSetup>(
       throw cause;
     }
 
-    throw LifecycleError.create("setup", component, cause, parent, {
+    throw reportLifecycleError("setup", component, cause, parent, {
       props: component.props,
     });
   }

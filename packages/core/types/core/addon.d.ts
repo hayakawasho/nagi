@@ -1,4 +1,5 @@
 import type { ComponentMiddleware, MountMiddleware, UnmountMiddleware } from "./_internal/addonRegistry";
+import type { DebugReporter } from "./debugEvent";
 declare const mountOptionsBrand: unique symbol;
 /** Options for `app.component(setup, opts)` — extended by mount addons. */
 export interface MountOptions {
@@ -9,6 +10,7 @@ export type AddonContext = {
     addComponentMiddleware(middleware: ComponentMiddleware): void;
     addMountMiddleware(middleware: MountMiddleware): void;
     addUnmountMiddleware(middleware: UnmountMiddleware): void;
+    setDebugReporter(reporter: DebugReporter): void;
 };
 export type Addon = {
     readonly name: string;

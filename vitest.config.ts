@@ -12,6 +12,10 @@ export default defineConfig({
         __dirname,
         "packages/addons/cue/index.ts",
       ),
+      "@usenagi/core/addons/debug": resolve(
+        __dirname,
+        "packages/addons/debug/index.ts",
+      ),
       "@usenagi/core": resolve(__dirname, "packages/core/lib/main.ts"),
     },
   },

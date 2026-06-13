@@ -1,8 +1,4 @@
-//#region lib/core/addon.ts
-function e(e) {
-	return e;
-}
-//#endregion
+import { t as e } from "../addon-DptsY8c_.js";
 //#region ../addons/scheduler/_internal/deferredMounts.ts
 var t = class {
 	#e = /* @__PURE__ */ new Map();

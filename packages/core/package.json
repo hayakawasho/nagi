@@ -19,6 +19,11 @@
       "types": "./types/addons/cue/index.d.ts",
       "import": "./dist/addons/cue.es.js",
       "require": "./dist/addons/cue.cjs.js"
+    },
+    "./addons/debug": {
+      "types": "./types/addons/debug/index.d.ts",
+      "import": "./dist/addons/debug.es.js",
+      "require": "./dist/addons/debug.cjs.js"
     }
   },
   "files": [

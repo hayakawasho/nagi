@@ -3,8 +3,83 @@ function e(e) {
 	return e;
 }
 //#endregion
+//#region lib/core/error.ts
+function t(e) {
+	let t = [], n = e;
+	for (; n;) t.unshift(n.name), n = n.parent;
+	return t.join(" > ");
+}
+var n = class e extends Error {
+	details;
+	constructor(e) {
+		super(`[nagi] Component error in phase "${e.phase}" for "${e.name}"${e.path ? ` (${e.path})` : ""}`, { cause: e.cause }), this.name = "LifecycleError", this.details = e;
+	}
+	static create(n, r, i, a = r.parent, o) {
+		return new e({
+			phase: n,
+			name: r.name,
+			uid: r.uid,
+			path: t(r),
+			parentName: a?.name,
+			parentUid: a?.uid,
+			element: r.element,
+			cause: i,
+			...o
+		});
+	}
+};
+function r(e) {
+	return e instanceof n;
+}
+//#endregion
+//#region lib/core/_internal/debugEvents.ts
+var i = {
+	setup: "[nagi] setup failed",
+	mount: "[nagi] onMount hook failed",
+	deferredUnmount: "[nagi] useDeferredUnmount hook failed",
+	unmount: "[nagi] onUnmount cleanup failed",
+	removeChild: "[nagi] removeChild failed"
+}, a = (e, t) => {
+	console.error(i[t.details.phase], t);
+};
+function o(e) {
+	a = (t) => e(t);
+}
+function s(e) {
+	return `${e.tagName.toLowerCase()}${e.id ? `#${e.id}` : ""}${Array.from(e.classList).map((e) => `.${e}`).join("")}`;
+}
+function c(e) {
+	let { details: t } = e;
+	return {
+		version: 1,
+		level: "error",
+		source: "lifecycle",
+		type: "error",
+		phase: t.phase,
+		name: t.name,
+		uid: t.uid,
+		path: t.path,
+		parentUid: t.parentUid,
+		element: t.element,
+		elementLabel: t.element ? s(t.element) : void 0,
+		props: t.props,
+		cause: t.cause
+	};
+}
+function l(e, t) {
+	try {
+		a(e, t);
+	} catch (e) {
+		console.error("[nagi] debug reporter failed", e);
+	}
+}
+function u(e, t, r, i, a) {
+	let o = n.create(e, t, r, i, a);
+	return l(c(o), o), o;
+}
+//#endregion
 //#region lib/core/_internal/addonRegistry.ts
-var t = class {
+var d = class {
 	#e = /* @__PURE__ */ new Set();
 	#t = [];
 	#n = [];
@@ -21,6 +96,9 @@ var t = class {
 	addUnmountMiddleware(e) {
 		this.#r.push(e);
 	}
+	setDebugReporter(e) {
+		o(e);
+	}
 	composeComponent(e) {
 		return this.#t.reduce((e, t) => t(e), e);
 	}
@@ -34,61 +112,22 @@ var t = class {
 		if (this.#e.has(e.name)) throw Error(`[nagi] addon "${e.name}" is already installed`);
 		e.install(this), this.#e.add(e.name);
 	};
-}, n = () => new t();
-//#endregion
-//#region lib/core/error.ts
-function r(e) {
-	let t = [], n = e;
-	for (; n;) t.unshift(n.name), n = n.parent;
-	return t.join(" > ");
-}
-var i = class e extends Error {
-	details;
-	constructor(e) {
-		super(`[nagi] Component error in phase "${e.phase}" for "${e.name}"${e.path ? ` (${e.path})` : ""}`, { cause: e.cause }), this.name = "LifecycleError", this.details = e;
-	}
-	static create(t, n, i, a = n.parent, o) {
-		return new e({
-			phase: t,
-			name: n.name,
-			uid: n.uid,
-			path: r(n),
-			parentName: a?.name,
-			parentUid: a?.uid,
-			element: n.element,
-			cause: i,
-			...o
-		});
-	}
-};
-function a(e) {
-	return e instanceof i;
-}
-//#endregion
-//#region lib/core/_internal/registry.ts
-var o = /* @__PURE__ */ new WeakMap();
-function s(e, t) {
-	let n = o.get(e);
-	if (n) throw i.create("mount", t, /* @__PURE__ */ Error(`Component "${n.name}" (${n.uid}) is already mounted on this element`), n);
-	o.set(e, t);
+}, f = () => new d(), p = /* @__PURE__ */ new WeakMap();
+function m(e, t) {
+	let r = p.get(e);
+	if (r) throw n.create("mount", t, /* @__PURE__ */ Error(`Component "${r.name}" (${r.uid}) is already mounted on this element`), r);
+	p.set(e, t);
 }
 //#endregion
 //#region lib/core/_internal/errorReport.ts
-var c = {
-	setup: "[nagi] setup failed",
-	mount: "[nagi] onMount hook failed",
-	deferredUnmount: "[nagi] useDeferredUnmount hook failed",
-	unmount: "[nagi] onUnmount cleanup failed",
-	removeChild: "[nagi] removeChild failed"
-};
-function l(e, t, n, r) {
-	console.error(c[e], i.create(e, t, n, r));
+function h(e, t, n, r) {
+	u(e, t, n, r);
 }
 //#endregion
 //#region lib/core/_internal/component.ts
-var u = /* @__PURE__ */ function(e) {
+var g = /* @__PURE__ */ function(e) {
 	return e.MOUNTED = "mount", e.UNMOUNTED = "unmount", e.DEFERRED_UNMOUNT = "deferredUnmount", e;
-}(u || {}), d = 0, f = class {
+}(g || {}), _ = 0, v = class {
 	mount = [];
 	unmount = [];
 	deferredUnmount = [];
@@ -103,7 +142,7 @@ var u = /* @__PURE__ */ function(e) {
 	element;
 	provides = /* @__PURE__ */ new Map();
 	constructor(e, t) {
-		this.uid = `${t}.${d++}`, this.name = t, this.element = e;
+		this.uid = `${t}.${_++}`, this.name = t, this.element = e;
 	}
 	onMount = () => {
 		let e = [];
@@ -111,7 +150,7 @@ var u = /* @__PURE__ */ function(e) {
 			let n = t();
 			typeof n == "function" && e.push(n);
 		} catch (e) {
-			l("mount", this, e);
+			h("mount", this, e);
 		}
 		this.unmount.push(...e);
 	};
@@ -119,7 +158,7 @@ var u = /* @__PURE__ */ function(e) {
 		try {
 			await e();
 		} catch (e) {
-			l("deferredUnmount", this, e);
+			h("deferredUnmount", this, e);
 		}
 	}), ...this.#e.map((e) => e.onDeferredUnmount())]).then(() => {}), this.#t);
 	onUnmount = () => {
@@ -128,7 +167,7 @@ var u = /* @__PURE__ */ function(e) {
 			for (let e of this.unmount) try {
 				e();
 			} catch (e) {
-				l("unmount", this, e);
+				h("unmount", this, e);
 			}
 			for (let e of this.#e) e.onUnmount();
 		}
@@ -151,57 +190,57 @@ var u = /* @__PURE__ */ function(e) {
 	get childElements() {
 		return this.#e.map((e) => e.element);
 	}
-}, p;
-function m(e) {
-	if (!p) throw Error(`"${e}" called outside setup() will never be run.`);
-	return p;
+}, y;
+function b(e) {
+	if (!y) throw Error(`"${e}" called outside setup() will never be run.`);
+	return y;
 }
-function h(e, t, n = {}) {
-	let r = new f(t, e.name), o = p;
-	p = r;
+function x(e, t, n = {}) {
+	let i = new v(t, e.name), a = y;
+	y = i;
 	try {
-		o && (r.parent = o), r.props = n, r.current = e.setup(t, n) || {};
+		a && (i.parent = a), i.props = n, i.current = e.setup(t, n) || {};
 	} catch (e) {
-		throw p = o, a(e) ? e : i.create("setup", r, e, o, { props: r.props });
+		throw y = a, r(e) ? e : u("setup", i, e, a, { props: i.props });
 	}
-	return p = o, r;
+	return y = a, i;
 }
 //#endregion
 //#region lib/core/app.ts
-var g = class {
-	#e = n();
+var S = class {
+	#e = f();
 	install = (...e) => (e.forEach(this.#e.install), this);
 	component = (e, t = {}) => {
 		let n = this.#e.composeComponent(e), r = this.#e.composeMount((e, t) => {
-			let r = h(n, e, t);
-			return s(e, r), r.onMount(), r;
+			let r = x(n, e, t);
+			return m(e, r), r.onMount(), r;
 		}, n, t);
 		return (e, t = {}) => r(e, t);
 	};
 	unmount = (e) => Promise.resolve(this.#e.composeUnmount((e) => this.#t(e))(e));
 	async #t(e) {
 		let t = e.map((e) => {
-			let t = o.get(e);
-			return t && o.delete(e), t;
+			let t = p.get(e);
+			return t && p.delete(e), t;
 		}).filter((e) => e !== void 0);
 		await Promise.all(t.map((e) => e.onDeferredUnmount()));
 		for (let e of t) e.onUnmount();
 	}
 };
-function _() {
-	return new g();
+function C() {
+	return new S();
 }
 //#endregion
 //#region lib/core/component.ts
-function v(e) {
+function w(e) {
 	return e;
 }
 //#endregion
 //#region lib/core/context.ts
-function y() {
+function T() {
 	let e = Symbol();
 	return [{ _id: e }, () => {
-		let t = m("createContext.use");
+		let t = b("createContext.use");
 		for (; t !== null;) {
 			if (t.provides.has(e)) return t.provides.get(e);
 			t = t.parent;
@@ -209,36 +248,36 @@ function y() {
 		throw Error("createContext.use: no provider found");
 	}];
 }
-function b(e, t) {
+function E(e, t) {
 	return (n) => ({
 		name: n.name,
 		setup(r, i) {
-			return m(`withContext.${n.name}`).provides.set(e._id, t), n.setup(r, i);
+			return b(`withContext.${n.name}`).provides.set(e._id, t), n.setup(r, i);
 		}
 	});
 }
 //#endregion
 //#region lib/core/lifecycle.ts
-var x = (e) => {
-	m(u.MOUNTED)[u.MOUNTED].push(e);
-}, S = (e) => {
-	m(u.UNMOUNTED)[u.UNMOUNTED].push(e);
-}, C = (e) => {
-	m(u.DEFERRED_UNMOUNT)[u.DEFERRED_UNMOUNT].push(e);
+var D = (e) => {
+	b(g.MOUNTED)[g.MOUNTED].push(e);
+}, O = (e) => {
+	b(g.UNMOUNTED)[g.UNMOUNTED].push(e);
+}, k = (e) => {
+	b(g.DEFERRED_UNMOUNT)[g.DEFERRED_UNMOUNT].push(e);
 };
 //#endregion
 //#region lib/core/props.ts
-function w() {}
+function A() {}
 //#endregion
 //#region lib/core/reactivity.ts
-var T = Symbol("watch"), E = null, D = class {
+var j = Symbol("watch"), M = null, N = class {
 	#e;
 	#t = /* @__PURE__ */ new Set();
 	constructor(e) {
 		this.#e = e;
 	}
 	get value() {
-		return E !== null && E.add(this), this.#e;
+		return M !== null && M.add(this), this.#e;
 	}
 	set value(e) {
 		if (Object.is(e, this.#e)) return;
@@ -246,12 +285,12 @@ var T = Symbol("watch"), E = null, D = class {
 		this.#e = e;
 		for (let n of Array.from(this.#t)) n(e, t);
 	}
-	[T](e) {
+	[j](e) {
 		return this.#t.add(e), () => {
 			this.#t.delete(e);
 		};
 	}
-}, O = (e) => new D(e), k = class {
+}, P = (e) => new N(e), F = class {
 	#e;
 	constructor(e) {
 		this.#e = e;
@@ -259,48 +298,48 @@ var T = Symbol("watch"), E = null, D = class {
 	get value() {
 		return this.#e.value;
 	}
-	[T](e) {
-		return this.#e[T](e);
+	[j](e) {
+		return this.#e[j](e);
 	}
-}, A = (e) => new k(e);
-function j(e, t) {
-	return e[T](t);
+}, I = (e) => new F(e);
+function L(e, t) {
+	return e[j](t);
 }
-function M(e, t) {
-	S(j(e, t));
+function R(e, t) {
+	O(L(e, t));
 }
-function N(e) {
-	let t = O(void 0), n = [], r = () => {
+function z(e) {
+	let t = P(void 0), n = [], r = () => {
 		n.forEach((e) => {
 			e();
 		}), n = [];
 	}, i = () => {
 		r();
-		let a = E, o = /* @__PURE__ */ new Set();
-		E = o;
+		let a = M, o = /* @__PURE__ */ new Set();
+		M = o;
 		let s;
 		try {
 			s = e();
 		} finally {
-			E = a;
+			M = a;
 		}
 		t.value = s;
-		for (let e of o) n.push(e[T](() => {
+		for (let e of o) n.push(e[j](() => {
 			i();
 		}));
 	};
-	return i(), S(r), A(t);
+	return i(), O(r), I(t);
 }
 //#endregion
 //#region lib/hooks/core/useDomRef.ts
-function P(e, t) {
+function B(e, t) {
 	return t.some((t) => t !== e && t.contains(e));
 }
-function F(e, t, n) {
-	let r = `[data-ref="${CSS.escape(e)}"]`, i = Array.from(t.querySelectorAll(r)).filter((e) => !P(e, n));
+function V(e, t, n) {
+	let r = `[data-ref="${CSS.escape(e)}"]`, i = Array.from(t.querySelectorAll(r)).filter((e) => !B(e, n));
 	return i.length === 0 ? null : i.length === 1 ? i[0] : i;
 }
-var I = class {
+var H = class {
 	scope;
 	getBoundaries;
 	#e = /* @__PURE__ */ new Map();
@@ -309,12 +348,12 @@ var I = class {
 	}
 	get(e) {
 		if (this.#e.has(e)) return this.#e.get(e) ?? null;
-		let t = F(e, this.scope, this.getBoundaries());
+		let t = V(e, this.scope, this.getBoundaries());
 		return this.#e.set(e, t), t;
 	}
 };
-function L(e, t) {
-	let n = new I(e, t);
+function U(e, t) {
+	let n = new H(e, t);
 	return new Proxy({}, {
 		get(e, t) {
 			if (!(typeof t == "symbol" || t === "then")) return n.get(t);
@@ -334,39 +373,39 @@ function L(e, t) {
 		}
 	});
 }
-function R() {
-	let e = m("useDomRef");
-	return { refs: L(e.element, () => e.childElements) };
+function W() {
+	let e = b("useDomRef");
+	return { refs: U(e.element, () => e.childElements) };
 }
 //#endregion
 //#region lib/hooks/core/useSlot.ts
-function z() {
-	let e = m("useSlot");
+function G() {
+	let e = b("useSlot");
 	return {
 		addChild(t, n, r) {
 			let i = (t) => {
-				let i = h(n, t, r);
+				let i = x(n, t, r);
 				return e.addChild(i), i;
 			};
 			return Array.isArray(t) ? t.map((e) => i(e)) : [i(t)];
 		},
 		async removeChild(t) {
 			await Promise.all(t.map((t) => e.removeChild(t).catch((n) => {
-				l("removeChild", t, n, e);
+				h("removeChild", t, n, e);
 			})));
 		}
 	};
 }
 //#endregion
 //#region lib/hooks/useEvent.ts
-function B(e, t, n, r) {
-	x(() => (e.addEventListener(t, n, r), () => {
+function K(e, t, n, r) {
+	D(() => (e.addEventListener(t, n, r), () => {
 		e.removeEventListener(t, n, r);
 	}));
 }
 //#endregion
 //#region lib/hooks/useIntersectionWatch.ts
-function V(e, t, n = {
+function q(e, t, n = {
 	rootMargin: "0px",
 	threshold: .1
 }) {
@@ -376,7 +415,7 @@ function V(e, t, n = {
 			r.observe(e);
 		}) : r.observe(e);
 	}
-	x(() => (i(e), () => {
+	D(() => (i(e), () => {
 		r.disconnect();
 	}));
 	function a(e) {
@@ -386,14 +425,14 @@ function V(e, t, n = {
 }
 //#endregion
 //#region lib/hooks/useMediaQuery.ts
-function H(e, t) {
-	let n = window.matchMedia(e), r = O(n.matches), i = null;
+function J(e, t) {
+	let n = window.matchMedia(e), r = P(n.matches), i = null;
 	function a(e) {
 		r.value = e.matches, e.matches ? i = t() : (i?.(), i = null);
 	}
-	return x(() => (n.addEventListener("change", a), n.matches && (i = t()), () => {
+	return D(() => (n.addEventListener("change", a), n.matches && (i = t()), () => {
 		i?.(), n.removeEventListener("change", a);
-	})), { matchesQuery: A(r) };
+	})), { matchesQuery: I(r) };
 }
 //#endregion
-export { i as LifecycleError, _ as create, y as createContext, e as defineAddon, v as defineComponent, a as isLifecycleError, w as propTypes, A as readonly, O as signal, N as useComputed, C as useDeferredUnmount, R as useDomRef, B as useEvent, V as useIntersectionWatch, H as useMediaQuery, x as useMount, z as useSlot, S as useUnmount, M as useWatch, b as withContext };
+export { n as LifecycleError, C as create, T as createContext, e as defineAddon, w as defineComponent, r as isLifecycleError, A as propTypes, I as readonly, P as signal, z as useComputed, k as useDeferredUnmount, W as useDomRef, K as useEvent, q as useIntersectionWatch, J as useMediaQuery, D as useMount, G as useSlot, O as useUnmount, R as useWatch, E as withContext };

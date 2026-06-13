@@ -1,5 +1,6 @@
 import type { ComponentSetup, RefElement } from "../../types";
 import type { Addon, AddonContext, MountOptions } from "../addon";
+import type { DebugReporter } from "../debugEvent";
 type MountFn = (el: RefElement, props: Record<string, any>) => any;
 type UnmountFn = (targets: RefElement[]) => Promise<void>;
 export type ComponentMiddleware = <S extends ComponentSetup>(comp: S) => S;
@@ -11,6 +12,7 @@ declare class AddonRegistry implements AddonContext {
     addComponentMiddleware(middleware: ComponentMiddleware): void;
     addMountMiddleware(middleware: MountMiddleware): void;
     addUnmountMiddleware(middleware: UnmountMiddleware): void;
+    setDebugReporter(reporter: DebugReporter): void;
     composeComponent<S extends ComponentSetup>(setup: S): S;
     composeMount(mountFn: MountFn, setup: ComponentSetup, opts: MountOptions): MountFn;
     composeUnmount(unmountFn: UnmountFn): UnmountFn;
