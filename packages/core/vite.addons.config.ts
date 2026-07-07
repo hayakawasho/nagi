@@ -10,17 +10,18 @@ const __dirname = fileURLToPath(new URL(".", import.meta.url));
 // UMD/IIFE は使わない。Vite library mode では複数 entry をそれらの形式で出力できないため。
 // addon は bundler 経由で利用する想定。<script> 直読みは core（main.umd.js）のみ対応。
 export default defineConfig({
-  resolve: {
-    alias: {
-      "@usenagi/core": resolve(__dirname, "lib/main.ts"),
-    },
-  },
   build: {
     emptyOutDir: false,
+    // core を addon にインライン化すると runtime のモジュール状態（owner）が
+    // 二重化して hooks が壊れるため、必ず external にする。
+    rollupOptions: {
+      external: ["@usenagi/core", "@preact/signals-core"],
+    },
     lib: {
       entry: {
         "addons/scheduler": resolve(__dirname, "../addons/scheduler/index.ts"),
         "addons/cue": resolve(__dirname, "../addons/cue/index.ts"),
+        "addons/signals": resolve(__dirname, "../addons/signals/index.ts"),
       },
       formats: ["es", "cjs"],
       fileName: (format, entryName) =>

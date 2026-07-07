@@ -1,8 +1,4 @@
-//#region lib/core/addon.ts
-function e(e) {
-	return e;
-}
-//#endregion
+import { defineAddon as e } from "@usenagi/core";
 //#region ../addons/scheduler/_internal/deferredMounts.ts
 var t = class {
 	#e = /* @__PURE__ */ new Map();

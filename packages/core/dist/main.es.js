@@ -160,7 +160,10 @@ function h(e, t, n = {}) {
 	let r = new f(t, e.name), o = p;
 	p = r;
 	try {
-		o && (r.parent = o), r.props = n, r.current = e.setup(t, n) || {};
+		o && (r.parent = o), r.props = n;
+		let i = e.setup(t, n);
+		if (typeof i == "object" && i && typeof i.then == "function") throw Error(`"${e.name}" setup() must be synchronous. Hooks registered after "await" would be bound to the wrong component.`);
+		r.current = i || {};
 	} catch (e) {
 		throw p = o, a(e) ? e : i.create("setup", r, e, o, { props: r.props });
 	}

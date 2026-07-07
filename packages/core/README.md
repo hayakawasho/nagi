@@ -146,6 +146,30 @@ useWatch(area, (v) => {
 });
 ```
 
+#### Signals addon (glitch-free reactivity)
+
+The built-in reactivity is intentionally minimal and can observe intermediate values in diamond-shaped dependencies. For complex dependency graphs, the `signals` addon provides the same API backed by [@preact/signals-core](https://github.com/preactjs/signals) — glitch-free evaluation, lazy `computed`, plus `batch()` and `useSignalEffect()`.
+
+```ts
+import { signal, useComputed, useWatch, batch, useSignalEffect } from "@usenagi/core/addons/signals";
+
+const a = signal(1);
+const b = signal(2);
+const sum = useComputed(() => a.value + b.value);
+
+setup() {
+  useWatch(sum, (v) => { /* fires once with the final value */ });
+  useSignalEffect(() => { /* auto-tracks reads, disposed on unmount */ });
+}
+
+batch(() => {
+  a.value = 10;
+  b.value = 20; // one notification, not two
+});
+```
+
+Signals from the core and this addon are separate implementations — do not mix them for the same value.
+
 ### Lifecycle
 
 | API                        | Description                                                                 |

@@ -19,6 +19,11 @@
       "types": "./types/addons/cue/index.d.ts",
       "import": "./dist/addons/cue.es.js",
       "require": "./dist/addons/cue.cjs.js"
+    },
+    "./addons/signals": {
+      "types": "./types/addons/signals/index.d.ts",
+      "import": "./dist/addons/signals.es.js",
+      "require": "./dist/addons/signals.cjs.js"
     }
   },
   "files": [
@@ -57,5 +62,8 @@
     "watch": "vite build -w"
   },
   "type": "module",
-  "sideEffects": false
+  "sideEffects": false,
+  "dependencies": {
+    "@preact/signals-core": "^1.14.4"
+  }
 }
