@@ -6,7 +6,6 @@ export type DebugEvent = {
     version: 1;
     level: "error";
     source: "lifecycle";
-    type: "error";
     phase: LifecycleErrorDetails["phase"];
     name: string;
     uid?: string;

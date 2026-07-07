@@ -1,18 +1,25 @@
 import { t as e } from "../addon-DptsY8c_.js";
 //#region ../addons/debug/index.ts
 function t(e) {
-	let t = e.path ?? e.name, n = e.uid ? ` (${e.uid})` : "", r = e.elementLabel ? ` <${e.elementLabel}>` : "";
-	return `[nagi:debug] ${e.level}:${e.source}:${e.phase} ${t}${n}${r}`;
+	return e instanceof Error ? {
+		name: e.name,
+		message: e.message,
+		stack: e.stack
+	} : { message: String(e) };
 }
-function n() {
+function n(e) {
+	let n = e.path ?? e.name, r = e.uid ? ` (${e.uid})` : "", i = e.elementLabel ? ` <${e.elementLabel}>` : "", a = t(e.cause), o = [a.name, a.message].filter(Boolean).join(": ");
+	return `[nagi:debug] ${e.level}:${e.source}:${e.phase} ${n}${r}${i}: ${o}`;
+}
+function r() {
 	return e({
 		name: "@usenagi/debug",
 		install(e) {
-			e.setDebugReporter((e) => {
-				console.error(t(e), e.cause);
+			e.addDebugReporter((e) => {
+				console.error(n(e), e.cause);
 			});
 		}
 	});
 }
 //#endregion
-export { n as debugAddon };
+export { r as debugAddon };

@@ -1,3 +1,4 @@
+import type { DebugReporter } from "../debugEvent";
 import type { ComponentContext, ComponentSetup, ExposedSetup, RefElement } from "../../types";
 declare enum LifecycleHooks {
     MOUNTED = "mount",
@@ -16,6 +17,7 @@ declare class ComponentContextImpl<T = any> implements ComponentContext<ExposedS
     props: Parameters<ComponentSetup<T>["setup"]>[1];
     element: ComponentContext["element"];
     provides: Map<symbol, unknown>;
+    reporters: readonly DebugReporter[] | undefined;
     constructor(element: RefElement, name: string);
     onMount: () => void;
     onDeferredUnmount: () => Promise<void>;

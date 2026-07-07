@@ -1,5 +1,6 @@
 import { errorReport } from "./errorReport";
 
+import type { DebugReporter } from "../debugEvent";
 import type {
   Cleanup,
   ComponentContext,
@@ -39,6 +40,8 @@ class ComponentContextImpl<T = any>
   props = {} as Parameters<ComponentSetup<T>["setup"]>[1];
   element: ComponentContext["element"];
   provides = new Map<symbol, unknown>();
+  // App が持つ配列を参照共有する。mount 後に install された reporter にも届けるため。
+  reporters: readonly DebugReporter[] | undefined;
 
   constructor(element: RefElement, name: string) {
     this.uid = `${name}.${uid++}`;

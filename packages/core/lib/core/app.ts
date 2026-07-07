@@ -35,7 +35,12 @@ class App {
     const componentSetup = this.#addonRegistry.composeComponent(rawComponent);
 
     const baseMount = (el: RefElement, props: Record<string, unknown>) => {
-      const component = createComponent(componentSetup, el, props);
+      const component = createComponent(
+        componentSetup,
+        el,
+        props,
+        this.#addonRegistry.debugReporters,
+      );
       bindDOMNodeToComponent(el, component);
       component.onMount();
 

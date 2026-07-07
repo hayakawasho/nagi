@@ -1,5 +1,3 @@
-import { setDebugReporter } from "./debugEvents";
-
 import type { ComponentSetup, RefElement } from "../../types";
 import type { Addon, AddonContext, MountOptions } from "../addon";
 import type { DebugReporter } from "../debugEvent";
@@ -24,9 +22,15 @@ class AddonRegistry implements AddonContext {
   #componentMiddlewares: ComponentMiddleware[] = [];
   #mountMiddlewares: MountMiddleware[] = [];
   #unmountMiddlewares: UnmountMiddleware[] = [];
+  // component 側と参照共有するため、この配列インスタンスは作り直さない
+  #debugReporters: DebugReporter[] = [];
 
   get installedAddons(): ReadonlySet<string> {
     return this.#installedAddonNames;
+  }
+
+  get debugReporters(): readonly DebugReporter[] {
+    return this.#debugReporters;
   }
 
   addComponentMiddleware(middleware: ComponentMiddleware): void {
@@ -41,8 +45,8 @@ class AddonRegistry implements AddonContext {
     this.#unmountMiddlewares.push(middleware);
   }
 
-  setDebugReporter(reporter: DebugReporter): void {
-    setDebugReporter(reporter);
+  addDebugReporter(reporter: DebugReporter): void {
+    this.#debugReporters.push(reporter);
   }
 
   composeComponent<S extends ComponentSetup>(setup: S): S {

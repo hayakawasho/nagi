@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { useSlot } from "../hooks/core/useSlot";
 
-import { reportLifecycleError, resetDebugEvents } from "./_internal/debugEvents";
+import { reportLifecycleError } from "./_internal/debugEvents";
 import { defineAddon } from "./addon";
 import { create } from "./app";
 import { isLifecycleError } from "./error";
@@ -21,13 +21,12 @@ function debugReporter(reporter: (event: DebugEvent) => void) {
   return defineAddon({
     name: `probe-${crypto.randomUUID()}`,
     install(ctx) {
-      ctx.setDebugReporter(reporter);
+      ctx.addDebugReporter(reporter);
     },
   });
 }
 
 afterEach(() => {
-  resetDebugEvents();
   document.body.innerHTML = "";
   vi.restoreAllMocks();
 });
@@ -63,7 +62,6 @@ describe("debug event", () => {
       version: 1,
       level: "error",
       source: "lifecycle",
-      type: "error",
       phase: "setup",
       name: "Child",
       path: "Parent > Child",
@@ -106,7 +104,7 @@ describe("debug event", () => {
     ]);
   });
 
-  it("removeChild error が event として届く", async () => {
+  it("removeChild error が target の reporter に届く", async () => {
     const events: DebugEvent[] = [];
     const parent = {
       name: "Parent",
@@ -119,9 +117,9 @@ describe("debug event", () => {
       uid: "Child.0",
       parent,
       element: makeEl("span"),
+      reporters: [(event: DebugEvent) => events.push(event)],
     } as unknown as ComponentContextImpl;
 
-    create().install(debugReporter((event) => events.push(event)));
     reportLifecycleError("removeChild", child, new Error("remove"), parent);
 
     expect(events).toHaveLength(1);
@@ -130,6 +128,77 @@ describe("debug event", () => {
       name: "Child",
       parentUid: "Parent.0",
     });
+  });
+
+  it("reporter は app ごとに分離される（別 app には影響しない）", () => {
+    const events: DebugEvent[] = [];
+    const errorLog = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    const appA = create().install(
+      debugReporter((event) => events.push(event)),
+    );
+    const appB = create();
+
+    const failing = {
+      name: "App",
+      setup: () => {
+        useMount(() => {
+          throw new Error("mount");
+        });
+      },
+    };
+
+    appB.component(failing)(makeEl());
+    expect(events).toHaveLength(0);
+    expect(errorLog).toHaveBeenCalledOnce();
+
+    appA.component(failing)(makeEl());
+    expect(events).toHaveLength(1);
+    expect(errorLog).toHaveBeenCalledOnce();
+  });
+
+  it("複数の reporter を登録すると全てに通知される", () => {
+    const first = vi.fn();
+    const second = vi.fn();
+
+    const { component } = create()
+      .install(debugReporter(first))
+      .install(debugReporter(second));
+
+    component({
+      name: "App",
+      setup: () => {
+        useMount(() => {
+          throw new Error("mount");
+        });
+      },
+    })(makeEl());
+
+    expect(first).toHaveBeenCalledOnce();
+    expect(second).toHaveBeenCalledOnce();
+  });
+
+  it("mount 後に install した reporter にも以降のエラーが届く", async () => {
+    const events: DebugEvent[] = [];
+    const root = makeEl();
+    const app = create();
+
+    app.component({
+      name: "App",
+      setup: () => {
+        useUnmount(() => {
+          throw new Error("unmount");
+        });
+      },
+    })(root);
+
+    app.install(debugReporter((event) => events.push(event)));
+    await app.unmount([root]);
+
+    expect(events).toHaveLength(1);
+    expect(events[0].phase).toBe("unmount");
   });
 
   it("reporter が throw しても lifecycle は継続する", () => {
@@ -141,7 +210,7 @@ describe("debug event", () => {
       defineAddon({
         name: "reporter",
         install(ctx) {
-          ctx.setDebugReporter(() => {
+          ctx.addDebugReporter(() => {
             throw new Error("reporter");
           });
         },

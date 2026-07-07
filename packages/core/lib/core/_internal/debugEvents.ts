@@ -3,11 +3,6 @@ import { LifecycleError, type LifecycleErrorDetails } from "../error";
 import type { DebugEvent, DebugReporter } from "../debugEvent";
 import type { ComponentContextImpl } from "./component";
 
-type InternalDebugReporter = (
-  event: DebugEvent,
-  lifecycleError: LifecycleError,
-) => void;
-
 const errorMessages: Record<LifecycleErrorDetails["phase"], string> = {
   setup: "[nagi] setup failed",
   mount: "[nagi] onMount hook failed",
@@ -16,19 +11,8 @@ const errorMessages: Record<LifecycleErrorDetails["phase"], string> = {
   removeChild: "[nagi] removeChild failed",
 };
 
-const defaultReporter: InternalDebugReporter = (_event, lifecycleError) => {
+function defaultReport(lifecycleError: LifecycleError): void {
   console.error(errorMessages[lifecycleError.details.phase], lifecycleError);
-};
-
-let reporter: InternalDebugReporter = defaultReporter;
-
-export function setDebugReporter(nextReporter: DebugReporter): void {
-  reporter = (event) => nextReporter(event);
-}
-
-/** @internal test-only */
-export function resetDebugEvents(): void {
-  reporter = defaultReporter;
 }
 
 function describeElement(element: Element): string {
@@ -48,7 +32,6 @@ function createDebugEvent(lifecycleError: LifecycleError): DebugEvent {
     version: 1,
     level: "error",
     source: "lifecycle",
-    type: "error",
     phase: details.phase,
     name: details.name,
     uid: details.uid,
@@ -61,17 +44,6 @@ function createDebugEvent(lifecycleError: LifecycleError): DebugEvent {
     props: details.props,
     cause: details.cause,
   };
-}
-
-function runDebugReporter(
-  event: DebugEvent,
-  lifecycleError: LifecycleError,
-): void {
-  try {
-    reporter(event, lifecycleError);
-  } catch (cause) {
-    console.error("[nagi] debug reporter failed", cause);
-  }
 }
 
 export function reportLifecycleError(
@@ -88,9 +60,23 @@ export function reportLifecycleError(
     parent,
     extra,
   );
+
+  const reporters: readonly DebugReporter[] | undefined = target.reporters;
+
+  if (!reporters || reporters.length === 0) {
+    defaultReport(lifecycleError);
+    return lifecycleError;
+  }
+
   const event = createDebugEvent(lifecycleError);
 
-  runDebugReporter(event, lifecycleError);
+  for (const reporter of reporters) {
+    try {
+      reporter(event);
+    } catch (cause) {
+      console.error("[nagi] debug reporter failed", cause);
+    }
+  }
 
   return lifecycleError;
 }

@@ -9,10 +9,11 @@ export type UnmountMiddleware = (next: UnmountFn) => UnmountFn;
 declare class AddonRegistry implements AddonContext {
     #private;
     get installedAddons(): ReadonlySet<string>;
+    get debugReporters(): readonly DebugReporter[];
     addComponentMiddleware(middleware: ComponentMiddleware): void;
     addMountMiddleware(middleware: MountMiddleware): void;
     addUnmountMiddleware(middleware: UnmountMiddleware): void;
-    setDebugReporter(reporter: DebugReporter): void;
+    addDebugReporter(reporter: DebugReporter): void;
     composeComponent<S extends ComponentSetup>(setup: S): S;
     composeMount(mountFn: MountFn, setup: ComponentSetup, opts: MountOptions): MountFn;
     composeUnmount(unmountFn: UnmountFn): UnmountFn;

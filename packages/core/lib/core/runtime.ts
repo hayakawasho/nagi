@@ -3,6 +3,7 @@ import { reportLifecycleError } from "./_internal/debugEvents";
 import { isLifecycleError } from "./error";
 
 import type { ComponentSetup, ExposedSetup, RefElement } from "../types";
+import type { DebugReporter } from "./debugEvent";
 
 // The "owner" refers to the component currently executing its setup, which is only valid during a createComponent call.
 // The restoration via save/restore relies on the assumption that setup() executes synchronously.
@@ -21,12 +22,14 @@ function createComponent<S extends ComponentSetup>(
   root: RefElement,
   // biome-ignore lint/suspicious/noExplicitAny: internal props type
   props: Record<string, any> = {},
+  reporters?: readonly DebugReporter[],
 ): ComponentContextImpl<ReturnType<S["setup"]>> {
   const component = new ComponentContextImpl<ReturnType<S["setup"]>>(
     root,
     wrap.name,
   );
   const parent = owner;
+  component.reporters = reporters ?? parent?.reporters;
   owner = component;
 
   try {

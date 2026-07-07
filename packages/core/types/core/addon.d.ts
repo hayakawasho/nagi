@@ -10,7 +10,7 @@ export type AddonContext = {
     addComponentMiddleware(middleware: ComponentMiddleware): void;
     addMountMiddleware(middleware: MountMiddleware): void;
     addUnmountMiddleware(middleware: UnmountMiddleware): void;
-    setDebugReporter(reporter: DebugReporter): void;
+    addDebugReporter(reporter: DebugReporter): void;
 };
 export type Addon = {
     readonly name: string;
