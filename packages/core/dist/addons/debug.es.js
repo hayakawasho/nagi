@@ -1,4 +1,4 @@
-import { t as e } from "../addon-DptsY8c_.js";
+import { defineAddon as e } from "@usenagi/core";
 //#region ../addons/debug/index.ts
 function t(e) {
 	return e instanceof Error ? {
