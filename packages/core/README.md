@@ -252,6 +252,19 @@ import { visible, idle, interaction, media } from "@usenagi/core/addons/cue";
 | `interaction(events?)` | A Cue that resolves on the first user interaction |
 | `media(query)` | A Cue that resolves when the media query matches |
 
+#### Debug addon
+
+Installing `debugAddon()` prints lifecycle errors (`setup` / `mount` / `unmount` / `deferredUnmount` / `removeChild`) as formatted logs via `console.error`. Reporters are scoped per app instance — installing the addon on one app has no effect on others.
+
+```ts
+import { create } from "@usenagi/core";
+import { debugAddon } from "@usenagi/core/addons/debug";
+
+const app = create().install(debugAddon());
+```
+
+Addon authors can add their own reporter via `ctx.addDebugReporter(reporter)`. Registering multiple reporters notifies all of them for each event.
+
 ---
 
 ## Comparison

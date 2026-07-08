@@ -251,6 +251,19 @@ import { visible, idle, interaction, media } from "@usenagi/core/addons/cue";
 | `interaction(events?)` | 最初のユーザー操作で解決する Cue |
 | `media(query)` | media query が一致したときに解決する Cue |
 
+#### Debug addon
+
+`debugAddon()` を install すると、ライフサイクルエラー（`setup` / `mount` / `unmount` / `deferredUnmount` / `removeChild`）が整形されたログとして `console.error` に出力される。reporter は app インスタンスごとに独立しており、あるアプリに install しても他のアプリには影響しない。
+
+```ts
+import { create } from "@usenagi/core";
+import { debugAddon } from "@usenagi/core/addons/debug";
+
+const app = create().install(debugAddon());
+```
+
+addon 作者は `ctx.addDebugReporter(reporter)` で独自の reporter を追加できる。複数登録した場合、すべての reporter に通知される。
+
 ---
 
 ## Comparison

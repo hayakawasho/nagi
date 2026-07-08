@@ -4,6 +4,18 @@ All notable changes to `@usenagi/core` are documented here. Release notes also a
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.6.0] - 2026-07-08
+
+### Added
+
+- `signals` addon (`@usenagi/core/addons/signals`) — glitch-free reactivity based on [@preact/signals-core](https://github.com/preactjs/signals), with `batch()` and `useSignalEffect()`.
+- `debug` addon (`@usenagi/core/addons/debug`) — app-scoped lifecycle error reporter.
+
+### Fixed
+
+- `useSlot().addChild()` / `removeChild()` now run through the addon pipeline (component / unmount middleware).
+- `setup()` now throws a `LifecycleError` when it returns a `Promise`, guarding against accidental `async setup` usage.
+
 ## [0.5.1] - 2026-06-05
 
 ### Changed
