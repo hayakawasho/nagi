@@ -142,7 +142,8 @@ useWatch(area, (v) => {
 
 The built-in reactivity is intentionally minimal and can observe intermediate values in diamond-shaped dependencies. For complex dependency graphs, the `signals` addon provides the same API backed by [@preact/signals-core](https://github.com/preactjs/signals) — glitch-free evaluation, lazy `computed`, plus `batch()` and `useSignalEffect()`.
 
-`@preact/signals-core` is listed in the package dependencies, but the core runtime never imports it — it is loaded only when you import `@usenagi/core/addons/signals`, so it adds nothing to your bundle unless you use this addon.
+`@preact/signals-core` is included in the package dependencies but is never imported by the core itself. It is only loaded when you import `@usenagi/core/addons/signals`, so it does not affect the bundle size unless you use this addon.
+
 
 ```ts
 import { signal, useComputed, useWatch, batch, useSignalEffect } from "@usenagi/core/addons/signals";
