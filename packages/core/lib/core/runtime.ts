@@ -8,6 +8,28 @@ import type { ComponentSetup, ExposedSetup, RefElement } from "../types";
 // If setup is to be made asynchronous, the design of this module must be revisited.
 let owner: ComponentContextImpl | undefined;
 
+type AddonPipeline = {
+  composeComponent: <S extends ComponentSetup>(setup: S) => S;
+  composeUnmount: (fn: (targets: RefElement[]) => Promise<void>) => (targets: RefElement[]) => Promise<void>;
+};
+
+let currentAddonPipeline: AddonPipeline | undefined;
+
+function getCurrentAddonPipeline(): AddonPipeline | undefined {
+  return currentAddonPipeline;
+}
+
+function withAddonPipeline<T>(pipeline: AddonPipeline | undefined, fn: () => T): T {
+  const prev = currentAddonPipeline;
+  currentAddonPipeline = pipeline;
+
+  try {
+    return fn();
+  } finally {
+    currentAddonPipeline = prev;
+  }
+}
+
 function getCurrentComponent(hookName: string): ComponentContextImpl {
   if (!owner) {
     throw new Error(`"${hookName}" called outside setup() will never be run.`);
@@ -56,4 +78,6 @@ function createComponent<S extends ComponentSetup>(
 }
 
 /** @internal */
-export { createComponent, getCurrentComponent };
+export { createComponent, getCurrentComponent, getCurrentAddonPipeline, withAddonPipeline };
+
+export type { AddonPipeline };

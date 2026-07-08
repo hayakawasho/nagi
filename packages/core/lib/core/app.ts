@@ -3,8 +3,9 @@ import {
   bindDOMNodeToComponent,
   DOM_COMPONENT_INSTANCE,
 } from "./_internal/registry";
-import { createComponent } from "./runtime";
+import { createComponent, withAddonPipeline } from "./runtime";
 
+import type { AddonPipeline } from "./runtime";
 import type {
   ComponentContext,
   ComponentSetup,
@@ -34,12 +35,19 @@ class App {
   ) => {
     const componentSetup = this.#addonRegistry.composeComponent(rawComponent);
 
-    const baseMount = (el: RefElement, props: Record<string, unknown>) => {
-      const component = createComponent(componentSetup, el, props);
-      bindDOMNodeToComponent(el, component);
-      component.onMount();
+    const addonPipeline: AddonPipeline = {
+      composeComponent: this.#addonRegistry.composeComponent.bind(this.#addonRegistry),
+      composeUnmount: this.#addonRegistry.composeUnmount.bind(this.#addonRegistry),
+    };
 
-      return component;
+    const baseMount = (el: RefElement, props: Record<string, unknown>) => {
+      return withAddonPipeline(addonPipeline, () => {
+        const component = createComponent(componentSetup, el, props);
+        bindDOMNodeToComponent(el, component);
+        component.onMount();
+
+        return component;
+      });
     };
 
     const mount = this.#addonRegistry.composeMount(
