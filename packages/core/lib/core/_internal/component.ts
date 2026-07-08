@@ -111,6 +111,8 @@ class ComponentContextImpl<T = any>
   addChild = (child: ComponentContextImpl) => {
     this.#children.push(child);
     child.parent = this;
+    // setup 完了後の addChild では owner 経由の継承が効かないため、ここでも補う
+    child.reporters ??= this.reporters;
 
     try {
       child.onMount();

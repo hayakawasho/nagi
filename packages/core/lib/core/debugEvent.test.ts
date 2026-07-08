@@ -230,6 +230,42 @@ describe("debug event", () => {
     expect(second).toHaveBeenCalledOnce();
   });
 
+  it("mount 後に addChild された子のエラーも app の reporter に届く", () => {
+    const events: DebugEvent[] = [];
+    const root = makeEl();
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const ctx = create()
+      .install(debugReporter((event) => events.push(event)))
+      .component({
+        name: "Parent",
+        setup: () => {
+          const slot = useSlot();
+
+          return {
+            add: (el: HTMLElement) =>
+              slot.addChild(el, {
+                name: "Child",
+                setup: () => {
+                  useMount(() => {
+                    throw new Error("late child mount");
+                  });
+                },
+              }),
+          };
+        },
+      })(root);
+
+    ctx?.current.add(makeEl("span"));
+
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      phase: "mount",
+      name: "Child",
+      path: "Parent > Child",
+    });
+  });
+
   it("default reporter は既存互換の LifecycleError を1回だけ出力する", () => {
     const errorLog = vi.spyOn(console, "error").mockImplementation(() => {});
     const cause = new Error("mount");
