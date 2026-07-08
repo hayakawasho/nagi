@@ -1,5 +1,6 @@
 import type { ComponentSetup, RefElement } from "../../types";
 import type { Addon, AddonContext, MountOptions } from "../addon";
+import type { DebugReporter } from "../debugEvent";
 
 // biome-ignore lint/suspicious/noExplicitAny: return type varies with addons
 type MountFn = (el: RefElement, props: Record<string, any>) => any;
@@ -21,9 +22,15 @@ class AddonRegistry implements AddonContext {
   #componentMiddlewares: ComponentMiddleware[] = [];
   #mountMiddlewares: MountMiddleware[] = [];
   #unmountMiddlewares: UnmountMiddleware[] = [];
+  // component 側と参照共有するため、この配列インスタンスは作り直さない
+  #debugReporters: DebugReporter[] = [];
 
   get installedAddons(): ReadonlySet<string> {
     return this.#installedAddonNames;
+  }
+
+  get debugReporters(): readonly DebugReporter[] {
+    return this.#debugReporters;
   }
 
   addComponentMiddleware(middleware: ComponentMiddleware): void {
@@ -36,6 +43,10 @@ class AddonRegistry implements AddonContext {
 
   addUnmountMiddleware(middleware: UnmountMiddleware): void {
     this.#unmountMiddlewares.push(middleware);
+  }
+
+  addDebugReporter(reporter: DebugReporter): void {
+    this.#debugReporters.push(reporter);
   }
 
   composeComponent<S extends ComponentSetup>(setup: S): S {

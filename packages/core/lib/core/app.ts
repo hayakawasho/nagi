@@ -42,7 +42,12 @@ class App {
 
     const baseMount = (el: RefElement, props: Record<string, unknown>) => {
       return withAddonPipeline(addonPipeline, () => {
-        const component = createComponent(componentSetup, el, props);
+        const component = createComponent(
+          componentSetup,
+          el,
+          props,
+          this.#addonRegistry.debugReporters,
+        );
         bindDOMNodeToComponent(el, component);
         component.onMount();
 

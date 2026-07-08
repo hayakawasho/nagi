@@ -9,8 +9,12 @@ var t = class {
 	#t = [];
 	#n = [];
 	#r = [];
+	#i = [];
 	get installedAddons() {
 		return this.#e;
+	}
+	get debugReporters() {
+		return this.#i;
 	}
 	addComponentMiddleware(e) {
 		this.#t.push(e);
@@ -20,6 +24,9 @@ var t = class {
 	}
 	addUnmountMiddleware(e) {
 		this.#r.push(e);
+	}
+	addDebugReporter(e) {
+		this.#i.push(e);
 	}
 	composeComponent(e) {
 		return this.#t.reduce((e, t) => t(e), e);
@@ -73,7 +80,7 @@ function s(e, t) {
 	o.set(e, t);
 }
 //#endregion
-//#region lib/core/_internal/errorReport.ts
+//#region lib/core/_internal/debugEvents.ts
 var c = {
 	setup: "[nagi] setup failed",
 	mount: "[nagi] onMount hook failed",
@@ -81,14 +88,50 @@ var c = {
 	unmount: "[nagi] onUnmount cleanup failed",
 	removeChild: "[nagi] removeChild failed"
 };
-function l(e, t, n, r) {
-	console.error(c[e], i.create(e, t, n, r));
+function l(e) {
+	console.error(c[e.details.phase], e);
+}
+function u(e) {
+	return `${e.tagName.toLowerCase()}${e.id ? `#${e.id}` : ""}${Array.from(e.classList).map((e) => `.${e}`).join("")}`;
+}
+function d(e) {
+	let { details: t } = e;
+	return {
+		version: 1,
+		level: "error",
+		source: "lifecycle",
+		phase: t.phase,
+		name: t.name,
+		uid: t.uid,
+		path: t.path,
+		parentUid: t.parentUid,
+		element: t.element,
+		elementLabel: t.element ? u(t.element) : void 0,
+		props: t.props,
+		cause: t.cause
+	};
+}
+function f(e, t, n, r, a) {
+	let o = i.create(e, t, n, r, a), s = t.reporters;
+	if (!s || s.length === 0) return l(o), o;
+	let c = d(o);
+	for (let e of s) try {
+		e(c);
+	} catch (e) {
+		console.error("[nagi] debug reporter failed", e);
+	}
+	return o;
+}
+//#endregion
+//#region lib/core/_internal/errorReport.ts
+function p(e, t, n, r) {
+	f(e, t, n, r);
 }
 //#endregion
 //#region lib/core/_internal/component.ts
-var u = /* @__PURE__ */ function(e) {
+var m = /* @__PURE__ */ function(e) {
 	return e.MOUNTED = "mount", e.UNMOUNTED = "unmount", e.DEFERRED_UNMOUNT = "deferredUnmount", e;
-}(u || {}), d = 0, f = class {
+}(m || {}), h = 0, g = class {
 	mount = [];
 	unmount = [];
 	deferredUnmount = [];
@@ -102,8 +145,9 @@ var u = /* @__PURE__ */ function(e) {
 	props = {};
 	element;
 	provides = /* @__PURE__ */ new Map();
+	reporters;
 	constructor(e, t) {
-		this.uid = `${t}.${d++}`, this.name = t, this.element = e;
+		this.uid = `${t}.${h++}`, this.name = t, this.element = e;
 	}
 	onMount = () => {
 		let e = [];
@@ -111,7 +155,7 @@ var u = /* @__PURE__ */ function(e) {
 			let n = t();
 			typeof n == "function" && e.push(n);
 		} catch (e) {
-			l("mount", this, e);
+			p("mount", this, e);
 		}
 		this.unmount.push(...e);
 	};
@@ -119,7 +163,7 @@ var u = /* @__PURE__ */ function(e) {
 		try {
 			await e();
 		} catch (e) {
-			l("deferredUnmount", this, e);
+			p("deferredUnmount", this, e);
 		}
 	}), ...this.#e.map((e) => e.onDeferredUnmount())]).then(() => {}), this.#t);
 	onUnmount = () => {
@@ -128,7 +172,7 @@ var u = /* @__PURE__ */ function(e) {
 			for (let e of this.unmount) try {
 				e();
 			} catch (e) {
-				l("unmount", this, e);
+				p("unmount", this, e);
 			}
 			for (let e of this.#e) e.onUnmount();
 		}
@@ -151,29 +195,29 @@ var u = /* @__PURE__ */ function(e) {
 	get childElements() {
 		return this.#e.map((e) => e.element);
 	}
-}, p;
-function m(e) {
-	if (!p) throw Error(`"${e}" called outside setup() will never be run.`);
-	return p;
+}, _;
+function v(e) {
+	if (!_) throw Error(`"${e}" called outside setup() will never be run.`);
+	return _;
 }
-function h(e, t, n = {}) {
-	let r = new f(t, e.name), o = p;
-	p = r;
+function y(e, t, n = {}, r) {
+	let i = new g(t, e.name), o = _;
+	i.reporters = r ?? o?.reporters, _ = i;
 	try {
-		o && (r.parent = o), r.props = n, r.current = e.setup(t, n) || {};
+		o && (i.parent = o), i.props = n, i.current = e.setup(t, n) || {};
 	} catch (e) {
-		throw p = o, a(e) ? e : i.create("setup", r, e, o, { props: r.props });
+		throw _ = o, a(e) ? e : f("setup", i, e, o, { props: i.props });
 	}
-	return p = o, r;
+	return _ = o, i;
 }
 //#endregion
 //#region lib/core/app.ts
-var g = class {
+var b = class {
 	#e = n();
 	install = (...e) => (e.forEach(this.#e.install), this);
 	component = (e, t = {}) => {
 		let n = this.#e.composeComponent(e), r = this.#e.composeMount((e, t) => {
-			let r = h(n, e, t);
+			let r = y(n, e, t, this.#e.debugReporters);
 			return s(e, r), r.onMount(), r;
 		}, n, t);
 		return (e, t = {}) => r(e, t);
@@ -188,20 +232,20 @@ var g = class {
 		for (let e of t) e.onUnmount();
 	}
 };
-function _() {
-	return new g();
+function x() {
+	return new b();
 }
 //#endregion
 //#region lib/core/component.ts
-function v(e) {
+function S(e) {
 	return e;
 }
 //#endregion
 //#region lib/core/context.ts
-function y() {
+function C() {
 	let e = Symbol();
 	return [{ _id: e }, () => {
-		let t = m("createContext.use");
+		let t = v("createContext.use");
 		for (; t !== null;) {
 			if (t.provides.has(e)) return t.provides.get(e);
 			t = t.parent;
@@ -209,36 +253,36 @@ function y() {
 		throw Error("createContext.use: no provider found");
 	}];
 }
-function b(e, t) {
+function w(e, t) {
 	return (n) => ({
 		name: n.name,
 		setup(r, i) {
-			return m(`withContext.${n.name}`).provides.set(e._id, t), n.setup(r, i);
+			return v(`withContext.${n.name}`).provides.set(e._id, t), n.setup(r, i);
 		}
 	});
 }
 //#endregion
 //#region lib/core/lifecycle.ts
-var x = (e) => {
-	m(u.MOUNTED)[u.MOUNTED].push(e);
-}, S = (e) => {
-	m(u.UNMOUNTED)[u.UNMOUNTED].push(e);
-}, C = (e) => {
-	m(u.DEFERRED_UNMOUNT)[u.DEFERRED_UNMOUNT].push(e);
+var T = (e) => {
+	v(m.MOUNTED)[m.MOUNTED].push(e);
+}, E = (e) => {
+	v(m.UNMOUNTED)[m.UNMOUNTED].push(e);
+}, D = (e) => {
+	v(m.DEFERRED_UNMOUNT)[m.DEFERRED_UNMOUNT].push(e);
 };
 //#endregion
 //#region lib/core/props.ts
-function w() {}
+function O() {}
 //#endregion
 //#region lib/core/reactivity.ts
-var T = Symbol("watch"), E = null, D = class {
+var k = Symbol("watch"), A = null, j = class {
 	#e;
 	#t = /* @__PURE__ */ new Set();
 	constructor(e) {
 		this.#e = e;
 	}
 	get value() {
-		return E !== null && E.add(this), this.#e;
+		return A !== null && A.add(this), this.#e;
 	}
 	set value(e) {
 		if (Object.is(e, this.#e)) return;
@@ -246,12 +290,12 @@ var T = Symbol("watch"), E = null, D = class {
 		this.#e = e;
 		for (let n of Array.from(this.#t)) n(e, t);
 	}
-	[T](e) {
+	[k](e) {
 		return this.#t.add(e), () => {
 			this.#t.delete(e);
 		};
 	}
-}, O = (e) => new D(e), k = class {
+}, M = (e) => new j(e), N = class {
 	#e;
 	constructor(e) {
 		this.#e = e;
@@ -259,48 +303,48 @@ var T = Symbol("watch"), E = null, D = class {
 	get value() {
 		return this.#e.value;
 	}
-	[T](e) {
-		return this.#e[T](e);
+	[k](e) {
+		return this.#e[k](e);
 	}
-}, A = (e) => new k(e);
-function j(e, t) {
-	return e[T](t);
+}, P = (e) => new N(e);
+function F(e, t) {
+	return e[k](t);
 }
-function M(e, t) {
-	S(j(e, t));
+function I(e, t) {
+	E(F(e, t));
 }
-function N(e) {
-	let t = O(void 0), n = [], r = () => {
+function L(e) {
+	let t = M(void 0), n = [], r = () => {
 		n.forEach((e) => {
 			e();
 		}), n = [];
 	}, i = () => {
 		r();
-		let a = E, o = /* @__PURE__ */ new Set();
-		E = o;
+		let a = A, o = /* @__PURE__ */ new Set();
+		A = o;
 		let s;
 		try {
 			s = e();
 		} finally {
-			E = a;
+			A = a;
 		}
 		t.value = s;
-		for (let e of o) n.push(e[T](() => {
+		for (let e of o) n.push(e[k](() => {
 			i();
 		}));
 	};
-	return i(), S(r), A(t);
+	return i(), E(r), P(t);
 }
 //#endregion
 //#region lib/hooks/core/useDomRef.ts
-function P(e, t) {
+function R(e, t) {
 	return t.some((t) => t !== e && t.contains(e));
 }
-function F(e, t, n) {
-	let r = `[data-ref="${CSS.escape(e)}"]`, i = Array.from(t.querySelectorAll(r)).filter((e) => !P(e, n));
+function z(e, t, n) {
+	let r = `[data-ref="${CSS.escape(e)}"]`, i = Array.from(t.querySelectorAll(r)).filter((e) => !R(e, n));
 	return i.length === 0 ? null : i.length === 1 ? i[0] : i;
 }
-var I = class {
+var B = class {
 	scope;
 	getBoundaries;
 	#e = /* @__PURE__ */ new Map();
@@ -309,12 +353,12 @@ var I = class {
 	}
 	get(e) {
 		if (this.#e.has(e)) return this.#e.get(e) ?? null;
-		let t = F(e, this.scope, this.getBoundaries());
+		let t = z(e, this.scope, this.getBoundaries());
 		return this.#e.set(e, t), t;
 	}
 };
-function L(e, t) {
-	let n = new I(e, t);
+function V(e, t) {
+	let n = new B(e, t);
 	return new Proxy({}, {
 		get(e, t) {
 			if (!(typeof t == "symbol" || t === "then")) return n.get(t);
@@ -334,39 +378,39 @@ function L(e, t) {
 		}
 	});
 }
-function R() {
-	let e = m("useDomRef");
-	return { refs: L(e.element, () => e.childElements) };
+function H() {
+	let e = v("useDomRef");
+	return { refs: V(e.element, () => e.childElements) };
 }
 //#endregion
 //#region lib/hooks/core/useSlot.ts
-function z() {
-	let e = m("useSlot");
+function U() {
+	let e = v("useSlot");
 	return {
 		addChild(t, n, r) {
 			let i = (t) => {
-				let i = h(n, t, r);
+				let i = y(n, t, r);
 				return e.addChild(i), i;
 			};
 			return Array.isArray(t) ? t.map((e) => i(e)) : [i(t)];
 		},
 		async removeChild(t) {
 			await Promise.all(t.map((t) => e.removeChild(t).catch((n) => {
-				l("removeChild", t, n, e);
+				p("removeChild", t, n, e);
 			})));
 		}
 	};
 }
 //#endregion
 //#region lib/hooks/useEvent.ts
-function B(e, t, n, r) {
-	x(() => (e.addEventListener(t, n, r), () => {
+function W(e, t, n, r) {
+	T(() => (e.addEventListener(t, n, r), () => {
 		e.removeEventListener(t, n, r);
 	}));
 }
 //#endregion
 //#region lib/hooks/useIntersectionWatch.ts
-function V(e, t, n = {
+function G(e, t, n = {
 	rootMargin: "0px",
 	threshold: .1
 }) {
@@ -376,7 +420,7 @@ function V(e, t, n = {
 			r.observe(e);
 		}) : r.observe(e);
 	}
-	x(() => (i(e), () => {
+	T(() => (i(e), () => {
 		r.disconnect();
 	}));
 	function a(e) {
@@ -386,14 +430,14 @@ function V(e, t, n = {
 }
 //#endregion
 //#region lib/hooks/useMediaQuery.ts
-function H(e, t) {
-	let n = window.matchMedia(e), r = O(n.matches), i = null;
+function K(e, t) {
+	let n = window.matchMedia(e), r = M(n.matches), i = null;
 	function a(e) {
 		r.value = e.matches, e.matches ? i = t() : (i?.(), i = null);
 	}
-	return x(() => (n.addEventListener("change", a), n.matches && (i = t()), () => {
+	return T(() => (n.addEventListener("change", a), n.matches && (i = t()), () => {
 		i?.(), n.removeEventListener("change", a);
-	})), { matchesQuery: A(r) };
+	})), { matchesQuery: P(r) };
 }
 //#endregion
-export { i as LifecycleError, _ as create, y as createContext, e as defineAddon, v as defineComponent, a as isLifecycleError, w as propTypes, A as readonly, O as signal, N as useComputed, C as useDeferredUnmount, R as useDomRef, B as useEvent, V as useIntersectionWatch, H as useMediaQuery, x as useMount, z as useSlot, S as useUnmount, M as useWatch, b as withContext };
+export { i as LifecycleError, x as create, C as createContext, e as defineAddon, S as defineComponent, a as isLifecycleError, O as propTypes, P as readonly, M as signal, L as useComputed, D as useDeferredUnmount, H as useDomRef, W as useEvent, G as useIntersectionWatch, K as useMediaQuery, T as useMount, U as useSlot, E as useUnmount, I as useWatch, w as withContext };

@@ -11,6 +11,7 @@ export type LifecycleErrorDetails = {
     props?: unknown;
     cause: unknown;
 };
+export declare function traceComponentTree(context: ComponentContextImpl): string;
 export declare class LifecycleError extends Error {
     readonly details: LifecycleErrorDetails;
     constructor(details: LifecycleErrorDetails);

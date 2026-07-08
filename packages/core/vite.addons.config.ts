@@ -21,6 +21,7 @@ export default defineConfig({
       entry: {
         "addons/scheduler": resolve(__dirname, "../addons/scheduler/index.ts"),
         "addons/cue": resolve(__dirname, "../addons/cue/index.ts"),
+        "addons/debug": resolve(__dirname, "../addons/debug/index.ts"),
       },
       formats: ["es", "cjs"],
       fileName: (format, entryName) =>
