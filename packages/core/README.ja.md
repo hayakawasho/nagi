@@ -141,6 +141,8 @@ useWatch(area, (v) => {
 
 組み込みのリアクティビティは意図的に最小限の実装のため、ダイヤモンド型の依存関係では中間値を観測することがあります。複雑な依存グラフには、同じ API を [@preact/signals-core](https://github.com/preactjs/signals) ベースで提供する `signals` addon を使えます。グリッチフリーな評価・遅延評価の `computed` に加え、`batch()` と `useSignalEffect()` が使えます。
 
+`@preact/signals-core` はパッケージの dependencies に含まれますが、core 本体からは一切 import されません。読み込まれるのは `@usenagi/core/addons/signals` を import したときだけで、この addon を使わない限りバンドルサイズには影響しません。
+
 ```ts
 import { signal, useComputed, useWatch, batch, useSignalEffect } from "@usenagi/core/addons/signals";
 
