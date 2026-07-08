@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { create } from "../../core/app";
+import { defineAddon } from "../../core/addon";
 import { defineComponent } from "../../core/component";
 import { useDeferredUnmount, useMount, useUnmount } from "../../core/lifecycle";
 import { propTypes } from "../../core/props";
@@ -177,5 +178,235 @@ describe("useSlot", () => {
     })(root);
 
     expect(capturedLabel).toBe("From parent");
+  });
+});
+
+describe("useSlot — addon pipeline propagation", () => {
+  it("addChild applies component middleware", () => {
+    const childEl = document.createElement("span");
+    const root = makeRoot(childEl);
+
+    const calls: string[] = [];
+
+    const trackingAddon = defineAddon({
+      name: "tracking",
+      install(ctx) {
+        ctx.addComponentMiddleware((comp) => ({
+          ...comp,
+          setup(el, props) {
+            calls.push(comp.name);
+            return comp.setup(el, props);
+          },
+        }));
+      },
+    });
+
+    const child = {
+      name: "child",
+      setup: () => {},
+    };
+
+    const { component } = create().install(trackingAddon);
+
+    component({
+      name: "parent",
+      setup: () => {
+        const { addChild } = useSlot();
+        addChild(childEl, child);
+      },
+    })(root);
+
+    expect(calls).toContain("child");
+  });
+
+  it("removeChild applies unmount middleware", async () => {
+    const childEl = document.createElement("span");
+    const root = makeRoot(childEl);
+
+    const unmountCalls: string[] = [];
+
+    const trackingAddon = defineAddon({
+      name: "tracking",
+      install(ctx) {
+        ctx.addUnmountMiddleware((next) => async (targets) => {
+          unmountCalls.push("unmount-middleware");
+          return next(targets);
+        });
+      },
+    });
+
+    let slotRef: ReturnType<typeof useSlot> | null = null;
+    let childCtx: ReturnType<ReturnType<typeof useSlot>["addChild"]> = [];
+
+    const child = {
+      name: "child",
+      setup: () => {},
+    };
+
+    const { component } = create().install(trackingAddon);
+
+    component({
+      name: "parent",
+      setup: () => {
+        slotRef = useSlot();
+        childCtx = slotRef.addChild(childEl, child);
+      },
+    })(root);
+
+    await slotRef!.removeChild(childCtx);
+    expect(unmountCalls).toContain("unmount-middleware");
+  });
+
+  it("nested addChild propagates middleware", () => {
+    const root = document.createElement("div");
+    const childEl = document.createElement("span");
+    const grandchildEl = document.createElement("em");
+    childEl.appendChild(grandchildEl);
+    root.appendChild(childEl);
+    document.body.appendChild(root);
+
+    const calls: string[] = [];
+
+    const trackingAddon = defineAddon({
+      name: "tracking",
+      install(ctx) {
+        ctx.addComponentMiddleware((comp) => ({
+          ...comp,
+          setup(el, props) {
+            calls.push(comp.name);
+            return comp.setup(el, props);
+          },
+        }));
+      },
+    });
+
+    const grandchild = {
+      name: "grandchild",
+      setup: () => {},
+    };
+
+    const child = {
+      name: "child",
+      setup: () => {
+        const { addChild } = useSlot();
+        addChild(grandchildEl, grandchild);
+      },
+    };
+
+    const { component } = create().install(trackingAddon);
+
+    component({
+      name: "parent",
+      setup: () => {
+        const { addChild } = useSlot();
+        addChild(childEl, child);
+      },
+    })(root);
+
+    expect(calls).toContain("child");
+    expect(calls).toContain("grandchild");
+  });
+
+  it("late addChild (after setup) applies middleware", () => {
+    const childEl = document.createElement("span");
+    const root = makeRoot(childEl);
+
+    const calls: string[] = [];
+
+    const trackingAddon = defineAddon({
+      name: "tracking",
+      install(ctx) {
+        ctx.addComponentMiddleware((comp) => ({
+          ...comp,
+          setup(el, props) {
+            calls.push(comp.name);
+            return comp.setup(el, props);
+          },
+        }));
+      },
+    });
+
+    const child = {
+      name: "late-child",
+      setup: () => {},
+    };
+
+    let addLater: (() => void) | null = null;
+
+    const { component } = create().install(trackingAddon);
+
+    component({
+      name: "parent",
+      setup: () => {
+        const { addChild } = useSlot();
+        addLater = () => {
+          addChild(childEl, child);
+        };
+      },
+    })(root);
+
+    expect(calls).not.toContain("late-child");
+
+    addLater!();
+    expect(calls).toContain("late-child");
+  });
+
+  it("mount middleware does NOT apply to addChild", () => {
+    const childEl = document.createElement("span");
+    const root = makeRoot(childEl);
+
+    const mountCalls: string[] = [];
+
+    const trackingAddon = defineAddon({
+      name: "tracking",
+      install(ctx) {
+        ctx.addMountMiddleware((next, _setup, _opts) => (el, props) => {
+          mountCalls.push("mount-middleware");
+          return next(el, props);
+        });
+      },
+    });
+
+    const child = {
+      name: "child",
+      setup: () => {},
+    };
+
+    const { component } = create().install(trackingAddon);
+
+    mountCalls.length = 0;
+
+    component({
+      name: "parent",
+      setup: () => {
+        const { addChild } = useSlot();
+        addChild(childEl, child);
+      },
+    })(root);
+
+    expect(mountCalls).toEqual(["mount-middleware"]);
+  });
+
+  it("addChild works without addons", () => {
+    const childEl = document.createElement("span");
+    const root = makeRoot(childEl);
+
+    const setupFn = vi.fn();
+    const child = {
+      name: "child",
+      setup: setupFn,
+    };
+
+    const { component } = create();
+
+    component({
+      name: "parent",
+      setup: () => {
+        const { addChild } = useSlot();
+        addChild(childEl, child);
+      },
+    })(root);
+
+    expect(setupFn).toHaveBeenCalledOnce();
   });
 });
