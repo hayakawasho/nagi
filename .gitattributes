@@ -1,0 +1,2 @@
+packages/core/dist/** linguist-generated=true -diff
+packages/core/types/** linguist-generated=true
