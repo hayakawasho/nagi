@@ -1,7 +1,7 @@
 {
   "name": "@usenagi/core",
   "version": "0.5.1",
-  "description": "Composition-API ergonomics for vanilla DOM. Bring your own mounter.",
+  "description": "Lightweight lifecycle hooks and reactivity for existing HTML.",
   "main": "./dist/main.umd.js",
   "module": "./dist/main.es.js",
   "exports": {

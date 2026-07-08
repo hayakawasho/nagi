@@ -2,7 +2,7 @@
 
 # nagi
 
-**Composition-style ergonomics for vanilla DOM. Bring your own mounter.**
+**Lightweight lifecycle hooks and reactivity for existing HTML.**
 
 [![npm](https://img.shields.io/npm/v/@usenagi/core)](https://www.npmjs.com/package/@usenagi/core)
 [![bundle size](https://img.shields.io/bundlephobia/minzip/@usenagi/core)](https://bundlephobia.com/package/@usenagi/core)
@@ -10,56 +10,48 @@
 
 ---
 
+## 30-second example
+
+```ts
+import { create, useDeferredUnmount, useUnmount } from "@usenagi/core";
+import gsap from "gsap";
+
+const app = create();
+
+app.component({
+  name: "modal",
+  setup(el) {
+    gsap.from(el, { opacity: 0, y: 20, duration: 0.4 });
+
+    useDeferredUnmount(() => {
+      return new Promise((resolve) => {
+        gsap.to(el, { opacity: 0, y: -20, duration: 0.3, onComplete: resolve });
+      });
+    });
+
+    useUnmount(() => el.remove());
+  },
+})(document.querySelector(".modal")!);
+```
+
+Enter animation on mount, exit animation before unmount, cleanup on unmount — all in one `setup()`.
+
+---
+
 ## Why nagi?
 
-**Can be added in small parts to existing HTML**
+**Add lifecycle to existing HTML**
 
-You can add `setup()`, lifecycle, and reactivity to WordPress, CMS, Webflow, static sites, etc., without introducing a virtual DOM or templates.
+Add `setup()`, lifecycle hooks, and reactivity to WordPress, CMS, Webflow, static sites, etc. — no virtual DOM, no templates.
 
 **Compatible with animation**
 
 You can initialize libraries such as GSAP, Lenis, and IntersectionObserver in `setup()`, and perform cleanup using `useUnmount()`.
 You can also use `useDeferredUnmount()` to run async work, such as exit animations, before the unmount occurs.
 
-**Does not restrict mounting strategies**
+**Bring your own mounter**
 
-You are free to implement `[data-component]` scanning, manifests, lazy imports, MutationObserver, and so on, on the consuming side.
-
----
-
-## 30-second example
-
-```ts
-// counter.ts
-import { create, signal, useWatch, useDomRef } from "@usenagi/core";
-
-const app = create();
-
-app.component({
-  name: "counter",
-  setup() {
-    const { refs } = useDomRef<{
-      count: HTMLSpanElement;
-      btn: HTMLButtonElement;
-    }>();
-
-    const n = signal(0);
-    useWatch(n, (v) => {
-      refs.count.textContent = String(v);
-    });
-    refs.btn.addEventListener("click", () => {
-      n.value++;
-    });
-  },
-})(document.querySelector("#counter")!);
-```
-
-```html
-<div id="counter">
-  <span data-ref="count">0</span>
-  <button data-ref="btn">+</button>
-</div>
-```
+`[data-component]` scanning, manifests, lazy imports, MutationObserver — implement your own mounting strategy.
 
 ---
 

@@ -2,7 +2,7 @@
 
 # nagi
 
-**Composition-style ergonomics for vanilla DOM. Bring your own mounter.**
+**Lightweight lifecycle hooks and reactivity for existing HTML.**
 
 [![npm](https://img.shields.io/npm/v/@usenagi/core)](https://www.npmjs.com/package/@usenagi/core)
 [![bundle size](https://img.shields.io/bundlephobia/minzip/@usenagi/core)](https://bundlephobia.com/package/@usenagi/core)
@@ -10,11 +10,39 @@
 
 ---
 
+## 30-second example
+
+```ts
+import { create, useDeferredUnmount, useUnmount } from "@usenagi/core";
+import gsap from "gsap";
+
+const app = create();
+
+app.component({
+  name: "modal",
+  setup(el) {
+    gsap.from(el, { opacity: 0, y: 20, duration: 0.4 });
+
+    useDeferredUnmount(() => {
+      return new Promise((resolve) => {
+        gsap.to(el, { opacity: 0, y: -20, duration: 0.3, onComplete: resolve });
+      });
+    });
+
+    useUnmount(() => el.remove());
+  },
+})(document.querySelector(".modal")!);
+```
+
+mount 時に登場アニメーション、unmount 前に退場アニメーション、unmount 時にクリーンアップ。すべて1つの `setup()` に収まる。
+
+---
+
 ## Why nagi?
 
-**既存 HTML に小さく足せる**
+**既存 HTML にライフサイクルを足せる**
 
-WordPress、CMS、Webflow、静的サイトなどに、仮想 DOM やテンプレートを持ち込まず、`setup()` / lifecycle / reactivity を追加できる。
+WordPress、CMS、Webflow、静的サイトなどに、仮想 DOM やテンプレートを持ち込まず `setup()` / lifecycle / reactivity を追加できる。
 
 **アニメーションと相性が良い**
 
@@ -22,43 +50,7 @@ GSAP、Lenis、IntersectionObserver などを `setup()` で初期化し、`useUn
 
 **マウント戦略を縛らない**
 
-`[data-component]` スキャン、manifest、lazy import、MutationObserver などは、利用側で自由に組み立てられる。
-
----
-
-## 30-second example
-
-```ts
-// counter.ts
-import { create, signal, useWatch, useDomRef } from "@usenagi/core";
-
-const app = create();
-
-app.component({
-  name: "counter",
-  setup() {
-    const { refs } = useDomRef<{
-      count: HTMLSpanElement;
-      btn: HTMLButtonElement;
-    }>();
-
-    const n = signal(0);
-    useWatch(n, (v) => {
-      refs.count.textContent = String(v);
-    });
-    refs.btn.addEventListener("click", () => {
-      n.value++;
-    });
-  },
-})(document.querySelector("#counter")!);
-```
-
-```html
-<div id="counter">
-  <span data-ref="count">0</span>
-  <button data-ref="btn">+</button>
-</div>
-```
+`[data-component]` スキャン、manifest、lazy import、MutationObserver — マウント戦略は利用側で自由に組み立てられる。
 
 ---
 
