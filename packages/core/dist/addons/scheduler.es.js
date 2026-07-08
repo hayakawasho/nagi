@@ -1,4 +1,4 @@
-import { t as e } from "../addon-DptsY8c_.js";
+import { defineAddon as e } from "@usenagi/core";
 //#region ../addons/scheduler/_internal/deferredMounts.ts
 var t = class {
 	#e = /* @__PURE__ */ new Map();

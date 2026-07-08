@@ -16,6 +16,6 @@
     "stripInternal": true,
     "skipLibCheck": true
   },
-  "include": ["scheduler", "cue", "debug"],
+  "include": ["scheduler", "cue", "debug", "signals"],
   "exclude": ["**/*.test.ts"]
 }

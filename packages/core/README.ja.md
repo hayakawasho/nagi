@@ -145,6 +145,30 @@ useWatch(area, (v) => {
 });
 ```
 
+#### Signals addon（グリッチフリーなリアクティビティ）
+
+組み込みのリアクティビティは意図的に最小限の実装のため、ダイヤモンド型の依存関係では中間値を観測することがあります。複雑な依存グラフには、同じ API を [@preact/signals-core](https://github.com/preactjs/signals) ベースで提供する `signals` addon を使えます。グリッチフリーな評価・遅延評価の `computed` に加え、`batch()` と `useSignalEffect()` が使えます。
+
+```ts
+import { signal, useComputed, useWatch, batch, useSignalEffect } from "@usenagi/core/addons/signals";
+
+const a = signal(1);
+const b = signal(2);
+const sum = useComputed(() => a.value + b.value);
+
+setup() {
+  useWatch(sum, (v) => { /* 最終値で1回だけ発火 */ });
+  useSignalEffect(() => { /* 読み取りを自動追跡、unmount で破棄 */ });
+}
+
+batch(() => {
+  a.value = 10;
+  b.value = 20; // 通知は2回ではなく1回
+});
+```
+
+core と本 addon の Signal は別実装のため、同じ値に対して混在させないでください。
+
 ### Lifecycle
 
 | API                        | 説明                                                              |

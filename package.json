@@ -9,9 +9,9 @@
     "watch": "npm run watch -w @usenagi/core",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "oxlint ./packages/core/lib ./packages/addons/scheduler ./packages/addons/cue ./packages/addons/debug",
-    "format": "biome format --write ./packages/core/lib ./packages/addons/scheduler ./packages/addons/cue ./packages/addons/debug",
-    "fix:biome": "biome check --write ./packages/core/lib ./packages/addons/scheduler ./packages/addons/cue ./packages/addons/debug",
+    "lint": "oxlint ./packages/core/lib ./packages/addons/scheduler ./packages/addons/cue ./packages/addons/debug ./packages/addons/signals",
+    "format": "biome format --write ./packages/core/lib ./packages/addons/scheduler ./packages/addons/cue ./packages/addons/debug ./packages/addons/signals",
+    "fix:biome": "biome check --write ./packages/core/lib ./packages/addons/scheduler ./packages/addons/cue ./packages/addons/debug ./packages/addons/signals",
     "fix": "npm run fix:biome"
   },
   "devDependencies": {

@@ -62,6 +62,17 @@ function createComponent<S extends ComponentSetup>(
     component.props = props;
 
     const provides = wrap.setup(root, props);
+
+    if (
+      provides !== null &&
+      typeof provides === "object" &&
+      typeof (provides as unknown as PromiseLike<unknown>).then === "function"
+    ) {
+      throw new Error(
+        `"${wrap.name}" setup() must be synchronous. Hooks registered after "await" would be bound to the wrong component.`,
+      );
+    }
+
     component.current = (provides || {}) as ExposedSetup<
       ReturnType<S["setup"]>
     >;
