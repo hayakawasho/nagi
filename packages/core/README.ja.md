@@ -2,7 +2,7 @@
 
 # nagi
 
-**Composition-style ergonomics for vanilla DOM. Bring your own mounter.**
+**Lightweight lifecycle hooks and reactivity for existing HTML.**
 
 [![npm](https://img.shields.io/npm/v/@usenagi/core)](https://www.npmjs.com/package/@usenagi/core)
 [![bundle size](https://img.shields.io/bundlephobia/minzip/@usenagi/core)](https://bundlephobia.com/package/@usenagi/core)
@@ -10,11 +10,39 @@
 
 ---
 
+## 30-second example
+
+```ts
+import { create, useDeferredUnmount, useUnmount } from "@usenagi/core";
+import gsap from "gsap";
+
+const app = create();
+
+app.component({
+  name: "modal",
+  setup(el) {
+    gsap.from(el, { opacity: 0, y: 20, duration: 0.4 });
+
+    useDeferredUnmount(() => {
+      return new Promise((resolve) => {
+        gsap.to(el, { opacity: 0, y: -20, duration: 0.3, onComplete: resolve });
+      });
+    });
+
+    useUnmount(() => el.remove());
+  },
+})(document.querySelector(".modal")!);
+```
+
+mount 時に登場アニメーション、unmount 前に退場アニメーション、unmount 時にクリーンアップ。すべて1つの `setup()` に収まる。
+
+---
+
 ## Why nagi?
 
-**既存 HTML に小さく足せる**
+**既存 HTML にライフサイクルを足せる**
 
-WordPress、CMS、Webflow、静的サイトなどに、仮想 DOM やテンプレートを持ち込まず、`setup()` / lifecycle / reactivity を追加できる。
+WordPress、CMS、Webflow、静的サイトなどに、仮想 DOM やテンプレートを持ち込まず `setup()` / lifecycle / reactivity を追加できる。
 
 **アニメーションと相性が良い**
 
@@ -22,43 +50,7 @@ GSAP、Lenis、IntersectionObserver などを `setup()` で初期化し、`useUn
 
 **マウント戦略を縛らない**
 
-`[data-component]` スキャン、manifest、lazy import、MutationObserver などは、利用側で自由に組み立てられる。
-
----
-
-## 30-second example
-
-```ts
-// counter.ts
-import { create, signal, useWatch, useDomRef } from "@usenagi/core";
-
-const app = create();
-
-app.component({
-  name: "counter",
-  setup() {
-    const { refs } = useDomRef<{
-      count: HTMLSpanElement;
-      btn: HTMLButtonElement;
-    }>();
-
-    const n = signal(0);
-    useWatch(n, (v) => {
-      refs.count.textContent = String(v);
-    });
-    refs.btn.addEventListener("click", () => {
-      n.value++;
-    });
-  },
-})(document.querySelector("#counter")!);
-```
-
-```html
-<div id="counter">
-  <span data-ref="count">0</span>
-  <button data-ref="btn">+</button>
-</div>
-```
+`[data-component]` スキャン、manifest、lazy import、MutationObserver — マウント戦略は利用側で自由に組み立てられる。
 
 ---
 
@@ -144,6 +136,32 @@ useWatch(area, (v) => {
   output.textContent = String(v);
 });
 ```
+
+#### Signals addon（グリッチフリーなリアクティビティ）
+
+組み込みのリアクティビティは意図的に最小限の実装のため、ダイヤモンド型の依存関係では中間値を観測することがある。複雑な依存グラフには、同じ API を [@preact/signals-core](https://github.com/preactjs/signals) ベースで提供する `signals` addon が使える。グリッチフリーな評価・遅延評価の `computed` に加え、`batch()` と `useSignalEffect()` が使える。
+
+`@preact/signals-core` はパッケージの dependencies に含まれるが、core 本体からは一切 import されない。読み込まれるのは `@usenagi/core/addons/signals` を import したときだけで、この addon を使わない限りバンドルサイズには影響しない。
+
+```ts
+import { signal, useComputed, useWatch, batch, useSignalEffect } from "@usenagi/core/addons/signals";
+
+const a = signal(1);
+const b = signal(2);
+const sum = useComputed(() => a.value + b.value);
+
+setup() {
+  useWatch(sum, (v) => { /* 最終値で1回だけ発火 */ });
+  useSignalEffect(() => { /* 読み取りを自動追跡、unmount で破棄 */ });
+}
+
+batch(() => {
+  a.value = 10;
+  b.value = 20; // 通知は2回ではなく1回
+});
+```
+
+core と本 addon の Signal は別実装のため、同じ値に対して混在させないこと。
 
 ### Lifecycle
 
@@ -234,6 +252,19 @@ import { visible, idle, interaction, media } from "@usenagi/core/addons/cue";
 | `idle(timeout?)` | `requestIdleCallback` で解決する Cue |
 | `interaction(events?)` | 最初のユーザー操作で解決する Cue |
 | `media(query)` | media query が一致したときに解決する Cue |
+
+#### Debug addon
+
+`debugAddon()` を install すると、ライフサイクルエラー（`setup` / `mount` / `unmount` / `deferredUnmount` / `removeChild`）が整形されたログとして `console.error` に出力される。reporter は app インスタンスごとに独立しており、あるアプリに install しても他のアプリには影響しない。
+
+```ts
+import { create } from "@usenagi/core";
+import { debugAddon } from "@usenagi/core/addons/debug";
+
+const app = create().install(debugAddon());
+```
+
+addon 作者は `ctx.addDebugReporter(reporter)` で独自の reporter を追加できる。複数登録した場合、すべての reporter に通知される。
 
 ---
 

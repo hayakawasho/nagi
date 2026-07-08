@@ -1,5 +1,6 @@
 import { errorReport } from "./errorReport";
 
+import type { DebugReporter } from "../debugEvent";
 import type {
   Cleanup,
   ComponentContext,
@@ -39,6 +40,8 @@ class ComponentContextImpl<T = any>
   props = {} as Parameters<ComponentSetup<T>["setup"]>[1];
   element: ComponentContext["element"];
   provides = new Map<symbol, unknown>();
+  // App が持つ配列を参照共有する。mount 後に install された reporter にも届けるため。
+  reporters: readonly DebugReporter[] | undefined;
 
   constructor(element: RefElement, name: string) {
     this.uid = `${name}.${uid++}`;
@@ -108,6 +111,8 @@ class ComponentContextImpl<T = any>
   addChild = (child: ComponentContextImpl) => {
     this.#children.push(child);
     child.parent = this;
+    // setup 完了後の addChild では owner 経由の継承が効かないため、ここでも補う
+    child.reporters ??= this.reporters;
 
     try {
       child.onMount();

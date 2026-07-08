@@ -2,7 +2,7 @@
 
 # nagi
 
-**Composition-style ergonomics for vanilla DOM. Bring your own mounter.**
+**Lightweight lifecycle hooks and reactivity for existing HTML.**
 
 [![npm](https://img.shields.io/npm/v/@usenagi/core)](https://www.npmjs.com/package/@usenagi/core)
 [![bundle size](https://img.shields.io/bundlephobia/minzip/@usenagi/core)](https://bundlephobia.com/package/@usenagi/core)
@@ -10,56 +10,48 @@
 
 ---
 
+## 30-second example
+
+```ts
+import { create, useDeferredUnmount, useUnmount } from "@usenagi/core";
+import gsap from "gsap";
+
+const app = create();
+
+app.component({
+  name: "modal",
+  setup(el) {
+    gsap.from(el, { opacity: 0, y: 20, duration: 0.4 });
+
+    useDeferredUnmount(() => {
+      return new Promise((resolve) => {
+        gsap.to(el, { opacity: 0, y: -20, duration: 0.3, onComplete: resolve });
+      });
+    });
+
+    useUnmount(() => el.remove());
+  },
+})(document.querySelector(".modal")!);
+```
+
+Enter animation on mount, exit animation before unmount, cleanup on unmount — all in one `setup()`.
+
+---
+
 ## Why nagi?
 
-**Can be added in small parts to existing HTML**
+**Add lifecycle to existing HTML**
 
-You can add `setup()`, lifecycle, and reactivity to WordPress, CMS, Webflow, static sites, etc., without introducing a virtual DOM or templates.
+Add `setup()`, lifecycle hooks, and reactivity to WordPress, CMS, Webflow, static sites, etc. — no virtual DOM, no templates.
 
 **Compatible with animation**
 
 You can initialize libraries such as GSAP, Lenis, and IntersectionObserver in `setup()`, and perform cleanup using `useUnmount()`.
 You can also use `useDeferredUnmount()` to run async work, such as exit animations, before the unmount occurs.
 
-**Does not restrict mounting strategies**
+**Bring your own mounter**
 
-You are free to implement `[data-component]` scanning, manifests, lazy imports, MutationObserver, and so on, on the consuming side.
-
----
-
-## 30-second example
-
-```ts
-// counter.ts
-import { create, signal, useWatch, useDomRef } from "@usenagi/core";
-
-const app = create();
-
-app.component({
-  name: "counter",
-  setup() {
-    const { refs } = useDomRef<{
-      count: HTMLSpanElement;
-      btn: HTMLButtonElement;
-    }>();
-
-    const n = signal(0);
-    useWatch(n, (v) => {
-      refs.count.textContent = String(v);
-    });
-    refs.btn.addEventListener("click", () => {
-      n.value++;
-    });
-  },
-})(document.querySelector("#counter")!);
-```
-
-```html
-<div id="counter">
-  <span data-ref="count">0</span>
-  <button data-ref="btn">+</button>
-</div>
-```
+`[data-component]` scanning, manifests, lazy imports, MutationObserver — implement your own mounting strategy.
 
 ---
 
@@ -145,6 +137,33 @@ useWatch(area, (v) => {
   output.textContent = String(v);
 });
 ```
+
+#### Signals addon (glitch-free reactivity)
+
+The built-in reactivity is intentionally minimal and can observe intermediate values in diamond-shaped dependencies. For complex dependency graphs, the `signals` addon provides the same API backed by [@preact/signals-core](https://github.com/preactjs/signals) — glitch-free evaluation, lazy `computed`, plus `batch()` and `useSignalEffect()`.
+
+`@preact/signals-core` is included in the package dependencies but is never imported by the core itself. It is only loaded when you import `@usenagi/core/addons/signals`, so it does not affect the bundle size unless you use this addon.
+
+
+```ts
+import { signal, useComputed, useWatch, batch, useSignalEffect } from "@usenagi/core/addons/signals";
+
+const a = signal(1);
+const b = signal(2);
+const sum = useComputed(() => a.value + b.value);
+
+setup() {
+  useWatch(sum, (v) => { /* fires once with the final value */ });
+  useSignalEffect(() => { /* auto-tracks reads, disposed on unmount */ });
+}
+
+batch(() => {
+  a.value = 10;
+  b.value = 20; // one notification, not two
+});
+```
+
+Signals from the core and this addon are separate implementations — do not mix them for the same value.
 
 ### Lifecycle
 
@@ -235,6 +254,19 @@ import { visible, idle, interaction, media } from "@usenagi/core/addons/cue";
 | `idle(timeout?)` | A Cue that resolves via `requestIdleCallback` |
 | `interaction(events?)` | A Cue that resolves on the first user interaction |
 | `media(query)` | A Cue that resolves when the media query matches |
+
+#### Debug addon
+
+Installing `debugAddon()` prints lifecycle errors (`setup` / `mount` / `unmount` / `deferredUnmount` / `removeChild`) as formatted logs via `console.error`. Reporters are scoped per app instance — installing the addon on one app has no effect on others.
+
+```ts
+import { create } from "@usenagi/core";
+import { debugAddon } from "@usenagi/core/addons/debug";
+
+const app = create().install(debugAddon());
+```
+
+Addon authors can add their own reporter via `ctx.addDebugReporter(reporter)`. Registering multiple reporters notifies all of them for each event.
 
 ---
 

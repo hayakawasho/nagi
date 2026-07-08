@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { create } from "./app";
+import { isLifecycleError, type LifecycleError } from "./error";
 import { useMount, useUnmount } from "./lifecycle";
 
 function makeEl(): HTMLElement {
@@ -46,6 +47,28 @@ describe("create — 同期 mount（addon なし）", () => {
 
       expect(ctx).toBeDefined();
       expect(ctx?.current).toEqual({});
+    });
+
+    it("setup が Promise を返すと LifecycleError を投げる", () => {
+      const el = makeEl();
+      const { component } = create();
+
+      let caught: unknown;
+
+      try {
+        component({
+          name: "test",
+          // biome-ignore lint/suspicious/noExplicitAny: async setup は型で禁止されているため意図的に握りつぶす
+          setup: (async () => {}) as any,
+        })(el);
+      } catch (e) {
+        caught = e;
+      }
+
+      expect(isLifecycleError(caught)).toBe(true);
+      expect(String((caught as LifecycleError).details.cause)).toMatch(
+        /must be synchronous/,
+      );
     });
   });
 
