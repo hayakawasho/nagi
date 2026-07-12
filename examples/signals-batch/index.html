@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>signals batch example</title>
+    <style>
+      body { font-family: sans-serif; padding: 2rem; }
+      button { margin-right: 0.5rem; }
+      dl { margin-top: 1rem; }
+      dt { font-weight: bold; }
+      dd { margin: 0 0 0.5rem 0; }
+      ol { margin-top: 1rem; padding-left: 1.25rem; font-size: 0.875rem; color: #666; }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <button type="button" data-ref="loadBatch">読み込む(batchあり)</button>
+      <button type="button" data-ref="loadNoBatch">読み込む(batchなし)</button>
+      <button type="button" data-ref="reset">リセット</button>
+      <dl>
+        <dt>loading</dt>
+        <dd data-ref="loading"></dd>
+        <dt>data</dt>
+        <dd data-ref="data"></dd>
+        <dt>error</dt>
+        <dd data-ref="error"></dd>
+      </dl>
+      <ol data-ref="log"></ol>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

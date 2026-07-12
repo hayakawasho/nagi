@@ -28,4 +28,4 @@ function u(t) {
 	e(r(t));
 }
 //#endregion
-export { t as batch, n as computed, r as effect, o as readonly, i as signal, a as untracked, l as useComputed, u as useSignalEffect, c as useWatch };
+export { t as batch, o as readonly, i as signal, a as untracked, l as useComputed, u as useSignalEffect, c as useWatch };

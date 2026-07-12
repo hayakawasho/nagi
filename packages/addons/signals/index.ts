@@ -52,13 +52,12 @@ function useComputed<T>(getter: () => T): ReadonlySignal<T> {
 }
 
 function useSignalEffect(fn: () => void | (() => void)) {
-  useUnmount(effect(fn));
+  const dispose = effect(fn);
+  useUnmount(dispose);
 }
 
 export {
   batch,
-  computed,
-  effect,
   readonly,
   signal,
   untracked,
