@@ -3,16 +3,14 @@ import {
   createContext,
   defineComponent,
   propTypes,
-  readonly,
-  signal,
   useDomRef,
   useEvent,
   useSlot,
-  useWatch,
   withContext,
 } from "../../packages/core/lib/main";
+import { readonly, signal, useWatch } from "../../packages/addons/signals";
 
-import type { ReadonlySignal } from "../../packages/core/lib/main";
+import type { ReadonlySignal } from "../../packages/addons/signals";
 
 type DisclosureContext = {
   isOpen: ReadonlySignal<boolean>;

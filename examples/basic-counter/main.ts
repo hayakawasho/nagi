@@ -1,10 +1,10 @@
 import {
   create,
   defineComponent,
-  signal,
   useDomRef,
   useUnmount,
 } from "../../packages/core/lib/main";
+import { signal } from "../../packages/addons/signals";
 
 const Counter = defineComponent({
   name: "counter",

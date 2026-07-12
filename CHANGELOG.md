@@ -6,6 +6,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Removed (BREAKING)
+
+- Core reactivity (`signal` / `readonly` / `useComputed` / `useWatch`, types `Signal` / `ReadonlySignal`) has been removed from the `@usenagi/core` entry. Reactivity is now provided solely by the `signals` addon — same package, separate entry. The core entry is now purely lifecycle + DOM, and the "two implementations, do not mix" caveat is gone.
+
+  ```diff
+  -import { create, signal, useComputed, useWatch } from "@usenagi/core";
+  +import { create } from "@usenagi/core";
+  +import { signal, useComputed, useWatch } from "@usenagi/core/addons/signals";
+  ```
+
+  `@preact/signals-core` is already in the package dependencies and is loaded only when the signals entry is imported — no install step required.
+
+- `useMediaQuery` has been removed. `MediaQueryList` is an `EventTarget`, so `useEvent` (which supports arbitrary event targets since the previous release) covers it:
+
+  ```ts
+  setup(el) {
+    const mql = matchMedia("(min-width: 768px)");
+    const apply = () => { /* branch on mql.matches */ };
+    useEvent(mql, "change", apply);
+    apply();
+  }
+  ```
+
+  To defer mounting until a media query matches, use the `media()` cue.
+
 ### Added
 
 - Debug info trace — mount / unmount now emit `level: "info"` debug events (`source: "lifecycle"`). Emitted only when a debug reporter is registered; without one the app stays completely silent.
