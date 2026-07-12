@@ -1,4 +1,4 @@
-import { reportLifecycleError } from "./debugEvents";
+import { reportLifecycleError, reportLifecycleInfo } from "./debugEvents";
 
 import type { LifecycleErrorDetails } from "../error";
 import type { ComponentContextImpl } from "./component";
@@ -12,4 +12,11 @@ export function errorReport(
   parent?: ComponentContextImpl | null,
 ) {
   reportLifecycleError(phase, target, cause, parent);
+}
+
+export function infoReport(
+  phase: "mount" | "unmount",
+  target: ComponentContextImpl,
+) {
+  reportLifecycleInfo(phase, target);
 }

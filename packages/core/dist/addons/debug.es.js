@@ -8,14 +8,20 @@ function t(e) {
 	} : { message: String(e) };
 }
 function n(e) {
-	let n = e.path ?? e.name, r = e.uid ? ` (${e.uid})` : "", i = e.elementLabel ? ` <${e.elementLabel}>` : "", a = t(e.cause), o = [a.name, a.message].filter(Boolean).join(": ");
-	return `[nagi:debug] ${e.level}:${e.source}:${e.phase} ${n}${r}${i}: ${o}`;
+	let n = e.path ?? e.name, r = e.uid ? ` (${e.uid})` : "", i = e.elementLabel ? ` <${e.elementLabel}>` : "", a = `[nagi:debug] ${e.level}:${e.source}:${e.phase} ${n}${r}${i}`;
+	if (e.level === "info") return e.source === "scheduler" && e.cueLabel ? `${a}${e.phase === "pending" ? ` waiting: ${e.cueLabel}` : ` cue: ${e.cueLabel}`}` : a;
+	let o = t(e.cause);
+	return `${a}: ${[o.name, o.message].filter(Boolean).join(": ")}`;
 }
 function r() {
 	return e({
 		name: "@usenagi/debug",
 		install(e) {
 			e.addDebugReporter((e) => {
+				if (e.level === "info") {
+					console.info(n(e));
+					return;
+				}
 				console.error(n(e), e.cause);
 			});
 		}

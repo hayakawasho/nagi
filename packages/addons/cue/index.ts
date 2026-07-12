@@ -20,7 +20,7 @@ function onAbort(
 }
 
 export function visible(opts?: IntersectionObserverInit): Cue {
-  return (el, signal) => {
+  const cue: Cue = (el, signal) => {
     return new Promise<void>((resolve, reject) => {
       if (signal.aborted) {
         reject(abortError());
@@ -42,10 +42,13 @@ export function visible(opts?: IntersectionObserverInit): Cue {
       onAbort(signal, () => io.disconnect(), reject);
     });
   };
+
+  cue.cueLabel = "visible";
+  return cue;
 }
 
 export function idle(timeout?: number): Cue {
-  return (_el, signal) => {
+  const cue: Cue = (_el, signal) => {
     return new Promise<void>((resolve, reject) => {
       if (signal.aborted) {
         reject(abortError());
@@ -66,10 +69,13 @@ export function idle(timeout?: number): Cue {
       onAbort(signal, () => cancelIdleCallback(id), reject);
     });
   };
+
+  cue.cueLabel = "idle";
+  return cue;
 }
 
 export function media(query: string): Cue {
-  return (_el, signal) => {
+  const cue: Cue = (_el, signal) => {
     return new Promise<void>((resolve, reject) => {
       if (signal.aborted) {
         reject(abortError());
@@ -99,12 +105,15 @@ export function media(query: string): Cue {
       );
     });
   };
+
+  cue.cueLabel = "media";
+  return cue;
 }
 
 export function interaction(
   events: string[] = ["click", "focus", "pointerenter"],
 ): Cue {
-  return (el, signal) => {
+  const cue: Cue = (el, signal) => {
     return new Promise<void>((resolve, reject) => {
       if (signal.aborted) {
         reject(abortError());
@@ -129,4 +138,7 @@ export function interaction(
       onAbort(signal, cleanup, reject);
     });
   };
+
+  cue.cueLabel = "interaction";
+  return cue;
 }

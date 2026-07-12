@@ -80,23 +80,36 @@ function s(t) {
 	return e({
 		name: "@usenagi/scheduler",
 		install(e) {
-			let i = o(t), a = n();
-			e.addMountMiddleware((e, t, n) => (t, o) => {
-				let s = a.add(t), c = () => {
+			let i = o(t), a = n(), s = (t, n, r, i) => {
+				e.emitDebugEvent({
+					version: 1,
+					level: "info",
+					source: "scheduler",
+					phase: t,
+					name: n,
+					element: r,
+					cueLabel: i
+				});
+			};
+			e.addMountMiddleware((e, t, n) => (o, c) => {
+				let l = a.add(o), u = () => {
 					i.schedule(() => {
-						s.complete() && e(t, o);
+						l.complete() && e(o, c);
 					}, {
 						priority: n.priority,
-						signal: s.signal
+						signal: l.signal
 					});
-				}, { when: l } = n;
-				l ? l(t, s.signal).then(() => {
-					s.signal.aborted || c();
-				}, (e) => {
-					r(e) || (s.abort(), queueMicrotask(() => {
-						throw e;
-					}));
-				}) : c();
+				}, { when: d } = n;
+				if (d) {
+					let e = d.cueLabel ?? "custom";
+					s("pending", t.name, o, e), l.signal.addEventListener("abort", () => s("aborted", t.name, o, e), { once: !0 }), d(o, l.signal).then(() => {
+						l.signal.aborted || (s("resolved", t.name, o, e), u());
+					}, (e) => {
+						r(e) || (l.abort(), queueMicrotask(() => {
+							throw e;
+						}));
+					});
+				} else u();
 			}), e.addUnmountMiddleware((e) => (t) => (t.forEach(a.abort), e(t)));
 		}
 	});

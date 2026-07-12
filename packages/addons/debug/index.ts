@@ -26,11 +26,25 @@ function formatEvent(event: DebugEvent): string {
   const location = event.path ?? event.name;
   const uid = event.uid ? ` (${event.uid})` : "";
   const element = event.elementLabel ? ` <${event.elementLabel}>` : "";
+  const head = `[nagi:debug] ${event.level}:${event.source}:${event.phase} ${location}${uid}${element}`;
+
+  if (event.level === "info") {
+    if (event.source === "scheduler" && event.cueLabel) {
+      const cue =
+        event.phase === "pending"
+          ? ` waiting: ${event.cueLabel}`
+          : ` cue: ${event.cueLabel}`;
+
+      return `${head}${cue}`;
+    }
+
+    return head;
+  }
 
   const error = normalizeError(event.cause);
   const causeMessage = [error.name, error.message].filter(Boolean).join(": ");
 
-  return `[nagi:debug] ${event.level}:${event.source}:${event.phase} ${location}${uid}${element}: ${causeMessage}`;
+  return `${head}: ${causeMessage}`;
 }
 
 export function debugAddon(): Addon {
@@ -38,6 +52,11 @@ export function debugAddon(): Addon {
     name: "@usenagi/debug",
     install(ctx) {
       ctx.addDebugReporter((event) => {
+        if (event.level === "info") {
+          console.info(formatEvent(event));
+          return;
+        }
+
         console.error(formatEvent(event), event.cause);
       });
     },

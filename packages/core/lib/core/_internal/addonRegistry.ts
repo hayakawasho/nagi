@@ -1,6 +1,8 @@
+import { describeElement, dispatchDebugEvent } from "./debugEvents";
+
 import type { ComponentSetup, RefElement } from "../../types";
 import type { Addon, AddonContext, MountOptions } from "../addon";
-import type { DebugReporter } from "../debugEvent";
+import type { DebugEvent, DebugReporter } from "../debugEvent";
 
 // biome-ignore lint/suspicious/noExplicitAny: return type varies with addons
 type MountFn = (el: RefElement, props: Record<string, any>) => any;
@@ -47,6 +49,20 @@ class AddonRegistry implements AddonContext {
 
   addDebugReporter(reporter: DebugReporter): void {
     this.#debugReporters.push(reporter);
+  }
+
+  emitDebugEvent(event: DebugEvent): void {
+    if (this.#debugReporters.length === 0) {
+      return;
+    }
+
+    // addon 側の手間を省くため、element だけ渡されたら elementLabel を補完する
+    const enriched =
+      event.element && !event.elementLabel
+        ? { ...event, elementLabel: describeElement(event.element) }
+        : event;
+
+    dispatchDebugEvent(this.#debugReporters, enriched);
   }
 
   composeComponent<S extends ComponentSetup>(setup: S): S {

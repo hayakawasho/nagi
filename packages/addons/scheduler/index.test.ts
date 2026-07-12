@@ -1,9 +1,9 @@
-import { create, useSlot, useUnmount } from "@usenagi/core";
+import { create, defineAddon, useSlot, useUnmount } from "@usenagi/core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { schedulerAddon } from "./index";
 
-import type { SchedulePriority } from "@usenagi/core";
+import type { Cue, DebugEvent, SchedulePriority } from "@usenagi/core";
 
 function createWithScheduler(opts?: { priority?: SchedulePriority }) {
   return create().install(schedulerAddon(opts));
@@ -331,5 +331,96 @@ describe("useSlot.addChild — scheduler を経由しない", () => {
 
     await Promise.resolve();
     expect(childSetupFn).toHaveBeenCalledOnce();
+  });
+});
+
+describe("schedulerAddon — debug info event", () => {
+  beforeEach(() => {
+    vi.stubGlobal("scheduler", undefined);
+  });
+
+  function debugProbe(events: DebugEvent[]) {
+    return defineAddon({
+      name: `probe-${crypto.randomUUID()}`,
+      install(ctx) {
+        ctx.addDebugReporter((event) => events.push(event));
+      },
+    });
+  }
+
+  it("cue 待ちで pending → resolved が届き、mount info が続く", async () => {
+    const events: DebugEvent[] = [];
+    let resolveCue!: () => void;
+    const cue: Cue = () =>
+      new Promise<void>((resolve) => {
+        resolveCue = resolve;
+      });
+    cue.cueLabel = "manual";
+    const el = makeEl();
+
+    const app = create().install(
+      schedulerAddon({ priority: "user-blocking" }),
+      debugProbe(events),
+    );
+
+    app.component({ name: "test", setup: () => {} }, { when: cue })(el);
+
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      version: 1,
+      level: "info",
+      source: "scheduler",
+      phase: "pending",
+      name: "test",
+      cueLabel: "manual",
+      element: el,
+      elementLabel: "div",
+    });
+
+    resolveCue();
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(events.map((event) => `${event.source}:${event.phase}`)).toEqual([
+      "scheduler:pending",
+      "scheduler:resolved",
+      "lifecycle:mount",
+    ]);
+  });
+
+  it("unmount で中断されると aborted が届く（ラベル未設定の cue は custom）", async () => {
+    const events: DebugEvent[] = [];
+    const cue: Cue = () => new Promise<void>(() => {});
+    const el = makeEl();
+
+    const app = create().install(
+      schedulerAddon({ priority: "user-blocking" }),
+      debugProbe(events),
+    );
+
+    app.component({ name: "test", setup: () => {} }, { when: cue })(el);
+    await app.unmount([el]);
+
+    expect(events.map((event) => `${event.source}:${event.phase}`)).toEqual([
+      "scheduler:pending",
+      "scheduler:aborted",
+    ]);
+    expect(events[1]).toMatchObject({ cueLabel: "custom" });
+  });
+
+  it("cue なしのマウントでは scheduler イベントを発行しない", async () => {
+    const events: DebugEvent[] = [];
+    const el = makeEl();
+
+    const app = create().install(
+      schedulerAddon({ priority: "user-blocking" }),
+      debugProbe(events),
+    );
+
+    app.component({ name: "test", setup: () => {} })(el);
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(events.map((event) => `${event.source}:${event.phase}`)).toEqual([
+      "lifecycle:mount",
+    ]);
   });
 });

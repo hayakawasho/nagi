@@ -1,4 +1,4 @@
-import { errorReport } from "./errorReport";
+import { errorReport, infoReport } from "./errorReport";
 
 import type { DebugReporter } from "../debugEvent";
 import type {
@@ -65,6 +65,8 @@ class ComponentContextImpl<T = any>
     }
 
     this[LifecycleHooks.UNMOUNTED].push(...unmounts);
+
+    infoReport("mount", this);
   };
 
   onDeferredUnmount = (): Promise<void> => {
@@ -106,6 +108,8 @@ class ComponentContextImpl<T = any>
     for (const child of this.#children) {
       child.onUnmount();
     }
+
+    infoReport("unmount", this);
   };
 
   addChild = (child: ComponentContextImpl) => {

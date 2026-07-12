@@ -17,5 +17,8 @@ export type UseMountCallback = () => void | Cleanup;
 export type UseDeferredUnmountCallback = () => void | Promise<void>;
 export type UseUnmountCallback = () => void;
 export type SchedulePriority = "user-blocking" | "user-visible" | "background";
-export type Cue = (el: RefElement, signal: AbortSignal) => Promise<void>;
+export type Cue = ((el: RefElement, signal: AbortSignal) => Promise<void>) & {
+    /** Debug 表示用のラベル(例: "visible")。挙動には影響しない */
+    cueLabel?: string;
+};
 export {};
