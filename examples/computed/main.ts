@@ -1,4 +1,4 @@
-import { create, signal, useComputed, useMount, useWatch } from "../../packages/core/lib/main";
+import { create, signal, useComputed, useMount, useWatch, useEvent } from "../../packages/core/lib/main";
 import { useDomRef } from "../../packages/core/lib/hooks/core/useDomRef";
 
 type Refs = {
@@ -37,11 +37,11 @@ component({
       refs.label.textContent = v;
     });
 
-    refs.width.addEventListener("input", (e) => {
+    useEvent(refs.width, "input", (e) => {
       width.value = Number((e.target as HTMLInputElement).value);
     });
 
-    refs.height.addEventListener("input", (e) => {
+    useEvent(refs.height, "input", (e) => {
       height.value = Number((e.target as HTMLInputElement).value);
     });
   },
