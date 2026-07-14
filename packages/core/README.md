@@ -193,7 +193,7 @@ Use **`setup(el)`** for the root element and **`useDomRef()`** for `[data-ref]` 
 | API                            | Description                                              |
 | ------------------------------ | -------------------------------------------------------- |
 | `useDomRef<T>()`               | Typed access to `[data-ref]` elements                    |
-| `useEvent(el, event, handler)` | Adds an event listener; automatically removed on unmount |
+| `useEvent(target, event, handler)` | Adds an event listener to any `EventTarget` (element / `window` / `document` / `MediaQueryList`, …); automatically removed on unmount |
 | `useSlot()`                    | Mounts child components; tied to the parent's unmount    |
 
 ### Parent / child
@@ -207,19 +207,6 @@ You can mount child components with `useSlot()`. You can pass values from parent
 | API                               | Description                                                         |
 | --------------------------------- | ------------------------------------------------------------------- |
 | `useIntersectionWatch(cb, opts?)` | IntersectionObserver wrapper; automatically disconnected on unmount |
-
-`MediaQueryList` is an `EventTarget`, so reacting to a media query is a `useEvent` composition:
-
-```ts
-setup(el) {
-  const mql = matchMedia("(min-width: 768px)");
-  const apply = () => { /* branch on mql.matches */ };
-  useEvent(mql, "change", apply);
-  apply();
-}
-```
-
-To defer mounting until a media query matches, use the `media()` cue instead.
 
 ### Addons
 

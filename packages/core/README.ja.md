@@ -192,7 +192,7 @@ setup(el) {
 | API                            | 説明                                                    |
 | ------------------------------ | ------------------------------------------------------- |
 | `useDomRef<T>()`               | `[data-ref]` 要素への型付きアクセス                     |
-| `useEvent(el, event, handler)` | イベントリスナーを追加する。unmount 時に自動で除去する  |
+| `useEvent(target, event, handler)` | 任意の `EventTarget`（要素 / `window` / `document` / `MediaQueryList` など）にイベントリスナーを追加する。unmount 時に自動で除去する |
 | `useSlot()`                    | 子コンポーネントをマウントする。親の unmount に連動する |
 
 ### Parent / child
@@ -206,19 +206,6 @@ setup(el) {
 | API                               | 説明                                                        |
 | --------------------------------- | ----------------------------------------------------------- |
 | `useIntersectionWatch(cb, opts?)` | IntersectionObserver のラッパー。unmount 時に自動で切断する |
-
-`MediaQueryList` は `EventTarget` なので、media query への反応は `useEvent` の合成で書ける:
-
-```ts
-setup(el) {
-  const mql = matchMedia("(min-width: 768px)");
-  const apply = () => { /* mql.matches で分岐 */ };
-  useEvent(mql, "change", apply);
-  apply();
-}
-```
-
-media query が一致するまでマウントを遅らせたい場合は `media()` cue を使う。
 
 ### Addons
 
