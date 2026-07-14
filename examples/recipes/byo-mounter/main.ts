@@ -14,13 +14,12 @@
 import {
   create,
   defineComponent,
-  signal,
   useDomRef,
-  useWatch,
   useMount,
 } from "../../../packages/core/lib/main";
 import { schedulerAddon } from "../../../packages/addons/scheduler";
 import { idle, interaction, visible, media } from "../../../packages/addons/cue";
+import { signal, useWatch } from "../../../packages/addons/signals";
 
 import type { ComponentSetup, SchedulePriority } from "../../../packages/core/lib/types";
 

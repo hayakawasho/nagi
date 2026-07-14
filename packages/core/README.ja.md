@@ -63,7 +63,8 @@ npm i @usenagi/core
 ### First component
 
 ```ts
-import { create, defineComponent, propTypes, signal, useWatch, useDomRef } from "@usenagi/core";
+import { create, defineComponent, propTypes, useDomRef } from "@usenagi/core";
+import { signal, useWatch } from "@usenagi/core/addons/signals";
 
 const Greeting = defineComponent({
   name: "greeting",
@@ -118,33 +119,24 @@ app.component(Analytics, { when: idle() })(el);
 | `defineComponent(opts)` | 型安全な `ComponentSetup` 定義ヘルパー                          |
 | `propTypes<T>()`       | コンポーネント props の型マーカー（ランタイムコストゼロ）         |
 
-### Reactivity
+### Reactivity（signals addon）
+
+リアクティビティは `signals` addon が提供する。同じパッケージ内の別エントリ（`@usenagi/core/addons/signals`）で、[@preact/signals-core](https://github.com/preactjs/signals) ベースのグリッチフリーな評価・遅延評価の `computed` を備える。
+
+`@preact/signals-core` はパッケージの dependencies に含まれるが、読み込まれるのは `@usenagi/core/addons/signals` を import したときだけ。core エントリはリアクティビティを含まないため、バンドルコストはかからない。
 
 | API                    | 説明                                                   |
 | ---------------------- | ------------------------------------------------------ |
 | `signal(value)`        | `.value` を持つリアクティブな値コンテナを作成する      |
 | `readonly(signal)`     | 書き込み可能な `signal` の読み取り専用ラッパー         |
-| `useComputed(fn)`      | `signal` の依存を自動追跡する派生値                    |
+| `useComputed(fn)`      | `signal` の依存を自動追跡する派生値（グリッチフリー・遅延評価） |
 | `useWatch(target, cb)` | 値変更時に `cb` を呼ぶ。unmount 時に自動で購読解除する |
+| `batch(fn)`            | 複数の更新を1回の通知にまとめる                        |
+| `useSignalEffect(fn)`  | 読み取りを自動追跡し、unmount 時に破棄する             |
+| `untracked(fn)`        | 購読せずに signal を読み取る                           |
 
 ```ts
-const width = signal(10);
-const height = signal(5);
-const area = useComputed(() => width.value * height.value); // auto-recomputed
-
-useWatch(area, (v) => {
-  output.textContent = String(v);
-});
-```
-
-#### Signals addon（グリッチフリーなリアクティビティ）
-
-組み込みのリアクティビティは意図的に最小限の実装のため、ダイヤモンド型の依存関係では中間値を観測することがある。複雑な依存グラフには、同じ API を [@preact/signals-core](https://github.com/preactjs/signals) ベースで提供する `signals` addon が使える。グリッチフリーな評価・遅延評価の `computed` に加え、`batch()` と `useSignalEffect()` が使える。
-
-`@preact/signals-core` はパッケージの dependencies に含まれるが、core 本体からは一切 import されない。読み込まれるのは `@usenagi/core/addons/signals` を import したときだけで、この addon を使わない限りバンドルサイズには影響しない。
-
-```ts
-import { signal, useComputed, useWatch, batch, useSignalEffect } from "@usenagi/core/addons/signals";
+import { batch, signal, useComputed, useSignalEffect, useWatch } from "@usenagi/core/addons/signals";
 
 const a = signal(1);
 const b = signal(2);
@@ -160,8 +152,6 @@ batch(() => {
   b.value = 20; // 通知は2回ではなく1回
 });
 ```
-
-core と本 addon の Signal は別実装のため、同じ値に対して混在させないこと。
 
 ### Lifecycle
 
@@ -202,7 +192,7 @@ setup(el) {
 | API                            | 説明                                                    |
 | ------------------------------ | ------------------------------------------------------- |
 | `useDomRef<T>()`               | `[data-ref]` 要素への型付きアクセス                     |
-| `useEvent(el, event, handler)` | イベントリスナーを追加する。unmount 時に自動で除去する  |
+| `useEvent(target, event, handler)` | 任意の `EventTarget`（要素 / `window` / `document` / `MediaQueryList` など）にイベントリスナーを追加する。unmount 時に自動で除去する |
 | `useSlot()`                    | 子コンポーネントをマウントする。親の unmount に連動する |
 
 ### Parent / child
@@ -216,7 +206,6 @@ setup(el) {
 | API                               | 説明                                                        |
 | --------------------------------- | ----------------------------------------------------------- |
 | `useIntersectionWatch(cb, opts?)` | IntersectionObserver のラッパー。unmount 時に自動で切断する |
-| `useMediaQuery(query, cb)` | query 一致時に callback を実行し、`matchesQuery` を `ReadonlySignal<boolean>` で返す |
 
 ### Addons
 
@@ -232,6 +221,7 @@ const app = create().install(schedulerAddon(), myAddon());
 | `defineAddon({ name, install(ctx) })` | addon を定義する（`ctx` は `AddonContext`） |
 | `app.install(...addons)` | app に addon を登録する（複数可） |
 | `ctx.addMountMiddleware` / `addUnmountMiddleware` / `addComponentMiddleware` | mount / unmount / ComponentSetup の middleware を追加する |
+| `ctx.addDebugReporter` / `ctx.emitDebugEvent` | debug reporter の登録 / app の reporter への debug イベント発行 |
 | `ctx.installedAddons` | この app に install 済みの addon 名 |
 
 `addMountMiddleware` / `addUnmountMiddleware` / `addComponentMiddleware` は **後から install した addon ほど外側**に適用される（`install(a, b)` なら実行順は `b → a → コア`）。
@@ -255,7 +245,13 @@ import { visible, idle, interaction, media } from "@usenagi/core/addons/cue";
 
 #### Debug addon
 
-`debugAddon()` を install すると、ライフサイクルエラー（`setup` / `mount` / `unmount` / `deferredUnmount` / `removeChild`）が整形されたログとして `console.error` に出力される。reporter は app インスタンスごとに独立しており、あるアプリに install しても他のアプリには影響しない。
+`debugAddon()` を install すると、ライフサイクルエラー（`setup` / `mount` / `unmount` / `deferredUnmount` / `removeChild`）が整形されたログとして `console.error` に出力される。さらに info レベルのトレース — コンポーネントの `mount` / `unmount`、scheduler の cue の状態（`pending` / `resolved` / `aborted`）— が `console.info` に出力され、「マウントされたのか」「何を待っているのか」を確認できる。reporter は app インスタンスごとに独立しており、あるアプリに install しても他のアプリには影響しない。reporter がなければ info イベントは構築すらされない。
+
+```
+[nagi:debug] info:scheduler:pending banner <div.banner> waiting: visible
+[nagi:debug] info:scheduler:resolved banner <div.banner> cue: visible
+[nagi:debug] info:lifecycle:mount banner (banner.2) <div.banner>
+```
 
 ```ts
 import { create } from "@usenagi/core";
@@ -264,7 +260,7 @@ import { debugAddon } from "@usenagi/core/addons/debug";
 const app = create().install(debugAddon());
 ```
 
-addon 作者は `ctx.addDebugReporter(reporter)` で独自の reporter を追加できる。複数登録した場合、すべての reporter に通知される。
+addon 作者は `ctx.addDebugReporter(reporter)` で独自の reporter を追加でき、`ctx.emitDebugEvent(event)` で同じチャネルに独自のイベントを発行できる（scheduler addon の cue トレースはこの仕組みの上に作られている）。複数登録した場合、すべての reporter に通知される。`DebugEvent` は error / info のユニオンなので `event.level` で分岐すること。`cause` は error イベントにのみ存在する。
 
 ---
 
@@ -277,7 +273,7 @@ addon 作者は `ctx.addDebugReporter(reporter)` で独自の reporter を追加
 | BYO mounter                | ◯        | △         | △        | △          |
 | Async mount cue            | ◯        | ✗         | ✗        | ✗          |
 | Lifecycle cleanup          | ◯        | △         | ◯        | △          |
-| computed (derived signals) | ◯        | ◯         | ✗        | ◯          |
+| computed (derived signals) | ◯ (addon) | ◯        | ✗        | ◯          |
 | Core gzip                  | ~2.5 kB  | ~16 kB    | ~8 kB    | ~6 kB      |
 
 (◯ = 組み込み、△ = 利用側の実装・規約で対応可能、✗ = 主な機能ではない)

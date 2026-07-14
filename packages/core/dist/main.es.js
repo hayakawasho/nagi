@@ -316,77 +316,15 @@ var j = (e) => {
 //#region lib/core/props.ts
 function P() {}
 //#endregion
-//#region lib/core/reactivity.ts
-var F = Symbol("watch"), I = null, L = class {
-	#e;
-	#t = /* @__PURE__ */ new Set();
-	constructor(e) {
-		this.#e = e;
-	}
-	get value() {
-		return I !== null && I.add(this), this.#e;
-	}
-	set value(e) {
-		if (Object.is(e, this.#e)) return;
-		let t = this.#e;
-		this.#e = e;
-		for (let n of Array.from(this.#t)) n(e, t);
-	}
-	[F](e) {
-		return this.#t.add(e), () => {
-			this.#t.delete(e);
-		};
-	}
-}, R = (e) => new L(e), z = class {
-	#e;
-	constructor(e) {
-		this.#e = e;
-	}
-	get value() {
-		return this.#e.value;
-	}
-	[F](e) {
-		return this.#e[F](e);
-	}
-}, B = (e) => new z(e);
-function V(e, t) {
-	return e[F](t);
-}
-function H(e, t) {
-	M(V(e, t));
-}
-function U(e) {
-	let t = R(void 0), n = [], r = () => {
-		n.forEach((e) => {
-			e();
-		}), n = [];
-	}, i = () => {
-		r();
-		let a = I, o = /* @__PURE__ */ new Set();
-		I = o;
-		let s;
-		try {
-			s = e();
-		} finally {
-			I = a;
-		}
-		t.value = s;
-		for (let e of o) n.push(e[F](() => {
-			i();
-		}));
-	};
-	return i(), M(r), B(t);
-}
-//#endregion
 //#region lib/hooks/core/useDomRef.ts
-function W(e, t) {
+function F(e, t) {
 	return t.some((t) => t !== e && t.contains(e));
 }
-function G(e, t, n) {
-	let r = `[data-ref="${CSS.escape(e)}"]`, i = Array.from(t.querySelectorAll(r)).filter((e) => !W(e, n));
+function I(e, t, n) {
+	let r = `[data-ref="${CSS.escape(e)}"]`, i = Array.from(t.querySelectorAll(r)).filter((e) => !F(e, n));
 	return i.length === 0 ? null : i.length === 1 ? i[0] : i;
 }
-var K = class {
+var L = class {
 	scope;
 	getBoundaries;
 	#e = /* @__PURE__ */ new Map();
@@ -395,12 +333,12 @@ var K = class {
 	}
 	get(e) {
 		if (this.#e.has(e)) return this.#e.get(e) ?? null;
-		let t = G(e, this.scope, this.getBoundaries());
+		let t = I(e, this.scope, this.getBoundaries());
 		return this.#e.set(e, t), t;
 	}
 };
-function q(e, t) {
-	let n = new K(e, t);
+function R(e, t) {
+	let n = new L(e, t);
 	return new Proxy({}, {
 		get(e, t) {
 			if (!(typeof t == "symbol" || t === "then")) return n.get(t);
@@ -420,13 +358,13 @@ function q(e, t) {
 		}
 	});
 }
-function J() {
+function z() {
 	let e = w("useDomRef");
-	return { refs: q(e.element, () => e.childElements) };
+	return { refs: R(e.element, () => e.childElements) };
 }
 //#endregion
 //#region lib/hooks/core/useSlot.ts
-function Y() {
+function B() {
 	let e = w("useSlot"), t = S();
 	return {
 		addChild(n, r, i) {
@@ -448,14 +386,14 @@ function Y() {
 }
 //#endregion
 //#region lib/hooks/useEvent.ts
-function X(e, t, n, r) {
+function V(e, t, n, r) {
 	j(() => (e.addEventListener(t, n, r), () => {
 		e.removeEventListener(t, n, r);
 	}));
 }
 //#endregion
 //#region lib/hooks/useIntersectionWatch.ts
-function Z(e, t, n = {
+function H(e, t, n = {
 	rootMargin: "0px",
 	threshold: .1
 }) {
@@ -474,15 +412,4 @@ function Z(e, t, n = {
 	return { unwatch: a };
 }
 //#endregion
-//#region lib/hooks/useMediaQuery.ts
-function Q(e, t) {
-	let n = window.matchMedia(e), r = R(n.matches), i = null;
-	function a(e) {
-		r.value = e.matches, e.matches ? i = t() : (i?.(), i = null);
-	}
-	return j(() => (n.addEventListener("change", a), n.matches && (i = t()), () => {
-		i?.(), n.removeEventListener("change", a);
-	})), { matchesQuery: B(r) };
-}
-//#endregion
-export { n as LifecycleError, D as create, k as createContext, e as defineAddon, O as defineComponent, r as isLifecycleError, P as propTypes, B as readonly, R as signal, U as useComputed, N as useDeferredUnmount, J as useDomRef, X as useEvent, Z as useIntersectionWatch, Q as useMediaQuery, j as useMount, Y as useSlot, M as useUnmount, H as useWatch, A as withContext };
+export { n as LifecycleError, D as create, k as createContext, e as defineAddon, O as defineComponent, r as isLifecycleError, P as propTypes, N as useDeferredUnmount, z as useDomRef, V as useEvent, H as useIntersectionWatch, j as useMount, B as useSlot, M as useUnmount, A as withContext };

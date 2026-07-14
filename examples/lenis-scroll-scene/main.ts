@@ -3,12 +3,10 @@ declare const Lenis: any;
 import {
   create,
   defineComponent,
-  signal,
-  useComputed,
   useDomRef,
   useMount,
-  useWatch,
 } from "../../packages/core/lib/main";
+import { signal, useComputed, useWatch } from "../../packages/addons/signals";
 
 const ScrollScene = defineComponent({
   name: "scrollScene",

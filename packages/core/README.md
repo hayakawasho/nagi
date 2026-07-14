@@ -64,7 +64,8 @@ npm i @usenagi/core
 ### First component
 
 ```ts
-import { create, defineComponent, propTypes, signal, useWatch, useDomRef } from "@usenagi/core";
+import { create, defineComponent, propTypes, useDomRef } from "@usenagi/core";
+import { signal, useWatch } from "@usenagi/core/addons/signals";
 
 const Greeting = defineComponent({
   name: "greeting",
@@ -119,34 +120,24 @@ An example of automatic mounting by combining `[data-component]` scanning, manif
 | `defineComponent(opts)` | Type-safe helper to define a `ComponentSetup` object                       |
 | `propTypes<T>()`       | Type-only marker for declaring component props shape (zero runtime cost)    |
 
-### Reactivity
+### Reactivity (signals addon)
+
+Reactivity lives in the `signals` addon — same package, separate entry (`@usenagi/core/addons/signals`). It is backed by [@preact/signals-core](https://github.com/preactjs/signals): glitch-free evaluation and lazy `computed`.
+
+`@preact/signals-core` is included in the package dependencies but is only loaded when you import `@usenagi/core/addons/signals`. The core entry contains no reactivity, so it pays no bundle cost.
 
 | API                    | Description                                                       |
 | ---------------------- | ----------------------------------------------------------------- |
 | `signal(value)`        | Creates a reactive value container (`.value`)                     |
 | `readonly(signal)`     | Read-only wrapper around a writable `signal`                      |
-| `useComputed(fn)`      | Derived value that auto-tracks `signal` dependencies              |
+| `useComputed(fn)`      | Derived value that auto-tracks `signal` dependencies (glitch-free, lazy) |
 | `useWatch(target, cb)` | Calls `cb` on value change; automatically unsubscribes on unmount |
+| `batch(fn)`            | Coalesces multiple updates into a single notification             |
+| `useSignalEffect(fn)`  | Auto-tracks reads; disposed on unmount                            |
+| `untracked(fn)`        | Reads signals without subscribing                                 |
 
 ```ts
-const width = signal(10);
-const height = signal(5);
-const area = useComputed(() => width.value * height.value); // auto-recomputed
-
-useWatch(area, (v) => {
-  output.textContent = String(v);
-});
-```
-
-#### Signals addon (glitch-free reactivity)
-
-The built-in reactivity is intentionally minimal and can observe intermediate values in diamond-shaped dependencies. For complex dependency graphs, the `signals` addon provides the same API backed by [@preact/signals-core](https://github.com/preactjs/signals) — glitch-free evaluation, lazy `computed`, plus `batch()` and `useSignalEffect()`.
-
-`@preact/signals-core` is included in the package dependencies but is never imported by the core itself. It is only loaded when you import `@usenagi/core/addons/signals`, so it does not affect the bundle size unless you use this addon.
-
-
-```ts
-import { signal, useComputed, useWatch, batch, useSignalEffect } from "@usenagi/core/addons/signals";
+import { batch, signal, useComputed, useSignalEffect, useWatch } from "@usenagi/core/addons/signals";
 
 const a = signal(1);
 const b = signal(2);
@@ -162,8 +153,6 @@ batch(() => {
   b.value = 20; // one notification, not two
 });
 ```
-
-Signals from the core and this addon are separate implementations — do not mix them for the same value.
 
 ### Lifecycle
 
@@ -204,7 +193,7 @@ Use **`setup(el)`** for the root element and **`useDomRef()`** for `[data-ref]` 
 | API                            | Description                                              |
 | ------------------------------ | -------------------------------------------------------- |
 | `useDomRef<T>()`               | Typed access to `[data-ref]` elements                    |
-| `useEvent(el, event, handler)` | Adds an event listener; automatically removed on unmount |
+| `useEvent(target, event, handler)` | Adds an event listener to any `EventTarget` (element / `window` / `document` / `MediaQueryList`, …); automatically removed on unmount |
 | `useSlot()`                    | Mounts child components; tied to the parent's unmount    |
 
 ### Parent / child
@@ -218,7 +207,6 @@ You can mount child components with `useSlot()`. You can pass values from parent
 | API                               | Description                                                         |
 | --------------------------------- | ------------------------------------------------------------------- |
 | `useIntersectionWatch(cb, opts?)` | IntersectionObserver wrapper; automatically disconnected on unmount |
-| `useMediaQuery(query, cb)` | Runs `callback` when the query matches; returns `matchesQuery` as `ReadonlySignal<boolean>` |
 
 ### Addons
 
@@ -234,6 +222,7 @@ const app = create().install(schedulerAddon(), myAddon());
 | `defineAddon({ name, install(ctx) })` | Defines an addon (`ctx` is `AddonContext`) |
 | `app.install(...addons)` | Registers one or more addons on the app |
 | `ctx.addMountMiddleware` / `addUnmountMiddleware` / `addComponentMiddleware` | Add mount / unmount / ComponentSetup middleware |
+| `ctx.addDebugReporter` / `ctx.emitDebugEvent` | Register a debug reporter / publish debug events to the app's reporters |
 | `ctx.installedAddons` | Addon names already installed on this app |
 
 `addMountMiddleware`, `addUnmountMiddleware`, and `addComponentMiddleware` apply **outermost for addons installed later** (`install(a, b)` runs as `b → a → core`).
@@ -257,7 +246,13 @@ import { visible, idle, interaction, media } from "@usenagi/core/addons/cue";
 
 #### Debug addon
 
-Installing `debugAddon()` prints lifecycle errors (`setup` / `mount` / `unmount` / `deferredUnmount` / `removeChild`) as formatted logs via `console.error`. Reporters are scoped per app instance — installing the addon on one app has no effect on others.
+Installing `debugAddon()` prints lifecycle errors (`setup` / `mount` / `unmount` / `deferredUnmount` / `removeChild`) as formatted logs via `console.error`. It also prints an info-level trace via `console.info` — component `mount` / `unmount`, and the scheduler's cue states (`pending` / `resolved` / `aborted`) — so you can tell whether a component mounted, and what it is still waiting for. Reporters are scoped per app instance — installing the addon on one app has no effect on others. Without a reporter, info events are not even constructed.
+
+```
+[nagi:debug] info:scheduler:pending banner <div.banner> waiting: visible
+[nagi:debug] info:scheduler:resolved banner <div.banner> cue: visible
+[nagi:debug] info:lifecycle:mount banner (banner.2) <div.banner>
+```
 
 ```ts
 import { create } from "@usenagi/core";
@@ -266,7 +261,7 @@ import { debugAddon } from "@usenagi/core/addons/debug";
 const app = create().install(debugAddon());
 ```
 
-Addon authors can add their own reporter via `ctx.addDebugReporter(reporter)`. Registering multiple reporters notifies all of them for each event.
+Addon authors can add their own reporter via `ctx.addDebugReporter(reporter)`, and publish their own events to the same channel via `ctx.emitDebugEvent(event)` (the scheduler addon's cue trace is built on this). Registering multiple reporters notifies all of them for each event. `DebugEvent` is a union of error / info events — branch on `event.level`; `cause` exists only on error events.
 
 ---
 
@@ -279,7 +274,7 @@ Addon authors can add their own reporter via `ctx.addDebugReporter(reporter)`. R
 | BYO mounter                | ◯        | △         | △        | △          |
 | Async mount cue            | ◯        | ✗         | ✗        | ✗          |
 | Lifecycle cleanup          | ◯        | △         | ◯        | △          |
-| computed (derived signals) | ◯        | ◯         | ✗        | ◯          |
+| computed (derived signals) | ◯ (addon) | ◯        | ✗        | ◯          |
 | Core gzip                  | ~2.5 kB  | ~16 kB    | ~8 kB    | ~6 kB      |
 
 (◯ = built-in, △ = handled via userland/convention, ✗ = not a primary feature)
