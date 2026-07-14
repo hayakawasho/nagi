@@ -1,6 +1,6 @@
 {
   "name": "@usenagi/core",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Lightweight lifecycle hooks and reactivity for existing HTML.",
   "main": "./dist/main.umd.js",
   "module": "./dist/main.es.js",
