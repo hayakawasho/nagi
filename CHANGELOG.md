@@ -4,7 +4,7 @@ All notable changes to `@usenagi/core` are documented here. Release notes also a
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.7.0] - 2026-07-15
+## [Unreleased]
 
 ### Removed (BREAKING)
 
@@ -30,6 +30,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   ```
 
   To defer mounting until a media query matches, use the `media()` cue.
+
+## [0.7.0] - 2026-07-15
 
 ### Added
 
