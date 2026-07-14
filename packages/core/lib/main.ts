@@ -13,11 +13,9 @@ export { useIntersectionWatch } from "./hooks/useIntersectionWatch";
 export type { Addon, AddonContext, MountOptions } from "./core/addon";
 export type { Provider } from "./core/context";
 export type {
-  DebugErrorEvent,
   DebugEvent,
   DebugEventLevel,
   DebugEventSource,
-  DebugInfoEvent,
   DebugReporter,
 } from "./core/debugEvent";
 export type { LifecycleErrorDetails } from "./core/error";
