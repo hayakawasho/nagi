@@ -69,4 +69,54 @@ describe("debugAddon", () => {
       cause,
     );
   });
+
+  it("info event は console.info に整形出力し、console.error は呼ばない", async () => {
+    const errorLog = vi.spyOn(console, "error").mockImplementation(() => {});
+    const infoLog = vi.spyOn(console, "info").mockImplementation(() => {});
+    const root = makeEl();
+    root.id = "app";
+
+    const app = create().install(debugAddon());
+
+    app.component({
+      name: "Greeting",
+      setup: () => {},
+    })(root);
+    await app.unmount([root]);
+
+    expect(errorLog).not.toHaveBeenCalled();
+    expect(infoLog).toHaveBeenCalledTimes(2);
+    expect(infoLog.mock.calls[0][0]).toMatch(
+      /^\[nagi:debug\] info:lifecycle:mount Greeting \(Greeting\.\d+\) <div#app>$/,
+    );
+    expect(infoLog.mock.calls[1][0]).toMatch(
+      /^\[nagi:debug\] info:lifecycle:unmount Greeting \(Greeting\.\d+\) <div#app>$/,
+    );
+  });
+
+  it("scheduler の pending info は cue ラベル付きで出力する", () => {
+    const infoLog = vi.spyOn(console, "info").mockImplementation(() => {});
+
+    create().install(
+      debugAddon(),
+      {
+        name: "emitter",
+        install(ctx) {
+          ctx.emitDebugEvent({
+            version: 1,
+            level: "info",
+            source: "scheduler",
+            phase: "pending",
+            name: "heavy-widget",
+            cueLabel: "visible",
+          });
+        },
+      },
+    );
+
+    expect(infoLog).toHaveBeenCalledOnce();
+    expect(infoLog).toHaveBeenCalledWith(
+      "[nagi:debug] info:scheduler:pending heavy-widget waiting: visible",
+    );
+  });
 });

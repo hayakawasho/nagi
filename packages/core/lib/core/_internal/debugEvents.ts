@@ -1,6 +1,14 @@
-import { LifecycleError, type LifecycleErrorDetails } from "../error";
+import {
+  LifecycleError,
+  type LifecycleErrorDetails,
+  traceComponentTree,
+} from "../error";
 
-import type { DebugEvent, DebugReporter } from "../debugEvent";
+import type {
+  DebugErrorEvent,
+  DebugEvent,
+  DebugReporter,
+} from "../debugEvent";
 import type { ComponentContextImpl } from "./component";
 
 const errorMessages: Record<LifecycleErrorDetails["phase"], string> = {
@@ -25,7 +33,7 @@ function describeElement(element: Element): string {
   return `${tag}${id}${classes}`;
 }
 
-function createDebugEvent(lifecycleError: LifecycleError): DebugEvent {
+function createDebugEvent(lifecycleError: LifecycleError): DebugErrorEvent {
   const { details } = lifecycleError;
 
   return {
@@ -44,6 +52,23 @@ function createDebugEvent(lifecycleError: LifecycleError): DebugEvent {
     props: details.props,
     cause: details.cause,
   };
+}
+
+export function dispatchDebugEvent(
+  reporters: readonly DebugReporter[] | undefined,
+  event: DebugEvent,
+): void {
+  if (!reporters || reporters.length === 0) {
+    return;
+  }
+
+  for (const reporter of reporters) {
+    try {
+      reporter(event);
+    } catch (cause) {
+      console.error("[nagi] debug reporter failed", cause);
+    }
+  }
 }
 
 export function reportLifecycleError(
@@ -68,15 +93,35 @@ export function reportLifecycleError(
     return lifecycleError;
   }
 
-  const event = createDebugEvent(lifecycleError);
-
-  for (const reporter of reporters) {
-    try {
-      reporter(event);
-    } catch (cause) {
-      console.error("[nagi] debug reporter failed", cause);
-    }
-  }
+  dispatchDebugEvent(reporters, createDebugEvent(lifecycleError));
 
   return lifecycleError;
 }
+
+// error と違い reporter 未登録なら完全に無音(イベント構築もしない)
+export function reportLifecycleInfo(
+  phase: "mount" | "unmount",
+  target: ComponentContextImpl,
+): void {
+  const reporters: readonly DebugReporter[] | undefined = target.reporters;
+
+  if (!reporters || reporters.length === 0) {
+    return;
+  }
+
+  dispatchDebugEvent(reporters, {
+    version: 1,
+    level: "info",
+    source: "lifecycle",
+    phase,
+    name: target.name,
+    uid: target.uid,
+    path: traceComponentTree(target),
+    parentUid: target.parent?.uid,
+    element: target.element,
+    elementLabel: describeElement(target.element),
+  });
+}
+
+/** @internal */
+export { describeElement };

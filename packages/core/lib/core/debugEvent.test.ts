@@ -26,6 +26,10 @@ function debugReporter(reporter: (event: DebugEvent) => void) {
   });
 }
 
+function errorsOf(events: DebugEvent[]): DebugEvent[] {
+  return events.filter((event) => event.level === "error");
+}
+
 afterEach(() => {
   document.body.innerHTML = "";
   vi.restoreAllMocks();
@@ -57,8 +61,10 @@ describe("debug event", () => {
         })(root);
     }).toThrow();
 
-    expect(events).toHaveLength(1);
-    expect(events[0]).toMatchObject({
+    const errors = errorsOf(events);
+
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toMatchObject({
       version: 1,
       level: "error",
       source: "lifecycle",
@@ -70,7 +76,7 @@ describe("debug event", () => {
       elementLabel: "span#child.broken",
       cause,
     });
-    expect(events[0].uid).toMatch(/^Child\.\d+$/);
+    expect(errors[0].uid).toMatch(/^Child\.\d+$/);
   });
 
   it("mount / unmount / deferredUnmount error が event として届く", async () => {
@@ -97,7 +103,7 @@ describe("debug event", () => {
     })(root);
     await unmount([root]);
 
-    expect(events.map((event) => event.phase)).toEqual([
+    expect(errorsOf(events).map((event) => event.phase)).toEqual([
       "mount",
       "deferredUnmount",
       "unmount",
@@ -151,11 +157,11 @@ describe("debug event", () => {
     };
 
     appB.component(failing)(makeEl());
-    expect(events).toHaveLength(0);
+    expect(errorsOf(events)).toHaveLength(0);
     expect(errorLog).toHaveBeenCalledOnce();
 
     appA.component(failing)(makeEl());
-    expect(events).toHaveLength(1);
+    expect(errorsOf(events)).toHaveLength(1);
     expect(errorLog).toHaveBeenCalledOnce();
   });
 
@@ -164,8 +170,12 @@ describe("debug event", () => {
     const second = vi.fn();
 
     const { component } = create()
-      .install(debugReporter(first))
-      .install(debugReporter(second));
+      .install(
+        debugReporter((event) => event.level === "error" && first(event)),
+      )
+      .install(
+        debugReporter((event) => event.level === "error" && second(event)),
+      );
 
     component({
       name: "App",
@@ -197,8 +207,10 @@ describe("debug event", () => {
     app.install(debugReporter((event) => events.push(event)));
     await app.unmount([root]);
 
-    expect(events).toHaveLength(1);
-    expect(events[0].phase).toBe("unmount");
+    const errors = errorsOf(events);
+
+    expect(errors).toHaveLength(1);
+    expect(errors[0].phase).toBe("unmount");
   });
 
   it("reporter が throw しても lifecycle は継続する", () => {
@@ -258,8 +270,10 @@ describe("debug event", () => {
 
     ctx?.current.add(makeEl("span"));
 
-    expect(events).toHaveLength(1);
-    expect(events[0]).toMatchObject({
+    const errors = errorsOf(events);
+
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toMatchObject({
       phase: "mount",
       name: "Child",
       path: "Parent > Child",
@@ -282,5 +296,108 @@ describe("debug event", () => {
     expect(errorLog).toHaveBeenCalledOnce();
     expect(errorLog.mock.calls[0][0]).toBe("[nagi] onMount hook failed");
     expect(isLifecycleError(errorLog.mock.calls[0][1])).toBe(true);
+  });
+});
+
+describe("debug info event", () => {
+  it("mount / unmount で info event が届く", async () => {
+    const events: DebugEvent[] = [];
+    const root = makeEl();
+    root.id = "app";
+
+    const app = create().install(
+      debugReporter((event) => events.push(event)),
+    );
+
+    app.component({
+      name: "App",
+      setup: () => {},
+    })(root);
+
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      version: 1,
+      level: "info",
+      source: "lifecycle",
+      phase: "mount",
+      name: "App",
+      path: "App",
+      element: root,
+      elementLabel: "div#app",
+    });
+    expect(events[0].uid).toMatch(/^App\.\d+$/);
+
+    await app.unmount([root]);
+
+    expect(events).toHaveLength(2);
+    expect(events[1]).toMatchObject({
+      level: "info",
+      source: "lifecycle",
+      phase: "unmount",
+      name: "App",
+    });
+  });
+
+  it("親子は mount / unmount とも子が先に届く", async () => {
+    const events: DebugEvent[] = [];
+    const root = makeEl();
+
+    const app = create().install(
+      debugReporter((event) => events.push(event)),
+    );
+
+    app.component({
+      name: "Parent",
+      setup: () => {
+        useSlot().addChild(makeEl("span"), {
+          name: "Child",
+          setup: () => {},
+        });
+      },
+    })(root);
+    await app.unmount([root]);
+
+    expect(events.map((event) => `${event.phase}:${event.name}`)).toEqual([
+      "mount:Child",
+      "mount:Parent",
+      "unmount:Child",
+      "unmount:Parent",
+    ]);
+    expect(events[0].parentUid).toBe(events[1].uid);
+    expect(events[0].path).toBe("Parent > Child");
+  });
+
+  it("unmount info は冪等ガードにより1回しか届かない", async () => {
+    const events: DebugEvent[] = [];
+    const root = makeEl();
+
+    const app = create().install(
+      debugReporter((event) => events.push(event)),
+    );
+
+    app.component({
+      name: "App",
+      setup: () => {},
+    })(root);
+
+    await app.unmount([root]);
+    await app.unmount([root]);
+
+    const unmounts = events.filter((event) => event.phase === "unmount");
+
+    expect(unmounts).toHaveLength(1);
+  });
+
+  it("reporter 未登録なら info はコンソールにも出ない(完全に無音)", () => {
+    const errorLog = vi.spyOn(console, "error").mockImplementation(() => {});
+    const infoLog = vi.spyOn(console, "info").mockImplementation(() => {});
+
+    create().component({
+      name: "App",
+      setup: () => {},
+    })(makeEl());
+
+    expect(errorLog).not.toHaveBeenCalled();
+    expect(infoLog).not.toHaveBeenCalled();
   });
 });

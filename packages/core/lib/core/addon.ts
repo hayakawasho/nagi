@@ -3,7 +3,7 @@ import type {
   MountMiddleware,
   UnmountMiddleware,
 } from "./_internal/addonRegistry";
-import type { DebugReporter } from "./debugEvent";
+import type { DebugEvent, DebugReporter } from "./debugEvent";
 
 declare const mountOptionsBrand: unique symbol;
 
@@ -18,6 +18,7 @@ export type AddonContext = {
   addMountMiddleware(middleware: MountMiddleware): void;
   addUnmountMiddleware(middleware: UnmountMiddleware): void;
   addDebugReporter(reporter: DebugReporter): void;
+  emitDebugEvent(event: DebugEvent): void;
 };
 
 export type Addon = {

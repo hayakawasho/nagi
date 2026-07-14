@@ -4,6 +4,20 @@ All notable changes to `@usenagi/core` are documented here. Release notes also a
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+
+- Debug info trace — mount / unmount now emit `level: "info"` debug events (`source: "lifecycle"`). Emitted only when a debug reporter is registered; without one the app stays completely silent.
+- `scheduler` addon emits `level: "info"` / `source: "scheduler"` events for cue-deferred mounts: `pending` (cue wait started), `resolved` (cue fulfilled), `aborted` (cancelled by unmount, cue error, or re-registration).
+- `AddonContext.emitDebugEvent(event)` — addons such as `scheduler` can forward defined debug events to the app's reporters. `elementLabel` is derived automatically when only `element` is passed.
+- `Cue` gains an optional `cueLabel` for debug display. Built-in cues (`visible` / `idle` / `interaction` / `media`) set it automatically; unlabeled custom cues appear as `custom`.
+- `debug` addon prints info events via `console.info` (e.g. `[nagi:debug] info:scheduler:pending heavy-widget waiting: visible`).
+
+### Changed
+
+- `DebugEvent` is now a discriminated union. Custom `DebugReporter` implementations should branch on `event.level` — `cause` exists only on error events.
+
 ## [0.6.0] - 2026-07-08
 
 ### Added

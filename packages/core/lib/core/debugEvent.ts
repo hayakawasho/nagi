@@ -1,15 +1,12 @@
 import type { RefElement } from "../types";
 import type { LifecycleErrorDetails } from "./error";
 
-export type DebugEventLevel = "error";
+export type DebugEventLevel = "error" | "info";
 
-export type DebugEventSource = "lifecycle";
+export type DebugEventSource = "lifecycle" | "scheduler";
 
-export type DebugEvent = {
+type DebugEventBase = {
   version: 1;
-  level: "error";
-  source: "lifecycle";
-  phase: LifecycleErrorDetails["phase"];
   name: string;
   uid?: string;
   path?: string;
@@ -17,7 +14,25 @@ export type DebugEvent = {
   element?: RefElement;
   elementLabel?: string;
   props?: unknown;
+};
+
+export type DebugErrorEvent = DebugEventBase & {
+  level: "error";
+  source: "lifecycle";
+  phase: LifecycleErrorDetails["phase"];
   cause: unknown;
 };
+
+export type DebugInfoEvent = DebugEventBase &
+  ({ level: "info" } & (
+    | { source: "lifecycle"; phase: "mount" | "unmount" }
+    | {
+        source: "scheduler";
+        phase: "pending" | "resolved" | "aborted";
+        cueLabel?: string;
+      }
+  ));
+
+export type DebugEvent = DebugErrorEvent | DebugInfoEvent;
 
 export type DebugReporter = (event: DebugEvent) => void;

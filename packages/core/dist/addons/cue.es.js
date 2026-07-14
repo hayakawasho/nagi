@@ -8,7 +8,7 @@ function t(t, n, r) {
 	}, { once: !0 });
 }
 function n(n) {
-	return (r, i) => new Promise((a, o) => {
+	let r = (r, i) => new Promise((a, o) => {
 		if (i.aborted) {
 			o(e());
 			return;
@@ -21,9 +21,10 @@ function n(n) {
 		}, n);
 		s.observe(r), t(i, () => s.disconnect(), o);
 	});
+	return r.cueLabel = "visible", r;
 }
 function r(n) {
-	return (r, i) => new Promise((r, a) => {
+	let r = (r, i) => new Promise((r, a) => {
 		if (i.aborted) {
 			a(e());
 			return;
@@ -36,9 +37,10 @@ function r(n) {
 		let o = requestIdleCallback(() => r(), n == null ? void 0 : { timeout: n });
 		t(i, () => cancelIdleCallback(o), a);
 	});
+	return r.cueLabel = "idle", r;
 }
 function i(n) {
-	return (r, i) => new Promise((r, a) => {
+	let r = (r, i) => new Promise((r, a) => {
 		if (i.aborted) {
 			a(e());
 			return;
@@ -53,13 +55,14 @@ function i(n) {
 		};
 		o.addEventListener("change", s), t(i, () => o.removeEventListener("change", s), a);
 	});
+	return r.cueLabel = "media", r;
 }
 function a(n = [
 	"click",
 	"focus",
 	"pointerenter"
 ]) {
-	return (r, i) => new Promise((a, o) => {
+	let r = (r, i) => new Promise((a, o) => {
 		if (i.aborted) {
 			o(e());
 			return;
@@ -72,6 +75,7 @@ function a(n = [
 		for (let e of n) r.addEventListener(e, c, { once: !0 });
 		t(i, s, o);
 	});
+	return r.cueLabel = "interaction", r;
 }
 //#endregion
 export { r as idle, a as interaction, i as media, n as visible };
