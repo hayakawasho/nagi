@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
-- `DebugEvent` is now a union of `DebugErrorEvent | DebugInfoEvent`. Custom `DebugReporter` implementations should branch on `event.level` — `cause` exists only on error events.
+- `DebugEvent` is now a discriminated union. Custom `DebugReporter` implementations should branch on `event.level` — `cause` exists only on error events.
 
 ## [0.6.0] - 2026-07-08
 

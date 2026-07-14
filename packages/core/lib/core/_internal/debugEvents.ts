@@ -1,4 +1,8 @@
-import { LifecycleError, type LifecycleErrorDetails } from "../error";
+import {
+  LifecycleError,
+  type LifecycleErrorDetails,
+  traceComponentTree,
+} from "../error";
 
 import type {
   DebugErrorEvent,
@@ -112,6 +116,7 @@ export function reportLifecycleInfo(
     phase,
     name: target.name,
     uid: target.uid,
+    path: traceComponentTree(target),
     parentUid: target.parent?.uid,
     element: target.element,
     elementLabel: describeElement(target.element),

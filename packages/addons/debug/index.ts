@@ -22,6 +22,28 @@ function normalizeError(cause: unknown): NormalizedError {
   };
 }
 
+type SchedulerInfoEvent = Extract<
+  DebugEvent,
+  { level: "info"; source: "scheduler" }
+>;
+
+function formatSchedulerInfoEvent(
+  event: SchedulerInfoEvent,
+  head: string,
+): string {
+  if (!event.cueLabel) {
+    return head;
+  }
+
+  switch (event.phase) {
+    case "pending":
+      return `${head} waiting: ${event.cueLabel}`;
+    case "resolved":
+    case "aborted":
+      return `${head} cue: ${event.cueLabel}`;
+  }
+}
+
 function formatEvent(event: DebugEvent): string {
   const location = event.path ?? event.name;
   const uid = event.uid ? ` (${event.uid})` : "";
@@ -29,13 +51,8 @@ function formatEvent(event: DebugEvent): string {
   const head = `[nagi:debug] ${event.level}:${event.source}:${event.phase} ${location}${uid}${element}`;
 
   if (event.level === "info") {
-    if (event.source === "scheduler" && event.cueLabel) {
-      const cue =
-        event.phase === "pending"
-          ? ` waiting: ${event.cueLabel}`
-          : ` cue: ${event.cueLabel}`;
-
-      return `${head}${cue}`;
+    if (event.source === "scheduler") {
+      return formatSchedulerInfoEvent(event, head);
     }
 
     return head;

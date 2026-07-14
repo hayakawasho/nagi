@@ -7,25 +7,33 @@ function t(e) {
 		stack: e.stack
 	} : { message: String(e) };
 }
-function n(e) {
-	let n = e.path ?? e.name, r = e.uid ? ` (${e.uid})` : "", i = e.elementLabel ? ` <${e.elementLabel}>` : "", a = `[nagi:debug] ${e.level}:${e.source}:${e.phase} ${n}${r}${i}`;
-	if (e.level === "info") return e.source === "scheduler" && e.cueLabel ? `${a}${e.phase === "pending" ? ` waiting: ${e.cueLabel}` : ` cue: ${e.cueLabel}`}` : a;
-	let o = t(e.cause);
-	return `${a}: ${[o.name, o.message].filter(Boolean).join(": ")}`;
+function n(e, t) {
+	if (!e.cueLabel) return t;
+	switch (e.phase) {
+		case "pending": return `${t} waiting: ${e.cueLabel}`;
+		case "resolved":
+		case "aborted": return `${t} cue: ${e.cueLabel}`;
+	}
 }
-function r() {
+function r(e) {
+	let r = e.path ?? e.name, i = e.uid ? ` (${e.uid})` : "", a = e.elementLabel ? ` <${e.elementLabel}>` : "", o = `[nagi:debug] ${e.level}:${e.source}:${e.phase} ${r}${i}${a}`;
+	if (e.level === "info") return e.source === "scheduler" ? n(e, o) : o;
+	let s = t(e.cause);
+	return `${o}: ${[s.name, s.message].filter(Boolean).join(": ")}`;
+}
+function i() {
 	return e({
 		name: "@usenagi/debug",
 		install(e) {
 			e.addDebugReporter((e) => {
 				if (e.level === "info") {
-					console.info(n(e));
+					console.info(r(e));
 					return;
 				}
-				console.error(n(e), e.cause);
+				console.error(r(e), e.cause);
 			});
 		}
 	});
 }
 //#endregion
-export { r as debugAddon };
+export { i as debugAddon };

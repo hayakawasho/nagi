@@ -321,6 +321,7 @@ describe("debug info event", () => {
       source: "lifecycle",
       phase: "mount",
       name: "App",
+      path: "App",
       element: root,
       elementLabel: "div#app",
     });
@@ -363,6 +364,7 @@ describe("debug info event", () => {
       "unmount:Parent",
     ]);
     expect(events[0].parentUid).toBe(events[1].uid);
+    expect(events[0].path).toBe("Parent > Child");
   });
 
   it("unmount info は冪等ガードにより1回しか届かない", async () => {

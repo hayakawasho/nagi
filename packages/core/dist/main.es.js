@@ -74,18 +74,19 @@ function l(e, t, r, i, o) {
 	let l = n.create(e, t, r, i, o), u = t.reporters;
 	return !u || u.length === 0 ? (a(l), l) : (c(u, s(l)), l);
 }
-function u(e, t) {
-	let n = t.reporters;
-	!n || n.length === 0 || c(n, {
+function u(e, n) {
+	let r = n.reporters;
+	!r || r.length === 0 || c(r, {
 		version: 1,
 		level: "info",
 		source: "lifecycle",
 		phase: e,
-		name: t.name,
-		uid: t.uid,
-		parentUid: t.parent?.uid,
-		element: t.element,
-		elementLabel: o(t.element)
+		name: n.name,
+		uid: n.uid,
+		path: t(n),
+		parentUid: n.parent?.uid,
+		element: n.element,
+		elementLabel: o(n.element)
 	});
 }
 //#endregion
