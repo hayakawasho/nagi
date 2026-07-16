@@ -18,7 +18,7 @@
     "@biomejs/biome": "^2.4.13",
     "happy-dom": "^20.9.0",
     "oxlint": "^1.66.0",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.0",
     "vite": "^8.0.14",
     "vitest": "^4.1.7"
   },
